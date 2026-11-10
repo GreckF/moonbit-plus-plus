@@ -185,8 +185,8 @@ fn show_prec(names : Array[String], t : Tm, prec : Int32) -> String {
           return "code " + show_block(push1(names, x), quoted_body(s, f))
         (Global("%splice"), [_, (c, _), _, _, .. rest]) => {
           let code = match c {
-            Var(_) => "$" + show_prec(names, c, 3)
-            _ => "${ " + show_prec(names, c, 0) + " }"
+            Var(_) => dollar + show_prec(names, c, 3)
+            _ => dollar + "{ " + show_prec(names, c, 0) + " }"
           }
           if rest.length() == 0 {
             return code
@@ -388,6 +388,12 @@ fn show_prec(names : Array[String], t : Tm, prec : Int32) -> String {
     }
   }
 }
+
+///|
+/// `$` (not written in the strings that are concatenated: the JavaScript
+/// back end of MoonBit turns them into template literals, where `${` is
+/// special).
+let dollar : String = '$'.to_string()
 
 ///|
 /// `t` as a block `{ a; b; c }`.

@@ -1,0 +1,74 @@
+// Staged metaprogramming: `code { e }` is the code of `e`, `${ c }` splices
+// code. A splice in a function is run when the program is checked, and
+// replaced by the code it makes.
+
+// x^n, with the recursion on n done by the generator
+fn power(n : Nat, x : Code[Int]) -> Code[Int] {
+  match n {
+    Z => code { 1 }
+    S(k) => code { ${x} * ${power(k, x)} }
+  }
+}
+
+// x * (x * (x * 1))
+fn cube(x : Int) -> Int {
+  ${ power(3, code { x }) }
+}
+
+// the checker computes with code: what it does is what it means
+lemma cube_2 : cube(2) === 8 = Refl
+
+// a typed expression language; its interpreter, staged, is a compiler
+enum Exp : [T] -> Type {
+  IntLit(Int) : Exp[Int]
+  Arg : Exp[Int]
+  Add(Exp[Int], Exp[Int]) : Exp[Int]
+  Less(Exp[Int], Exp[Int]) : Exp[Bool]
+  If[T](Exp[Bool], Exp[T], Exp[T]) : Exp[T]
+}
+
+fn[T] Exp::compile(self : Exp[T], arg : Code[Int]) -> Code[T] {
+  match self {
+    IntLit(n) => code { n }
+    Arg => arg
+    Add(l, r) => code { ${l.compile(arg)} + ${r.compile(arg)} }
+    Less(l, r) => code { ${l.compile(arg)} < ${r.compile(arg)} }
+    If[_](c, t, f) =>
+      code { if ${c.compile(arg)} { ${t.compile(arg)} } else { ${f.compile(arg)} } }
+  }
+}
+
+// if x < 10 { x + 1 } else { 0 }
+fn step(x : Int) -> Int {
+  ${ If(Less(Arg, IntLit(10)), Add(Arg, IntLit(1)), IntLit(0)).compile(code { x }) }
+}
+
+// code with loops and mutable variables: `body(i)` for each i below n
+fn repeat(n : Int, body : (Int) -> Code[Unit]) -> Code[Unit] {
+  if n == 0 { code { () } } else {
+    code { ${repeat(n - 1, body)}; ${body(n - 1)} }
+  }
+}
+
+// s = s + 0 * m; s = s + 1 * m; s = s + 2 * m
+fn weighted(m : Int) -> Int {
+  let mut s = 0
+  ${ repeat(3, i => code { s = s + i * m }) }
+  s
+}
+
+// code made and run at run time
+fn adder(n : Int) -> Code[(Int) -> Int] {
+  code { (x : Int) => x + n }
+}
+
+fn main {
+  println(cube(3))
+  println(step(3))
+  println(step(30))
+  println(weighted(10))
+  let add5 = adder(5).run()
+  println(add5(37))
+  let c = power(10, code { 2 })
+  println(c.run())
+}

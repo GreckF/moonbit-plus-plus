@@ -216,7 +216,9 @@ fn check_stage(cxt : Cxt, x : String, l : Int32) -> Unit raise ElabError {
     cxt.fail(
       "the mutable variable " +
       x +
-      " cannot be used across `code { }` or `${ }`" +
+      " cannot be used across `code { }` or `" +
+      dollar +
+      "{ }`" +
       at +
       "; copy it first: let " +
       x +
@@ -335,7 +337,9 @@ fn elab_splice(
     VData("Code", _) | VFlex(_, _) => ()
     _ =>
       cxt.fail(
-        "`${ }` splices code (a value of type Code[T]), but this has type " +
+        "`" +
+        dollar +
+        "{ }` splices code (a value of type Code[T]), but this has type " +
         cxt.show(ty),
       )
   }

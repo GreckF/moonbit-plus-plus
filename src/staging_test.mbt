@@ -8,7 +8,33 @@ fn expanded(src : String, name : String) -> String {
   @tt.check_program("t.mbtpp", src) catch {
     @tt.CheckError(msg) => return msg
   }
-  @tt.show_global_body(name).unwrap_or("no definition of " + name)
+  drop_counters(
+    @tt.show_global_body(name).unwrap_or("no definition of " + name),
+  )
+}
+
+///|
+/// Without the counters of generated names: `f$go$12` is `f$go$N`.
+fn drop_counters(s : String) -> String {
+  let buf = StringBuilder::new()
+  let cs : Array[Char] = s.iter().collect()
+  let mut i = 0
+  while i < cs.length() {
+    buf.write_char(cs[i])
+    if cs[i] == '$' &&
+      i + 1 < cs.length() &&
+      cs[i + 1] >= '0' &&
+      cs[i + 1] <= '9' {
+      buf.write_char('N')
+      i = i + 1
+      while i < cs.length() && cs[i] >= '0' && cs[i] <= '9' {
+        i = i + 1
+      }
+    } else {
+      i = i + 1
+    }
+  }
+  buf.to_string()
 }
 
 ///|
@@ -373,7 +399,7 @@ test "local recursive functions in generators and in code" {
   inspect(
     expanded(src, "g"),
     content=(
-      #|(x) => { let go = loop_code$go$4(code { x }, ()); go(4, 0) }
+      #|(x) => { let go = loop_code$go$N(code { x }, ()); go(4, 0) }
     ),
   )
   inspect(

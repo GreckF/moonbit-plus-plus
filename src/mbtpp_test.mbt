@@ -945,3 +945,19 @@ test "option types in type arguments" {
     ),
   )
 }
+
+///|
+test "example staging" {
+  inspect(
+    run_example("staging.mbtpp"),
+    content=(
+      #|27
+      #|4
+      #|0
+      #|30
+      #|42
+      #|1024
+      #|
+    ),
+  )
+}
