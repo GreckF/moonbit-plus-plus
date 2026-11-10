@@ -301,6 +301,7 @@ pub fn reset_state() -> Unit {
   reset_unfolding()
   lifted.clear()
   reset_structs()
+  reset_staging()
 }
 
 ///|

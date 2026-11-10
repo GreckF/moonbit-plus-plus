@@ -173,6 +173,8 @@ pub fn setup() -> Unit
 
 pub fn shift_tm(Tm, Int32, Int32) -> Tm
 
+pub fn show_global_body(String) -> String?
+
 pub fn show_global_type(String) -> String?
 
 pub fn show_tm(Array[String], Tm) -> String
@@ -267,6 +269,9 @@ pub(all) struct Cxt {
   handled : Array[String]
   arm_lams : Bool
   in_fun_arm : Bool
+  stage : Int32
+  stage_marks : Array[(Int32, Int32)]
+  quote_cxt : Cxt?
 }
 pub fn Cxt::at(Self, @parser.Pos) -> Self
 pub fn Cxt::bind(Self, String, Val) -> Self

@@ -9,8 +9,9 @@ fn set_body(name : String, body : Tm, arity : Int32) -> Unit {
   match globals.get(name) {
     Some(g) => {
       note_unfold_helper(name)
-      // the marks of effects are lowered (ctl.mbt)
-      let body = lower_body(name, body)
+      // the splices of code run when the code is made (staging.mbt); the
+      // marks of effects are lowered (ctl.mbt)
+      let body = lower_body(name, hoist_splices(body))
       g.kind = GFunc(Some(body), contains_imperative(body), arity)
     }
     None => ()
@@ -33,6 +34,9 @@ fn contains_imperative(t : Tm) -> Bool {
     | Defer(_, _) => true
     // a fresh marker of a handler of `ctl` operations (run, see exec.mbt)
     App(Global("%effect_marker"), _, _) => true
+    // quoted code is not run where it is written; its splices are
+    // (staging.mbt)
+    App(_, _, _) if quote_parts(t) is Some((_, s, _)) => contains_imperative(s)
     Lam(_, _, _, b) => contains_imperative(b)
     App(f, a, _) => contains_imperative(f) || contains_imperative(a)
     Pi(_, _, _, a, b) => contains_imperative(a) || contains_imperative(b)
@@ -1121,6 +1125,10 @@ pub fn check_decls(
   }
   check_mbt_impls(mbt_impls, lenient)
   check_mbt_fns(mbt_fn_decls)
+  // the splices of stage 0 are run now (staging.mbt)
+  if !lenient {
+    unstage_all()
+  }
 }
 
 ///|

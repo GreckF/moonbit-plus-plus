@@ -180,6 +180,22 @@ fn show_prec(names : Array[String], t : Tm, prec : Int32) -> String {
             prec > 1,
             show_prec(names, a, 2) + " === " + show_prec(names, b, 2),
           )
+        // `code { e }` and `${ c }` (see staging.mbt)
+        (Global("%quote"), [_, (s, _), (Lam(x, _, _, _) as f, _)]) =>
+          return "code " + show_block(push1(names, x), quoted_body(s, f))
+        (Global("%splice"), [_, (c, _), _, _, .. rest]) => {
+          let code = match c {
+            Var(_) => "$" + show_prec(names, c, 3)
+            _ => "${ " + show_prec(names, c, 0) + " }"
+          }
+          if rest.length() == 0 {
+            return code
+          }
+          return code +
+            "(" +
+            rest.map(a => show_prec(names, a.0, 0)).join(", ") +
+            ")"
+        }
         _ => ()
       }
       let hide_impl = match h {
@@ -292,16 +308,8 @@ fn show_prec(names : Array[String], t : Tm, prec : Int32) -> String {
       }
       paren(prec > 0, "(" + xs.join(", ") + ") => " + show_prec(ns, cur, 0))
     }
-    Let(x, _, v, b) => {
-      let y = fresh_name(names, x)
-      "{ let " +
-      y +
-      " = " +
-      show_prec(names, v, 0) +
-      "; " +
-      show_prec(push1(names, y), b, 0) +
-      " }"
-    }
+    Let(_, _, _, _) | LetMut(_, _, _, _) | Seq(_, _) | Defer(_, _) =>
+      show_block(names, t)
     Match(scr, cls) => {
       let arms = cls.map(cl => {
         let mut ns = names
@@ -348,6 +356,69 @@ fn show_prec(names : Array[String], t : Tm, prec : Int32) -> String {
     }
     Raises(a, e) => show_prec(names, a, 1) + " raise " + show_prec(names, e, 1)
     ArrayLit(es) => "[" + es.map(x => show_prec(names, x, 0)).join(", ") + "]"
-    _ => "<stmt>"
+    Assign(ix, v) =>
+      show_prec(names, Var(ix), 3) + " = " + show_prec(names, v, 0)
+    While(c, b, s) => {
+      let items : Array[String] = []
+      block_items(names, b, items)
+      if !(s is Lit(LUnit)) {
+        block_items(names, s, items)
+      }
+      "while " + show_prec(names, c, 0) + " { " + items.join("; ") + " }"
+    }
+    Break => "break"
+    Continue => "continue"
+    Return(v) => paren(prec > 1, "return " + show_prec(names, v, 0))
+    Raise(v) => paren(prec > 1, "raise " + show_prec(names, v, 2))
+    Try(b, cls) => {
+      let arms = cls.map(cl => {
+        let mut ns = names
+        let ps : Array[String] = []
+        for p in cl.pats {
+          let (s, bs) = show_pat(ns, p)
+          ps.push(s)
+          ns = concat(ns, bs)
+        }
+        ps.join(", ") + " => " + show_prec(ns, cl.body, 0)
+      })
+      paren(
+        prec > 0,
+        "try " + show_block(names, b) + " catch { " + arms.join("; ") + " }",
+      )
+    }
+  }
+}
+
+///|
+/// `t` as a block `{ a; b; c }`.
+fn show_block(names : Array[String], t : Tm) -> String {
+  let items : Array[String] = []
+  block_items(names, t, items)
+  "{ " + items.join("; ") + " }"
+}
+
+///|
+/// The statements of `t` (`let`s and sequences), then its value.
+fn block_items(names : Array[String], t : Tm, out : Array[String]) -> Unit {
+  match t {
+    Let(x, _, v, b) => {
+      let y = fresh_name(names, x)
+      out.push("let " + y + " = " + show_prec(names, v, 0))
+      block_items(push1(names, y), b, out)
+    }
+    LetMut(x, _, v, b) => {
+      let y = fresh_name(names, x)
+      out.push("let mut " + y + " = " + show_prec(names, v, 0))
+      block_items(push1(names, y), b, out)
+    }
+    Seq(a, b) => {
+      block_items(names, a, out)
+      block_items(names, b, out)
+    }
+    Defer(d, b) => {
+      out.push("defer " + show_prec(names, d, 0))
+      block_items(names, b, out)
+    }
+    _ => out.push(show_prec(names, t, 0))
   }
 }

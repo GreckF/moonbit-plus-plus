@@ -378,6 +378,12 @@ fn Machine::prim(
       } else {
         raise CAbort("index out of bounds: " + i.to_string())
       }
+    // code is its body, waiting to be run on the code of its splices
+    // (tt/staging.mbt): `${ c }` and `c.run()` run it
+    ("%quote", [s, f]) =>
+      RPartial(PPrim("%run_code", 3), [(s, Expl), (f, Expl)])
+    ("%run_code", [s, f, _]) => self.apply(f, s, Expl)
+    ("%splice", [c, _, _]) | ("%run", [c]) => self.apply(c, RLit(LUnit), Expl)
     // proofs by axioms are not computed
     ("%axiom", _) => RType
     ("%physical_equal", [a, b]) => RLit(LBool(physical_equal(a, b)))

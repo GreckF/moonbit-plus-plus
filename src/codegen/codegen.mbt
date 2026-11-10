@@ -715,6 +715,11 @@ let inline_prims : Map[String, String] = {
   "%print": "{ rt_write(as_str($0)); VUnit }",
   "%nat_succ": "VNat(as_nat($0) + 1N)",
   "%axiom": "VType",
+  // code is its body, waiting to be run on the code of its splices
+  // (tt/staging.mbt)
+  "%quote": "make_code($0, $1)",
+  "%splice": "apply($0, VUnit)",
+  "%run": "apply($0, VUnit)",
   "%physical_equal": "VBool(physical_equal($0, $1))",
   "%nat_of_int": "VNat(nat_of_int(as_int($0)))",
   "%nat_to_int": "VInt(as_nat($0).to_int())",

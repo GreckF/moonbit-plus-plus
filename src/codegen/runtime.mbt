@@ -741,6 +741,8 @@ let runtime_src : String =
   #|    ("%nat_compare", [VNat(a), VNat(b)]) => VInt(a.compare(b))
   #|    ("%nat_to_string", [VNat(n)]) => VStr(n.to_string())
   #|    ("%axiom", _) => VType
+  #|    ("%quote", [s, f]) => make_code(s, f)
+  #|    ("%splice", [c, _, _]) | ("%run", [c]) => apply(c, VUnit)
   #|    ("%physical_equal", [a, b]) => VBool(physical_equal(a, b))
   #|    ("%panic", _) => rt_fail("panic")
   #|    ("%abort", [VStr(s)]) => rt_fail(s)
@@ -767,6 +769,12 @@ let runtime_src : String =
   #|    }
   #|    _ => rt_fail("primitive " + name + " failed")
   #|  }
+  #|}
+  #|
+  #|/// Code (`code { e }`): its body `f`, to be run on the code `s` of its
+  #|/// splices.
+  #|fn make_code(s : Value, f : Value) -> Value {
+  #|  VFun(_ => apply(f, s))
   #|}
   #|
   #|/// A foreign MoonBit error, as a MoonBit++ value.

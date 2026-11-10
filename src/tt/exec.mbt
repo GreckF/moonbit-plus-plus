@@ -62,6 +62,8 @@ fn effectful_prim(p : String) -> Bool {
 fn has_effect(v : Val, print_ok : Bool) -> Bool {
   let sp_eff = (sp : Spine) => sp.iter().any(a => has_effect(a.0, false))
   match v {
+    // quoted code is not run by what makes it (staging.mbt)
+    VPrim("%quote", [_, (s, _), (f, _)]) => quoted_effect(s, f)
     VPrim(n, sp) =>
       match globals.get(n) {
         Some({ kind: GPrim(p, _), .. }) =>
@@ -572,6 +574,8 @@ fn needs_run(t : Tm) -> Bool {
     Seq(a, b) => needs_run(a) || needs_run(b)
     Try(b, cls) => needs_run(b) || cls.iter().any(cl => needs_run(cl.body))
     Lam(_, _, _, b) => needs_run(b)
+    // quoted code is not run where it is written; its splices are
+    App(_, _, _) if quote_parts(t) is Some((_, s, _)) => needs_run(s)
     App(f, a, _) => needs_run(f) || needs_run(a)
     Let(_, a, v, b) => needs_run(a) || needs_run(v) || needs_run(b)
     Match(ss, cls) =>

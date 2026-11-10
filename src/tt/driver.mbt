@@ -37,6 +37,7 @@ pub fn setup() -> Unit {
   }
   builtin_data("Error", U, 0, true)
   builtin_data("Array", Pi("T", Impl, false, U, U), 1, false)
+  setup_staging()
 }
 
 ///|

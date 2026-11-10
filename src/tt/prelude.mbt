@@ -554,6 +554,9 @@ pub let prelude_src : String =
   #|// the same object (MoonBit's `physical_equal`); not computed during
   #|// checking
   #|fn[T] physical_equal(a : T, b : T) -> Bool = "%physical_equal"
+  #|
+  #|// run code made at run time (`code { e }`, see doc/mbtpp/staging.md)
+  #|fn[T] Code::run(self : Code[T]) -> T = "%run"
   #|fn[T, a : T, b : T] physical_equal_sound(h : physical_equal(a, b) === true) -> a === b = "%axiom"
   #|
   #|fn[T] ptr_deq(a : T, b : T) -> Known[a === b] {

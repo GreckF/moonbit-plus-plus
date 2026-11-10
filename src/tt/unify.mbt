@@ -299,6 +299,10 @@ fn unify_struct(ts : LTypes, t0 : Val, u0 : Val) -> Unit raise UnifyError {
     (a, b) if is_row(a) || is_row(b) => unify_rows(ts, a, b)
     (VData(a, sp1), VData(b, sp2)) | (VCon(a, sp1), VCon(b, sp2)) if a == b =>
       unify_sp(ts, sp1, sp2)
+    // two splices are the same when their code is, wherever they are
+    // written (staging.mbt)
+    (VPrim(_, _), VPrim(_, _)) if spliced_code(t) is Some(c1) &&
+      spliced_code(u) is Some(c2) => unify(ts, c1, c2)
     (VPrim(a, sp1), VPrim(b, sp2)) if a == b => unify_sp(ts, sp1, sp2)
     (VArrLit(xs), VArrLit(ys)) if xs.length() == ys.length() =>
       for k = 0; k < xs.length(); k = k + 1 {
@@ -330,6 +334,16 @@ fn unify_struct(ts : LTypes, t0 : Val, u0 : Val) -> Unit raise UnifyError {
           }
         None => raise UnifyError("stuck function")
       }
+    // `code { e }` against other code `c`: `e` against `${ c }`
+    (VPrim("%quote", [(a, _), (s, _), (f, _)]), other)
+    | (other, VPrim("%quote", [(a, _), (s, _), (f, _)])) => {
+      let zero = (VLit(LInt(0)), Expl)
+      unify(
+        ts,
+        app_val(f, s, Expl),
+        VPrim("%splice", [(a, Impl), (other, Expl), zero, zero]),
+      )
+    }
     (VMatch(env1, vs1, cls1, sp1), VMatch(env2, vs2, cls2, sp2)) => {
       if cls1.length() != cls2.length() || vs1.length() != vs2.length() {
         raise UnifyError("different matches")

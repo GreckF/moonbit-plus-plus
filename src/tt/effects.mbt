@@ -924,6 +924,11 @@ fn escapes(e : @parser.Expr, x : String) -> Bool {
   }
   match e {
     EVar(_, y) => y == x
+    // code outlives the call that makes it, but its splices run in the call
+    // (staging.mbt)
+    EApp(_, EVar(_, "%quote"), None, Some([ELam(_, _, _, _, b)])) =>
+      code_mentions(b, x)
+    EApp(_, EVar(_, "%splice"), None, Some([a])) => escapes(a, x)
     EApp(_, EVar(_, y), _, args) if y == x =>
       args.unwrap_or([]).iter().any(arg_escapes)
     EApp(_, f, impls, args) =>

@@ -300,7 +300,8 @@ fn Parser::raises_opt(self : Parser) -> Expr? raise ParseError {
       self.at("=") ||
       self.at_stmt_end() ||
       self.at(",") ||
-      self.at(")") {
+      self.at(")") ||
+      self.at("]") {
       Some(EVar(self.pos(), "Error"))
     } else {
       Some(self.pipe())
@@ -584,8 +585,20 @@ fn Parser::unary(self : Parser) -> Expr raise ParseError {
 fn Parser::args(self : Parser, close : String) -> Array[Expr] raise ParseError {
   let es : Array[Expr] = []
   while !self.at(close) {
-    // tagged arguments are for calls; in `[...]`, `T?` is a type
-    es.push(if close == ")" { self.arg() } else { self.expr() })
+    // tagged arguments are for calls; in `[...]`, `T?` is a type, and
+    // `T raise E`, `T!Eff` are types of code (`Code[T raise E]`)
+    es.push(
+      if close == ")" {
+        self.arg()
+      } else {
+        let pos = self.pos()
+        let e = self.expr()
+        match self.effect_opt(false) {
+          Some(eff) => EEff(pos, e, eff)
+          None => e
+        }
+      },
+    )
     if !self.accept(",") {
       break
     }
@@ -866,6 +879,36 @@ fn Parser::primary(self : Parser) -> Expr raise ParseError {
       let names = self.unfold_names()
       self.expect(")")
       EUnfold(pos, names, self.block())
+    }
+    // `code { e }`: the code of `e` (`code` is not a keyword; see
+    // doc/mbtpp/staging.md). It is `%quote(() => e)`: code is a thunk.
+    TIdent("code") if !in_condition.val &&
+      self.at_k(1, "{") &&
+      !self.peek_at(1).nl => {
+      ignore(self.advance())
+      let body = self.block()
+      EApp(
+        pos,
+        EVar(pos, "%quote"),
+        None,
+        Some([ELam(pos, [], [], None, body)]),
+      )
+    }
+    // `${ e }`, `$x`: the splice of the code `e`, `%splice(e)`
+    TSym("$") => {
+      ignore(self.advance())
+      let e = if self.at("{") {
+        self.block()
+      } else {
+        let p = self.pos()
+        let mut name = self.ident()
+        while self.at("::") {
+          ignore(self.advance())
+          name = name + "::" + self.ident()
+        }
+        EVar(p, name)
+      }
+      EApp(pos, EVar(pos, "%splice"), None, Some([e]))
     }
     TIdent(x) => {
       ignore(self.advance())

@@ -160,6 +160,12 @@ pub fn app_spine(f : Val, sp : Spine) -> Val {
 /// checked).
 fn reduce_prim(n : String, sp : Spine, lazy~ : Bool = false) -> Val {
   match globals.get(n) {
+    // `${ c }`, `c.run()`: the code `c` is run (see staging.mbt)
+    Some({ kind: GPrim("%splice" | "%run", arity), .. }) if sp.length() >= arity =>
+      match splice_val(sp, arity, lazy) {
+        Some(w) => w
+        None => VPrim(n, sp)
+      }
     Some({ kind: GPrim(p, arity), .. }) if sp.length() == arity => {
       let lits : Array[Lit] = []
       for a in sp {
@@ -209,6 +215,12 @@ pub fn force(v : Val) -> Val {
         Some(r) => force(app_spine(r, sp))
         None => v
       }
+    // a splice of known code is that code (staging.mbt)
+    VPrim(n, sp) if splice_arity(n) is Some(arity) && sp.length() >= arity =>
+      match splice_val(sp, arity, false) {
+        Some(w) => force(w)
+        None => v
+      }
     VPrim(n, sp) =>
       match reduce_prim(n, sp) {
         VPrim(_, _) => v
@@ -232,6 +244,11 @@ pub fn force_meta(v : Val) -> Val {
         Some(r) => force_meta(app_spine(r, sp))
         None => v
       }
+    VPrim(n, sp) if splice_arity(n) is Some(arity) && sp.length() >= arity =>
+      match splice_val(sp, arity, true) {
+        Some(w) => force_meta(w)
+        None => v
+      }
     // (arguments that are folded applications are not computed either)
     VPrim(n, sp) =>
       match reduce_prim(n, sp, lazy=true) {
@@ -246,7 +263,8 @@ pub fn force_meta(v : Val) -> Val {
 /// Results that keep a function application folded.
 fn is_blocked(v : Val) -> Bool {
   match v {
-    VPrim("%raise", _) => false
+    // an error, and quoted code, are values
+    VPrim("%raise" | "%quote", _) => false
     VMatch(_, _, _, _) | VPrim(_, _) | VStuck(_, _, _) => true
     _ => false
   }

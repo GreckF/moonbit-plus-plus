@@ -868,6 +868,7 @@ fn infer_head(
 ) -> (Tm, Val, Int32) raise ElabError {
   match f {
     EVar(p, x) if !x.contains("::") && cxt.lookup(x) is Some(l) => {
+      check_stage(cxt.at(p), x, l)
       record_name(p, x, None, () => x + " : " + local_type(cxt, l))
       (Var(cxt.lvl - 1 - l), cxt.types[l], 0)
     }
@@ -902,6 +903,13 @@ fn elab_app(
   expl_args : Array[@parser.Expr]?,
   expected : Val?,
 ) -> (Tm, Val) raise ElabError {
+  // `code { e }` and `${ e }` (staging.mbt)
+  match (f, impl_args, expl_args) {
+    (EVar(_, "%quote"), None, Some([lam])) =>
+      return elab_quote(cxt, lam, expected)
+    (EVar(p, "%splice"), None, Some([x])) => return elab_splice(cxt, p, x)
+    _ => ()
+  }
   // `P(a, b)` builds the tuple struct `P`
   let f = match f {
     EVar(p, x) if expl_args is Some(_) &&

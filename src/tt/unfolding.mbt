@@ -102,7 +102,8 @@ fn unfold_closure(names : Array[String]) -> Map[String, Bool] {
 ///|
 /// May the global function `n` be unfolded here?
 fn can_unfold(n : String) -> Bool {
-  if unfold_modes.is_empty() && unfold_deps.is_empty() {
+  if unfold_everything.val ||
+    (unfold_modes.is_empty() && unfold_deps.is_empty()) {
     return true
   }
   can_unfold_in(n, [])

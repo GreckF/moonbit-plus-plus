@@ -24,11 +24,46 @@ fn mentions(e : @parser.Expr, x : String) -> Bool {
 }
 
 ///|
+/// Is the variable `x` used by the code `code { e }` when it runs, or does
+/// it escape in a splice of `e`? (A splice runs where the code is made.)
+fn code_mentions(e : @parser.Expr, x : String) -> Bool {
+  let saved = code_depth.val
+  code_depth.val = 0
+  let found = Ref::new(false)
+  mention_walk(e, x, found)
+  code_depth.val = saved
+  found.val
+}
+
+///|
+/// When not negative, `mention_walk` is in `code { }` (for `code_mentions`),
+/// that many `code { }` below the code asked about.
+let code_depth : Ref[Int32] = Ref::new(-1)
+
+///|
 fn mention_walk(e : @parser.Expr, x : String, found : Ref[Bool]) -> Unit {
   let walk = (y : @parser.Expr) => mention_walk(y, x, found)
   let walk_s = (st : @parser.Stmt) => mention_walk_s(st, x, found)
   match e {
     EVar(_, y) => if y == x { found.val = true }
+    // (see `code_mentions`)
+    EApp(_, EVar(_, "%quote"), None, Some([a])) if code_depth.val >= 0 => {
+      code_depth.val = code_depth.val + 1
+      walk(a)
+      code_depth.val = code_depth.val - 1
+    }
+    EApp(_, EVar(_, "%splice"), None, Some([a])) if code_depth.val > 0 => {
+      code_depth.val = code_depth.val - 1
+      walk(a)
+      code_depth.val = code_depth.val + 1
+    }
+    EApp(_, EVar(_, "%splice"), None, Some([a])) if code_depth.val == 0 => {
+      code_depth.val = -1
+      if escapes(a, x) {
+        found.val = true
+      }
+      code_depth.val = 0
+    }
     EApp(_, f, i, a) => {
       walk(f)
       for y in i.unwrap_or([]) {
@@ -250,6 +285,10 @@ fn elab_local_rec(
     gbody = Lam(cxt.names[k], Expl, k == n - 1, gbody)
   }
   ignore(fty_tm)
+  // its splices are those of the stage it is defined at (staging.mbt)
+  if cxt.stage != 0 {
+    lifted_stages.set(g, cxt.stage)
+  }
   lifted.push((owner, g, gty, gbody, n))
   (call, fty, Global(g))
 }

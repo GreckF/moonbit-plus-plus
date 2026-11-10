@@ -122,8 +122,10 @@ fn check_block(
       let t = match lhs {
         EVar(_, x) =>
           match cxt.lookup(x) {
-            Some(l) if cxt.muts[l] =>
+            Some(l) if cxt.muts[l] => {
+              check_stage(c, x, l)
               Assign(cxt.lvl - 1 - l, check(c, rhs, cxt.types[l]))
+            }
             _ => c.fail(x + " is not a mutable variable")
           }
         EApp(_, arr, Some([i]), None) =>

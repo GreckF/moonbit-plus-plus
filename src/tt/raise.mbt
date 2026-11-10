@@ -81,6 +81,8 @@ pub fn may_raise(v : Val) -> Bool {
         (global_raises(n) || call_raises(n, sp))
       ) ||
       sp_may_raise(sp)
+    // code that is not known yet may raise when it is run (staging.mbt)
+    VPrim(n, sp) if splice_may_raise(n, sp) => true
     VRigid(_, sp) | VFlex(_, sp) | VPrim(_, sp) => sp_may_raise(sp)
     VMatch(_, vs, cls, sp) =>
       vs.iter().any(may_raise) ||
@@ -105,6 +107,13 @@ fn tm_may_raise(t : Tm) -> Bool {
     App(_, _, _) => {
       let (h, args) = flatten_app(t)
       (h is Global(n) && args.length() >= global_arity(n) && global_raises(n)) ||
+      // a splice of code that raises (staging.mbt)
+      (
+        h is Global(n) &&
+        is_splice_prim(n) &&
+        args.length() >= 2 &&
+        args[0].0 is Raises(_, _)
+      ) ||
       // an effect polymorphic function given a lambda that raises
       (
         h is Global(n) &&

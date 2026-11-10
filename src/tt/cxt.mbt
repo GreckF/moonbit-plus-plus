@@ -33,6 +33,15 @@ pub(all) struct Cxt {
   arm_lams : Bool
   /// In the arm of a tail-resumptive operation: no `ctl` operation.
   in_fun_arm : Bool
+  /// The stage of the code being checked (see staging.mbt): `code { }`
+  /// raises it, `${ }` lowers it; a declaration is at stage 0.
+  stage : Int32
+  /// Where the stage changed: the variables from level `l` on (up to the
+  /// next mark) are bound at stage `s`, for each `(l, s)`.
+  stage_marks : Array[(Int32, Int32)]
+  /// In `code { }`: the context where the innermost one is written (its
+  /// splices that do not depend on the code are run there).
+  quote_cxt : Cxt?
 }
 
 ///|
@@ -54,6 +63,9 @@ pub fn empty_cxt(pos : Pos) -> Cxt {
     handled: [],
     arm_lams: false,
     in_fun_arm: false,
+    stage: 0,
+    stage_marks: [],
+    quote_cxt: None,
   }
 }
 
