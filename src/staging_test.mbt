@@ -779,6 +779,7 @@ fn demo_host() -> @tt.FfiHost {
         None
       }
     },
+    set_callback: _ => (),
     call: (name, args) => {
       match (name, args) {
         ("twice", "a1;i21;") => "oi42;"

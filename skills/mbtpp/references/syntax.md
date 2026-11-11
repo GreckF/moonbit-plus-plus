@@ -325,7 +325,8 @@ fn main {
   `let mut` 变量不能跨 `code { }`。
 - 效应：`code { }` 里不依赖其变量的拼接在代码生成时运行，效应属于生成器；函数里的拼接和用到代码
   变量的拼接必须是纯的。运行时有效应的代码是 `Code[T raise E]`、`Code[T!Eff]`。
-- 生成器不能用数组、`print` 和导入的 MoonBit 函数；`Code` 不能被匹配。
+- 生成器里可以用数组和 `print`（检查时输出）；导入的 MoonBit 函数由 moonpp 构建的驱动调用（要有 `moon`，
+  playground 不行），MoonBit 函数收到的函数参数会被回调；`Code` 不能被匹配。
 
 ## trait
 

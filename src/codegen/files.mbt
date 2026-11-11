@@ -79,8 +79,10 @@ fn Gen::value_ext(self : Gen, file : String) -> String {
   }
   let decl = StringBuilder::new()
   let dec = StringBuilder::new()
+  let mk = StringBuilder::new()
   decl.write_string("\n///|\nextenum Value += {\n")
   dec.write_string("\n///|\nfn init {\n  con_decoders.push(v => match v {\n")
+  mk.write_string("  con_makers.push((c, xs) => match c {\n")
   for c in cs {
     let (id, n) = self.ctors.get(c).unwrap()
     let xs : Array[String] = []
@@ -99,10 +101,28 @@ fn Gen::value_ext(self : Gen, file : String) -> String {
     dec.write_string(
       "    " + pat + " => Some((" + c.escape() + ", [" + xs.join(", ") + "]))\n",
     )
+    let make = if n == 0 {
+      id
+    } else {
+      id +
+      "(" +
+      Array::makei(n, k => "xs[" + k.to_string() + "]").join(", ") +
+      ")"
+    }
+    mk.write_string(
+      "    " +
+      c.escape() +
+      " => if xs.length() == " +
+      n.to_string() +
+      " { Some(" +
+      make +
+      ") } else { None }\n",
+    )
   }
   decl.write_string("}\n")
-  dec.write_string("    _ => None\n  })\n}\n")
-  decl.to_string() + dec.to_string()
+  dec.write_string("    _ => None\n  })\n")
+  mk.write_string("    _ => None\n  })\n}\n")
+  decl.to_string() + dec.to_string() + mk.to_string()
 }
 
 ///|

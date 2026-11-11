@@ -23,6 +23,8 @@
   - `staging.mbt`: staged metaprogramming (`code { e }`, `${ c }`, see
     [staging.md](staging.md)): stages, the hoisting of splices, and the
     expansion of the splices of stage 0 once a package is checked.
+  - `ffi.mbt`: calls of imported MoonBit functions by splices, through a
+    host (see [staging.md](staging.md)): the text of values, callbacks.
   - `prelude.mbt`: the prelude, written in MoonBit++.
 - `src/interp`: a tree-walking interpreter over elaborated core terms.
 - `src/codegen`: the compiler to MoonBit (see below).
@@ -70,6 +72,9 @@
   `#mbt` datatypes are the MoonBit types of their names, `#mbt` traits
   MoonBit traits; bounds become MoonBit bounds, method calls `Tr::m(..)`,
   and instances whose methods are typed become `impl`s.
+- `driver.mbt`: the driver of splices: the FFI wrappers of the imported
+  functions that splices call, with a `call` function that moonpp builds to
+  JavaScript and loads (`src/moonpp/driver.mbt`).
 - `export.mbt`: `#mbt` functions become public MoonBit functions calling
   their native translation; a body outside the fragment is a compile error
   naming the first term that is not native.

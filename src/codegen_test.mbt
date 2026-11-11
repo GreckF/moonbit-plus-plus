@@ -1110,3 +1110,52 @@ test "codegen: a variable alone is not a lambda body" {
   let code = @codegen.generate([]) catch { _ => abort("codegen failed") }
   inspect(code.contains("=> value_id(self"), content="true")
 }
+
+///|
+test "the driver of the splices has the imported functions" {
+  @tt.check_program(
+    "t.mbtpp",
+    (
+      #|fn twice(x : Int) -> Int = "@mbt:demo.twice"
+      #|fn[T] first(xs : Array[T]) -> T? = "@mbt:demo.first"
+      #|fn odd(f : (Int) -> Int) -> Int = "@mbt:demo.odd"
+      #|fn main { println(twice(1)) }
+    ),
+  ) catch {
+    @tt.CheckError(msg) => fail(msg)
+  }
+  let (files, skipped) = @codegen.generate_driver([("demo", "demo")], [
+    "twice", "first", "odd", "main",
+  ]) catch {
+    @codegen.CodegenError(msg) => fail(msg)
+  }
+  let names = files.map(f => f.0)
+  inspect(
+    names,
+    content=(
+      #|[t.mbt, mbtpp_prelude.mbt, mbtpp_imports.mbt, mbtpp_driver.mbt]
+    ),
+  )
+  let all = files.map(f => f.1).join("\n")
+  let table = all
+    .split("\n")
+    .filter(l => l.contains("ffi_table.set") || l.contains("ffi_why.set"))
+    .map(l => strip_counters(l.to_string()))
+  inspect(
+    table,
+    content=(
+      #|[  ffi_table.set("twice", ffi),   ffi_table.set("first", ffi),   ffi_table.set("odd", ffi)]
+    ),
+  )
+  inspect(
+    skipped,
+    content=(
+      #|[(main, main is not an imported function)]
+    ),
+  )
+  inspect(
+    all.contains("pub fn call(name : String, args : String) -> String"),
+    content="true",
+  )
+  inspect(all.contains("con_makers.push"), content="true")
+}

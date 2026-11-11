@@ -1330,10 +1330,12 @@ fn unstage_all() -> Unit raise ElabError {
               "cannot make the imported MoonBit functions of the splices callable: " +
               msg,
             )
-          None =>
+          None => {
+            (host.set_callback)(ffi_callback)
             for n in imported {
               ffi_ready.set(n, true)
             }
+          }
         }
       }
     }

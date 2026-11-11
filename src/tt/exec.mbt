@@ -609,3 +609,20 @@ fn needs_run(t : Tm) -> Bool {
     _ => contains_imperative(t)
   }
 }
+
+///|
+/// Run the function `f` of a splice on arguments, as the program would (it
+/// may have mutable state): its value, an error as `%raise`, or `None` if it
+/// cannot be run to the end. Used when MoonBit calls it back (ffi.mbt).
+fn run_callback(f : Val, args : Array[Val]) -> Val? {
+  let mut v = f
+  try {
+    for a in args {
+      v = xapply(v, a, Expl)
+    }
+    Some(force(v))
+  } catch {
+    Thrown(e) => Some(raise_val(e))
+    _ => None
+  }
+}

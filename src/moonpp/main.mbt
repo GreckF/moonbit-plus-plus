@@ -92,6 +92,8 @@ fn check_files(
     srcs.push((relative(f, cwd), src))
   }
   let imports = load_imports(dir)
+  // splices that call imported MoonBit functions (tt/ffi.mbt)
+  install_ffi_host(dir, imports)
   @tt.check_package(srcs, prelude=opts.prelude, imports~) catch {
     @tt.CheckError(msg) => die(msg)
   }

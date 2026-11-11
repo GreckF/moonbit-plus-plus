@@ -17,7 +17,8 @@ Kovács, *Staged Compilation with Two-Level Type Theory*（ICFP 2022）把分阶
 | 语义 | 去掉阶段标注后的程序（`${ code { e } }` 就是 `e`）；检查器按这个语义计算 |
 | 拼接的效应 | 不依赖所在代码的变量的拼接，在代码生成时运行，效应属于生成器；其余拼接必须是纯的 |
 | 运行时 | 代码是闭包；解释器和编译器都不需要求值器 |
-| 不做 | 对代码做模式匹配（`Code` 是抽象的）；编译期运行数组、`print`、导入的 MoonBit 函数 |
+| 生成器里的状态 | 数组是真的可变值，`print` 在检查时输出；导入的 MoonBit 函数由 moonpp 构建的驱动程序运行（第 6 节） |
+| 不做 | 对代码做模式匹配（`Code` 是抽象的） |
 
 ## 1. 动机
 
@@ -120,7 +121,35 @@ code { … ${a} … ${b} … }
 
 解释器和统一表示的代码生成各加三个原语。`Code[T]` 不是原生类型，使用它的函数按统一表示编译。
 
-## 6. 实现
+## 6. 生成器里的数组、`print` 与 MoonBit 函数
+
+展开拼接时（`unfold_everything`）求值器像程序一样运行：
+
+- 数组字面量每次求值产生一个新数组，`%array_*` 原语在饱和时直接操作它（`run_prim`）；`print`
+  追加到 `staging_output`（并输出）。语句的值（`Seq`、`let`）在这时被强制，调用按顺序发生；调用得到
+  的错误变成 `Thrown`，被生成器的 `try` 捕获。
+- 数组是值：`exec_call` 不再因为结果是数组而让调用保持折叠；放进代码时（`reify`）数组变成字面量。
+
+导入的 MoonBit 函数检查器没有定义。`FfiHost`（`src/tt/ffi.mbt`）是它与能运行 MoonBit 的一方之间的
+接口：`prepare(names)` 让这些函数可以调用，`call(name, args)` 调用，`set_callback` 给对方一个运行
+检查器的函数的入口。moonpp（JS 版）实现它（`src/moonpp/driver.mbt`）：
+
+1. 找出拼接可能调用的导入函数（从有拼接的定义能到达的 `@mbt:` 原语）；
+2. `@codegen.generate_driver` 生成一个 MoonBit 程序：这些函数的 FFI 包装（编译器用的那些，`ffi_fn`）、
+   运行时、和 `call`（`mbtpp_driver.mbt`）；
+3. 写成 `mbtpp_out/driver` 项目，`moon build --target js`，用 `require` 加载到 moonpp 进程里；
+4. 检查器把参数写成文本，调用 `call`，按函数的结果类型读回结果。
+
+值的文本（`src/tt/ffi.mbt` 与 `src/codegen/driver.mbt` 各有一份读写）：`u` 单位、`b0`/`b1`、`i<n>;`
+（`Int`）、`L`、`U`、`V`、`y`、`c`、`d`/`f`（浮点的位）、`n<数字>;`（`Nat`、`BigInt`）、`s<k>:`加 k 个字符
+（字符串）、`a<k>;` 加 k 个值（数组）、`k<m>:`构造子名`<k>;`加 k 个字段（数据类型）、`h<id>;`（MoonBit
+一侧保存的值）、`F<id>;<k>;`（检查器的函数，MoonBit 回调它）。构造子由运行时的 `con_makers` 按名字
+重建；结果的参数从函数的结果类型取。用自己的文本格式而不用 JSON，是为了不依赖核心库的 JSON API。
+
+驱动在进程内（JS 模块），同步调用，所以 MoonBit 保存的值（句柄）在多次调用之间保留，回调可以重入
+检查器。
+
+## 7. 实现
 
 - 语法：`code { e }` 解析为 `%quote(() => e)`，`${ e }` 解析为 `%splice(e)`；没有新的表面语法
   结点，也没有新的核心项结点。类型实参可以带效应（`Code[T raise E]`）。
@@ -131,9 +160,12 @@ code { … ${a} … ${b} … }
   η 规则；`may_raise` 认识可能抛错的拼接；检查期执行不把引用的内容当作副作用。
 - 打印：`code { }`、`${ }` 和语句（`let mut`、赋值、循环等），用于报错和展开结果。
 
-## 7. 限制
+## 8. 限制
 
-- 生成器在检查时运行，用的是检查器的求值器：数组、`print`、导入的 MoonBit 函数算不出来。
+- 导入的 MoonBit 函数只能在 moonpp 里调用（要有 `moon`，导入的包要能编译到 JS）；playground 和
+  `moonpp ide` 里这样的拼接算不出来（编辑器里会报错）。
+- 调用在求值到它时发生：有副作用的 MoonBit 函数要写成语句；被折叠的纯函数调用可能被求值多次。
+- 值的类型要能被编译器的 FFI 转换；有被擦除字段的数据类型不能传。
 - 依赖生成代码变量的拼接必须是纯的；所以用 `ctl` 效应做 let 插入（在生成的绑定下恢复）不行，
   用延续传递的写法可以（见测试 `generators with mutable state, and let insertion`）。
 - 不能检查代码的结构。

@@ -288,10 +288,71 @@ fn main {
 }
 ```
 
+## Arrays, `print` and MoonBit functions in generators
+
+A splice written in a function runs when the program is checked. What it runs is real: arrays are
+mutable values, `print` prints when the program is checked, and an array that is made is written
+into the code:
+
+```moonbit
+fn table(n : Int) -> Array[Int] {
+  let t : Array[Int] = []
+  for i = 0; i < n; i = i + 1 {
+    t.push(i * i)
+  }
+  t
+}
+
+// the array is made when the code is made: the code has [0, 1, 4, 9, 16][3]
+fn pick(i : Int) -> Code[Int] {
+  let t = table(5)
+  println("generating")
+  code { t[i] }
+}
+
+fn nine() -> Int {
+  ${ pick(3) }
+}
+
+fn main {
+  println(nine())
+}
+```
+
+An imported MoonBit function has no definition in the checker, only its type. When a splice written
+in a function calls one, moonpp compiles the imported functions to a MoonBit program
+(`mbtpp_out/driver`, or `_mbtpp_build/driver` for a single file), builds it to JavaScript with
+`moon`, loads it, and the checker calls it:
+
+```text
+// requires moonbitlang/core/math
+fn norm_code(x : Double, y : Double) -> Code[Double] {
+  let d = @math.hypot(x, y)     // computed by MoonBit when the code is made
+  code { d * 2.0 }
+}
+
+fn norm() -> Double {
+  ${ norm_code(3.0, 4.0) }       // once checked: 10.0
+}
+```
+
+- Numbers, strings, arrays and values of datatypes (`Option`, `Result`, tuples, `#mbt` types) are
+  passed by value. A value of a MoonBit type that has no definition here (a `Queue`, say) stays on
+  the MoonBit side: the checker holds a handle of it, which it can pass to later calls. A function
+  passed to a MoonBit function is called back by MoonBit, and runs in the checker.
+- `moon` is needed, and `moonpp` (`check`, `run`, `build`): the playground and the editor
+  (`moonpp ide`) cannot build the program, and there such a splice is reported as stuck. The
+  imported packages must compile to the JavaScript target.
+- A call happens when its evaluation is reached. Write MoonBit functions with effects as
+  statements (`q.push(x)`), not inside the arguments of a pure function.
+- The signature of a function must be one the compiler's FFI can convert (see
+  [Calling MoonBit Functions](../interop/ffi.md)); for the others, the reason is reported.
+
 ## Limitations
 
-- A splice written in a function is run by the type checker, so generators cannot use arrays,
-  `print` or imported MoonBit functions. When a splice cannot be computed, the error shows the
-  expression it is stuck on.
-- Code cannot be inspected or taken apart: a `Code[T]` can only be spliced and run.
+- Imported MoonBit functions can only be called in `moonpp` (which needs `moon`); in the playground
+  and in the editor, a splice that cannot be computed is an error showing the expression it is
+  stuck on.
+- Generators cannot use the variables of the generated code; code cannot be inspected or taken
+  apart: a `Code[T]` can only be spliced and run.
 - `Code[T]` uses the uniform representation in compiled programs.

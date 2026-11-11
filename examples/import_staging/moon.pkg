@@ -1,0 +1,6 @@
+import {
+  "moonbitlang/core/math",
+  "moonbitlang/core/queue",
+  "moonbitlang/core/array",
+  "moonbitlang/core/string" @str,
+}

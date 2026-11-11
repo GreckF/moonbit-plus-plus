@@ -18,7 +18,9 @@
 /// - `a<k>;` and `k` values: an array;
 /// - `k<m>:` and `m` characters, `<k>;` and `k` values: a constructor
 ///   (by its name) and its fields;
-/// - `h<id>;`: a value kept by the host.
+/// - `h<id>;`: a value kept by the host;
+/// - `F<id>;<k>;`: a function of the checker with `k` parameters (the host
+///   calls it back, see `ffi_callback`).
 ///
 /// A call is `call(name, arguments)` where `arguments` is `a<k>;` and the
 /// `k` arguments, one for each binder of the function (`u` for the ones
@@ -34,10 +36,19 @@ pub(all) struct FfiHost {
   /// Call an imported function (its global name) with the text of its
   /// arguments; the text of the answer.
   call : (String, String) -> String
+  /// Give the host the function that runs the functions of the checker it is
+  /// given (`F<id>;`): called with the number of the function and the text
+  /// of its arguments, it answers with the text of the result.
+  set_callback : ((Int32, String) -> String) -> Unit
 }
 
 ///|
 pub let ffi_host : Ref[FfiHost?] = Ref::new(None)
+
+///|
+/// The functions of the checker that the host was given, with the types of
+/// their parameters: the function and its type.
+let ffi_callbacks : Array[(Val, Val)] = []
 
 ///|
 /// The imported functions that the host can call.
@@ -50,6 +61,7 @@ pub let ffi_error : Ref[String?] = Ref::new(None)
 
 ///|
 fn reset_ffi() -> Unit {
+  ffi_callbacks.clear()
   ffi_ready.clear()
   ffi_error.val = None
 }
@@ -69,7 +81,7 @@ fn put_string(out : StringBuilder, s : String) -> Unit {
 ///|
 /// Write the value `v` (the checker's); `false` if it is not known yet (a
 /// variable, a call that is stuck, a function, ...).
-fn put_val(out : StringBuilder, v : Val) -> Bool {
+fn put_val(out : StringBuilder, v : Val, ty : Val?) -> Bool {
   if prelude_nat.val && nat_val(v) is Some(n) {
     out.write_string("n" + n.to_string() + ";")
     return true
@@ -95,12 +107,40 @@ fn put_val(out : StringBuilder, v : Val) -> Bool {
       }
     VArrLit(xs) => {
       out.write_string("a" + xs.length().to_string() + ";")
+      let elem = match ty {
+        Some(t) =>
+          match force(t) {
+            VData("Array", [(a, _)]) => Some(a)
+            _ => None
+          }
+        None => None
+      }
       for x in xs {
-        if !put_val(out, x) {
+        if !put_val(out, x, elem) {
           return false
         }
       }
     }
+    // a function: the host calls it back
+    VLam(_, _, _, _) as f =>
+      match ty {
+        Some(t) =>
+          match force(t) {
+            VPi(_, Expl, _, _, _) as pt => {
+              let n = group_params(pt)
+              ffi_callbacks.push((f, pt))
+              out.write_string(
+                "F" +
+                (ffi_callbacks.length() - 1).to_string() +
+                ";" +
+                n.to_string() +
+                ";",
+              )
+            }
+            _ => return false
+          }
+        None => return false
+      }
     VCon(c, sp) =>
       match con_info(c) {
         Some(ci) if sp.length() >= ci.nparams => {
@@ -112,7 +152,7 @@ fn put_val(out : StringBuilder, v : Val) -> Bool {
           }
           out.write_string(own.length().to_string() + ";")
           for a in own {
-            if !put_val(out, a.0) {
+            if !put_val(out, a.0, None) {
               return false
             }
           }
@@ -357,9 +397,28 @@ fn run_ffi(n : String, sp : Spine) -> Val? {
   }
   let out = StringBuilder::new()
   out.write_string("a" + sp.length().to_string() + ";")
+  // the types of the parameters, for the functions among the arguments
+  let mut fty = match globals.get(n) {
+    Some(g) => Some(g.vty)
+    None => None
+  }
   for a in sp {
+    let dom = match fty {
+      Some(t) =>
+        match force(t) {
+          VPi(_, _, _, d, cl) => {
+            fty = Some(inst(cl, a.0))
+            Some(d)
+          }
+          _ => {
+            fty = None
+            None
+          }
+        }
+      None => None
+    }
     if a.1 == Expl {
-      if !put_val(out, a.0) {
+      if !put_val(out, a.0, dom) {
         return None
       }
     } else {
@@ -480,5 +539,82 @@ fn collect_pattern_globals(ps : Array[CPat], out : Map[String, Bool]) -> Unit {
       }
       _ => ()
     }
+  }
+}
+
+///|
+/// The number of explicit parameters of the argument group at the head of
+/// the function type `t`.
+fn group_params(t : Val) -> Int32 {
+  let mut n = 0
+  let mut cur = force(t)
+  let mut lvl = 0
+  while cur is VPi(_, Expl, g, _, cl) {
+    if n > 0 && g {
+      break
+    }
+    n = n + 1
+    cur = force(inst(cl, v_var(lvl)))
+    lvl = lvl + 1
+  }
+  n
+}
+
+///|
+/// A function of the checker that the host calls: `id` is the number it was
+/// given, `args` the text of the arguments (`a<k>;` and the values). The text
+/// of the answer: `o` and the value, `r` and an error raised, or `e` and a
+/// message.
+pub fn ffi_callback(id : Int32, args : String) -> String {
+  let fail = (msg : String) => {
+    let out = StringBuilder::new()
+    out.write_string("e")
+    put_string(out, msg)
+    out.to_string()
+  }
+  if id < 0 || id >= ffi_callbacks.length() {
+    return fail("no such function of the checker")
+  }
+  let (f, fty) = ffi_callbacks[id]
+  let r : Reader = { cs: args.iter().collect(), pos: 0, }
+  let vals : Array[Val] = []
+  try {
+    ignore(r.next())
+    let k = r.int(';')
+    let mut t = fty
+    for _ in 0..<k {
+      match force(t) {
+        VPi(_, Expl, _, a, cl) => {
+          let v = get_val(r, a)
+          vals.push(v)
+          t = inst(cl, v)
+        }
+        _ => raise ReadFail
+      }
+    }
+  } catch {
+    _ => return fail("cannot read the arguments of a function of the checker")
+  }
+  let res = run_callback(f, vals)
+  let out = StringBuilder::new()
+  match res {
+    Some(VPrim("%raise", [(e, _), ..])) => {
+      out.write_string("r")
+      let msg = match force(e) {
+        VLit(LStr(s)) => s
+        _ => "an error"
+      }
+      put_string(out, msg)
+      out.to_string()
+    }
+    Some(v) => {
+      out.write_string("o")
+      if put_val(out, v, None) {
+        out.to_string()
+      } else {
+        fail("the result of a function of the checker is not known yet")
+      }
+    }
+    None => fail("a function of the checker could not be run")
   }
 }

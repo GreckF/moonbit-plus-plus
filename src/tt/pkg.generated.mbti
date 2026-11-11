@@ -51,6 +51,8 @@ pub fn eval(Array[Val], Tm) -> Val
 
 pub let external_instances : Array[String]
 
+pub fn ffi_callback(Int32, String) -> String
+
 pub let ffi_error : @ref.Ref[String?]
 
 pub let ffi_host : @ref.Ref[FfiHost?]
@@ -314,6 +316,7 @@ pub(all) struct DataInfo {
 pub(all) struct FfiHost {
   prepare : (Array[String]) -> String?
   call : (String, String) -> String
+  set_callback : ((Int32, String) -> String) -> Unit
 }
 
 pub(all) struct GEntry {

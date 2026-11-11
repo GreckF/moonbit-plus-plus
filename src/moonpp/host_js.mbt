@@ -74,3 +74,44 @@ extern "js" fn set_exit_code(code : Int32) -> Unit =
   #|  if (parentPort) { parentPort.postMessage({ exitCode: code }); }
   #|  else { process.exitCode = code; }
   #|}
+
+///|
+/// Load the driver of the splices (a CommonJS module built by `moon build
+/// --target js`, see driver.mbt), replacing the one loaded before.
+extern "js" fn js_load_driver(path : String) -> Unit =
+  #|(p) => {
+  #|  const full = require("path").resolve(p);
+  #|  delete require.cache[require.resolve(full)];
+  #|  globalThis.__mbtpp_driver = require(full);
+  #|}
+
+///|
+extern "js" fn js_driver_call(name : String, args : String) -> String =
+  #|(n, a) => {
+  #|  try {
+  #|    return globalThis.__mbtpp_driver.call(n, a);
+  #|  } catch (e) {
+  #|    const m = String((e && e.message) || e);
+  #|    return "e" + Array.from(m).length + ":" + m;
+  #|  }
+  #|}
+
+///|
+/// The function that the driver calls to run a function of the checker.
+extern "js" fn js_set_callback(f : (Int32, String) -> String) -> Unit =
+  #|(f) => { globalThis.__mbtpp_callback = f; }
+
+///|
+fn set_driver_callback(f : (Int32, String) -> String) -> Unit {
+  js_set_callback(f)
+}
+
+///|
+fn load_driver(path : String) -> Unit {
+  js_load_driver(path)
+}
+
+///|
+fn driver_call(name : String, args : String) -> String {
+  js_driver_call(name, args)
+}

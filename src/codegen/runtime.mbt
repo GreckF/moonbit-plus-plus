@@ -38,6 +38,10 @@ let runtime_src : String =
   #|/// The name and fields of a constructor value, by generated file.
   #|let con_decoders : Array[(Value) -> (String, Array[Value])?] = []
   #|
+  #|/// The constructors by name: the value of a constructor and its fields,
+  #|/// if the program has it (used by the driver of the splices).
+  #|let con_makers : Array[(String, Array[Value]) -> Value?] = []
+  #|
   #|fn con_decode(v : Value) -> (String, Array[Value])? {
   #|  match v {
   #|    VDyn(c, xs) => return Some((c, xs))

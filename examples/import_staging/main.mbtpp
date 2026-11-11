@@ -1,0 +1,61 @@
+// MoonBit functions in generators. A splice runs when the program is checked
+// and the checker has only the types of imported functions, so moonpp builds
+// a MoonBit program with them (in mbtpp_out/driver, or _mbtpp_build/driver
+// for a single file) and the checker calls it. Needs `moon`: `moonpp run`
+// and `moonpp check` do this, the playground cannot.
+
+// numbers computed by MoonBit when the code is made
+fn norm_code(x : Double, y : Double) -> Code[Double] {
+  let d = @math.hypot(x, y)
+  code { d * 2.0 }
+}
+
+fn norm() -> Double {
+  ${ norm_code(3.0, 4.0) }
+}
+
+// functions that return `Result`, `Option`, arrays: data cross as they are
+fn hex_code(s : String) -> Code[Int] {
+  match try? @str.parse_int(s, base=16) {
+    Ok(v) => code { v + 1 }
+    Err(_) => code { 0 }
+  }
+}
+
+fn hex() -> Int {
+  ${ hex_code("ff") }
+}
+
+// a value MoonBit keeps (a queue), used by several calls
+fn queue_code(n : Int) -> Code[Int] {
+  let q : @queue.Queue[Int] = @queue.Queue::new()
+  q.push(n)
+  q.push(n * 2)
+  let size = q.length()
+  let first = match q.pop() {
+    Some(x) => x
+    None => -1
+  }
+  code { size * 100 + first }
+}
+
+fn queue() -> Int {
+  ${ queue_code(21) }
+}
+
+// MoonBit calls back a function written in MoonBit++
+fn zip_code() -> Code[Array[Int]] {
+  let xs = @array.zip_with([1, 2, 3], [10, 20, 30], fn(a, b) { a * b + 1 })
+  code { xs }
+}
+
+fn zipped() -> Array[Int] {
+  ${ zip_code() }
+}
+
+fn main {
+  println(norm())
+  println(hex())
+  println(queue())
+  println(zipped())
+}

@@ -4,6 +4,8 @@ package "username/mbtpp/codegen"
 // Values
 pub fn generate(Array[(String, String)]) -> String raise CodegenError
 
+pub fn generate_driver(Array[(String, String)], Array[String]) -> (Array[(String, String)], Array[(String, String)]) raise CodegenError
+
 pub fn generate_files(Array[(String, String)]) -> Array[(String, String)] raise CodegenError
 
 pub fn native_fns(Array[(String, String)], Array[String]) -> Array[String]

@@ -80,8 +80,9 @@ moonpp run main.mbtpp      # 解释执行
   `unfold f`；报错的 `hint:` 行会提示。
 - **分阶段元编程**：`code { e }` 是 `e` 的代码（`Code[T]`），`${ c }` 拼接代码；写在函数里的拼接
   在检查时运行并被生成的代码替换。拼接里不能用运行时才知道的变量（报
-  `x is not known when this splice runs`，把它放进 `code { }`）；生成器不能用数组、`print` 和导入的
-  函数；`let mut` 变量不能跨 `code { }`，先 `let` 复制；运行时用 `c.run()`。
+  `x is not known when this splice runs`，把它放进 `code { }`）；生成器里数组和 `print` 可以用，导入的
+  MoonBit 函数在 `moonpp`（要有 `moon`）里可以调用（playground 和编辑器不行）；`let mut` 变量不能跨
+  `code { }`，先 `let` 复制；运行时用 `c.run()`。
 - **跨文件计算**：同一个包的文件按文件名字典序检查，证明要计算另一个文件中的函数时，用
   `moon.pkg` 的 `options("mbtpp-order": [ "x.mbtpp" ])` 让那个文件先检查（报错会给出 hint）。
 - **`catch` 写在同一行**：`e catch { … }`；`raise Empty === x` 解析为 `raise (Empty === x)`，

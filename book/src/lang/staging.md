@@ -280,9 +280,65 @@ fn main {
 }
 ```
 
+## 在生成器中使用数组、`print` 和 MoonBit 函数
+
+写在函数里的拼接在检查程序时运行。运行时的状态是真的：数组是可变的值，`print` 在检查时输出，
+生成的数组被写进代码里：
+
+```moonbit
+fn table(n : Int) -> Array[Int] {
+  let t : Array[Int] = []
+  for i = 0; i < n; i = i + 1 {
+    t.push(i * i)
+  }
+  t
+}
+
+// 数组在生成代码时算好，代码里是 [0, 1, 4, 9, 16][3]
+fn pick(i : Int) -> Code[Int] {
+  let t = table(5)
+  println("generating")
+  code { t[i] }
+}
+
+fn nine() -> Int {
+  ${ pick(3) }
+}
+
+fn main {
+  println(nine())
+}
+```
+
+导入的 MoonBit 函数在检查器里没有定义，只有类型。写在函数里的拼接调用它们时，moonpp 会把这些函数
+编译成一个 MoonBit 程序（`mbtpp_out/driver`，单个文件时是 `_mbtpp_build/driver`），用 `moon` 编成
+JavaScript 并加载，检查器通过它调用：
+
+```text
+// requires moonbitlang/core/math
+fn norm_code(x : Double, y : Double) -> Code[Double] {
+  let d = @math.hypot(x, y)     // 由 MoonBit 在生成代码时计算
+  code { d * 2.0 }
+}
+
+fn norm() -> Double {
+  ${ norm_code(3.0, 4.0) }       // 检查后：10.0
+}
+```
+
+- 数、字符串、数组、数据类型的值（`Option`、`Result`、元组、`#mbt` 类型）按值传递；MoonBit 里
+  没有定义的类型（`Queue` 之类）的值留在 MoonBit 一侧，检查器拿着它的句柄，可以传给后面的调用；
+  传给 MoonBit 的函数会被 MoonBit 回调，回调在检查器里运行。
+- 要有 `moon` 命令，要用 `moonpp`（`check`、`run`、`build`）：playground 和编辑器（`moonpp ide`）
+  不能构建这个程序，那里这样的拼接会报告“算不出来”。导入的包要能编译到 JavaScript 目标。
+- 调用在求值到它时发生。有副作用的 MoonBit 函数请写成语句（`q.push(x)`），不要放在
+  纯函数的参数里。
+- 函数的签名要能被编译器的 FFI 转换（见[调用 MoonBit 函数](../interop/ffi.md)）；不能的函数
+  报告原因。
+
 ## 限制
 
-- 写在函数里的拼接由类型检查器运行，所以生成器不能使用数组、`print` 和导入的 MoonBit 函数。
+- 导入的 MoonBit 函数只能在 `moonpp` 里调用（需要 `moon`），playground 和编辑器里的拼接
   算不出来时会报错，并显示卡住的表达式。
-- 不能检查或拆开一段代码：`Code[T]` 只能被拼接和运行。
+- 生成器不能使用生成代码的变量；不能检查或拆开一段代码：`Code[T]` 只能被拼接和运行。
 - `Code[T]` 在编译后的程序里使用统一表示。
