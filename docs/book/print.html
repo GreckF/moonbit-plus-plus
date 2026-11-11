@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c4ba95e6.js";
+            window.path_to_searchindex_js = "searchindex-92fe1f69.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-8396c56b.js"></script>
@@ -2454,11 +2454,61 @@ fn main {
   try { println(f(8)) } catch { DivError(m) =&gt; println(m) }
 }
 </code></pre>
+<h2 id="在生成器中使用数组print-和-moonbit-函数"><a class="header" href="#在生成器中使用数组print-和-moonbit-函数">在生成器中使用数组、<code>print</code> 和 MoonBit 函数</a></h2>
+<p>写在函数里的拼接在检查程序时运行。运行时的状态是真的：数组是可变的值，<code>print</code> 在检查时输出，
+生成的数组被写进代码里：</p>
+<pre><code class="language-moonbit">fn table(n : Int) -&gt; Array[Int] {
+  let t : Array[Int] = []
+  for i = 0; i &lt; n; i = i + 1 {
+    t.push(i * i)
+  }
+  t
+}
+
+// 数组在生成代码时算好，代码里是 [0, 1, 4, 9, 16][3]
+fn pick(i : Int) -&gt; Code[Int] {
+  let t = table(5)
+  println("generating")
+  code { t[i] }
+}
+
+fn nine() -&gt; Int {
+  ${ pick(3) }
+}
+
+fn main {
+  println(nine())
+}
+</code></pre>
+<p>导入的 MoonBit 函数在检查器里没有定义，只有类型。写在函数里的拼接调用它们时，moonpp 会把这些函数
+编译成一个 MoonBit 程序（<code>mbtpp_out/driver</code>，单个文件时是 <code>_mbtpp_build/driver</code>），用 <code>moon</code> 编成
+JavaScript 并加载，检查器通过它调用：</p>
+<pre><code class="language-text">// requires moonbitlang/core/math
+fn norm_code(x : Double, y : Double) -&gt; Code[Double] {
+  let d = @math.hypot(x, y)     // 由 MoonBit 在生成代码时计算
+  code { d * 2.0 }
+}
+
+fn norm() -&gt; Double {
+  ${ norm_code(3.0, 4.0) }       // 检查后：10.0
+}
+</code></pre>
+<ul>
+<li>数、字符串、数组、数据类型的值（<code>Option</code>、<code>Result</code>、元组、<code>#mbt</code> 类型）按值传递；MoonBit 里
+没有定义的类型（<code>Queue</code> 之类）的值留在 MoonBit 一侧，检查器拿着它的句柄，可以传给后面的调用；
+传给 MoonBit 的函数会被 MoonBit 回调，回调在检查器里运行。</li>
+<li>要有 <code>moon</code> 命令，要用 <code>moonpp</code>（<code>check</code>、<code>run</code>、<code>build</code>）：playground 和编辑器（<code>moonpp ide</code>）
+不能构建这个程序，那里这样的拼接会报告“算不出来”。导入的包要能编译到 JavaScript 目标。</li>
+<li>调用在求值到它时发生。有副作用的 MoonBit 函数请写成语句（<code>q.push(x)</code>），不要放在
+纯函数的参数里。</li>
+<li>函数的签名要能被编译器的 FFI 转换（见<a href="#调用-moonbit-函数">调用 MoonBit 函数</a>）；不能的函数
+报告原因。</li>
+</ul>
 <h2 id="限制-1"><a class="header" href="#限制-1">限制</a></h2>
 <ul>
-<li>写在函数里的拼接由类型检查器运行，所以生成器不能使用数组、<code>print</code> 和导入的 MoonBit 函数。
+<li>导入的 MoonBit 函数只能在 <code>moonpp</code> 里调用（需要 <code>moon</code>），playground 和编辑器里的拼接
 算不出来时会报错，并显示卡住的表达式。</li>
-<li>不能检查或拆开一段代码：<code>Code[T]</code> 只能被拼接和运行。</li>
+<li>生成器不能使用生成代码的变量；不能检查或拆开一段代码：<code>Code[T]</code> 只能被拼接和运行。</li>
 <li><code>Code[T]</code> 在编译后的程序里使用统一表示。</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2519,7 +2569,7 @@ fn main {
 </ul>
 <h2 id="安装发布版"><a class="header" href="#安装发布版">安装发布版</a></h2>
 <p><a href="https://github.com/GreckF/mbtpp/releases">Releases</a> 页面的每个版本都附有 npm 包：</p>
-<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.7.1/moonpp-0.7.1.tgz
+<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.8.0/moonpp-0.8.0.tgz
 moonpp version
 </code></pre>
 <p>推送 <code>v*</code> tag 时，GitHub Actions 会测试、构建并发布（<code>.github/workflows/release.yml</code>）。</p>
@@ -3262,8 +3312,8 @@ MoonBit 的 <code>Map</code>、<code>HashMap</code>：参数或返回值是 Moon
 <li>没有 <code>BigInt</code> 字面量（<code>1N</code>）、<code>Int16</code>、<code>UInt16</code>；导入的 <code>@bigint</code> 中与 Prelude 同名的 <code>BigInt</code> 方法（如带
 <code>radix?</code> 的 <code>to_string</code>）被 Prelude 的取代；<code>Float</code> 的方法只有运算、比较和转换。</li>
 <li>类型检查时执行非纯函数时，用到数组、导入函数或捕获 <code>let mut</code> 的 lambda 的调用不执行（见<a href="#可变状态与循环">可变状态与循环</a>）。</li>
-<li>分阶段元编程的限制见<a href="#限制-1">分阶段元编程</a>：写在函数里的拼接由检查器运行，生成器不能用
-数组、<code>print</code> 和导入的函数；用到所在代码变量的拼接不能有效应；生成代码里嵌套在另一个局部递归函数中的
+<li>分阶段元编程的限制见<a href="#限制-1">分阶段元编程</a>：导入的 MoonBit 函数只能在 <code>moonpp</code> 里
+（需要 <code>moon</code>）在生成器中调用；用到所在代码变量的拼接不能有效应；生成代码里嵌套在另一个局部递归函数中的
 局部递归函数不会被特化（它的拼接留到运行时）。</li>
 <li>检查时限按实际时间计算，同一个文件在较慢的机器上可能超时（见<a href="#检查时限">检查时限</a>）。</li>
 </ul>

@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-fed82a95.js";
+            window.path_to_searchindex_js = "searchindex-26bc45d0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f32828f8.js"></script>
@@ -207,7 +207,7 @@ taking or returning those MoonBit types cannot be called.</li>
 named like the Prelude’s <code>BigInt</code> methods (<code>to_string</code> with <code>radix?</code>) give way to the Prelude’s; <code>Float</code> only has its operators,
 comparisons and conversions.</li>
 <li>When functions with mutable state are run during type checking, calls that use arrays, imported functions or lambdas capturing <code>let mut</code> variables are not run (see <a href="lang/mutation.html">Mutable State and Loops</a>).</li>
-<li>The limitations of staged metaprogramming are in <a href="lang/staging.html#limitations">Staged Metaprogramming</a>: a splice written in a function is run by the checker, so generators cannot use arrays, <code>print</code> or imported functions; a splice that uses the variables of the code it is in cannot have effects; in generated code, a recursive local function nested in another one is not specialized (its splices are left for run time).</li>
+<li>The limitations of staged metaprogramming are in <a href="lang/staging.html#limitations">Staged Metaprogramming</a>: imported MoonBit functions can only be called from generators in <code>moonpp</code> (which needs <code>moon</code>); a splice that uses the variables of the code it is in cannot have effects; in generated code, a recursive local function nested in another one is not specialized (its splices are left for run time).</li>
 <li>Time limits are measured in wall-clock time, so a file may time out on a slower machine (see <a href="lang/type-level.html#time-limits">Time limits</a>).</li>
 </ul>
 <h2 id="imports"><a class="header" href="#imports">Imports</a></h2>

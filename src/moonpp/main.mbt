@@ -37,7 +37,7 @@ let help_msg : String =
   #|checked by the interpreter, and called by the compiled program.
 
 ///|
-let version : String = "moonpp 0.7.1"
+let version : String = "moonpp 0.8.0"
 
 ///|
 /// Line-buffered output.

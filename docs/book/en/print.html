@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-fed82a95.js";
+            window.path_to_searchindex_js = "searchindex-26bc45d0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f32828f8.js"></script>
@@ -2567,12 +2567,67 @@ fn main {
   try { println(f(8)) } catch { DivError(m) =&gt; println(m) }
 }
 </code></pre>
+<h2 id="arrays-print-and-moonbit-functions-in-generators"><a class="header" href="#arrays-print-and-moonbit-functions-in-generators">Arrays, <code>print</code> and MoonBit functions in generators</a></h2>
+<p>A splice written in a function runs when the program is checked. What it runs is real: arrays are
+mutable values, <code>print</code> prints when the program is checked, and an array that is made is written
+into the code:</p>
+<pre><code class="language-moonbit">fn table(n : Int) -&gt; Array[Int] {
+  let t : Array[Int] = []
+  for i = 0; i &lt; n; i = i + 1 {
+    t.push(i * i)
+  }
+  t
+}
+
+// the array is made when the code is made: the code has [0, 1, 4, 9, 16][3]
+fn pick(i : Int) -&gt; Code[Int] {
+  let t = table(5)
+  println("generating")
+  code { t[i] }
+}
+
+fn nine() -&gt; Int {
+  ${ pick(3) }
+}
+
+fn main {
+  println(nine())
+}
+</code></pre>
+<p>An imported MoonBit function has no definition in the checker, only its type. When a splice written
+in a function calls one, moonpp compiles the imported functions to a MoonBit program
+(<code>mbtpp_out/driver</code>, or <code>_mbtpp_build/driver</code> for a single file), builds it to JavaScript with
+<code>moon</code>, loads it, and the checker calls it:</p>
+<pre><code class="language-text">// requires moonbitlang/core/math
+fn norm_code(x : Double, y : Double) -&gt; Code[Double] {
+  let d = @math.hypot(x, y)     // computed by MoonBit when the code is made
+  code { d * 2.0 }
+}
+
+fn norm() -&gt; Double {
+  ${ norm_code(3.0, 4.0) }       // once checked: 10.0
+}
+</code></pre>
+<ul>
+<li>Numbers, strings, arrays and values of datatypes (<code>Option</code>, <code>Result</code>, tuples, <code>#mbt</code> types) are
+passed by value. A value of a MoonBit type that has no definition here (a <code>Queue</code>, say) stays on
+the MoonBit side: the checker holds a handle of it, which it can pass to later calls. A function
+passed to a MoonBit function is called back by MoonBit, and runs in the checker.</li>
+<li><code>moon</code> is needed, and <code>moonpp</code> (<code>check</code>, <code>run</code>, <code>build</code>): the playground and the editor
+(<code>moonpp ide</code>) cannot build the program, and there such a splice is reported as stuck. The
+imported packages must compile to the JavaScript target.</li>
+<li>A call happens when its evaluation is reached. Write MoonBit functions with effects as
+statements (<code>q.push(x)</code>), not inside the arguments of a pure function.</li>
+<li>The signature of a function must be one the compiler’s FFI can convert (see
+<a href="#calling-moonbit-functions">Calling MoonBit Functions</a>); for the others, the reason is reported.</li>
+</ul>
 <h2 id="limitations-1"><a class="header" href="#limitations-1">Limitations</a></h2>
 <ul>
-<li>A splice written in a function is run by the type checker, so generators cannot use arrays,
-<code>print</code> or imported MoonBit functions. When a splice cannot be computed, the error shows the
-expression it is stuck on.</li>
-<li>Code cannot be inspected or taken apart: a <code>Code[T]</code> can only be spliced and run.</li>
+<li>Imported MoonBit functions can only be called in <code>moonpp</code> (which needs <code>moon</code>); in the playground
+and in the editor, a splice that cannot be computed is an error showing the expression it is
+stuck on.</li>
+<li>Generators cannot use the variables of the generated code; code cannot be inspected or taken
+apart: a <code>Code[T]</code> can only be spliced and run.</li>
 <li><code>Code[T]</code> uses the uniform representation in compiled programs.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2636,7 +2691,7 @@ say).</p>
 <h2 id="installing-a-release"><a class="header" href="#installing-a-release">Installing a release</a></h2>
 <p>Every version on the <a href="https://github.com/GreckF/mbtpp/releases">Releases</a> page comes with an npm
 package:</p>
-<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.7.1/moonpp-0.7.1.tgz
+<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.8.0/moonpp-0.8.0.tgz
 moonpp version
 </code></pre>
 <p>Pushing a <code>v*</code> tag makes GitHub Actions test, build, and publish a release
@@ -3434,7 +3489,7 @@ taking or returning those MoonBit types cannot be called.</li>
 named like the Prelude’s <code>BigInt</code> methods (<code>to_string</code> with <code>radix?</code>) give way to the Prelude’s; <code>Float</code> only has its operators,
 comparisons and conversions.</li>
 <li>When functions with mutable state are run during type checking, calls that use arrays, imported functions or lambdas capturing <code>let mut</code> variables are not run (see <a href="#mutable-state-and-loops">Mutable State and Loops</a>).</li>
-<li>The limitations of staged metaprogramming are in <a href="#limitations-1">Staged Metaprogramming</a>: a splice written in a function is run by the checker, so generators cannot use arrays, <code>print</code> or imported functions; a splice that uses the variables of the code it is in cannot have effects; in generated code, a recursive local function nested in another one is not specialized (its splices are left for run time).</li>
+<li>The limitations of staged metaprogramming are in <a href="#limitations-1">Staged Metaprogramming</a>: imported MoonBit functions can only be called from generators in <code>moonpp</code> (which needs <code>moon</code>); a splice that uses the variables of the code it is in cannot have effects; in generated code, a recursive local function nested in another one is not specialized (its splices are left for run time).</li>
 <li>Time limits are measured in wall-clock time, so a file may time out on a slower machine (see <a href="#time-limits">Time limits</a>).</li>
 </ul>
 <h2 id="imports"><a class="header" href="#imports">Imports</a></h2>
