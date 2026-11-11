@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3307130a.js";
+            window.path_to_searchindex_js = "searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-2f5a2ad3.js"></script>
+        <script src="toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,15 +191,19 @@
 <code>Some("x")</code>。</li>
 <li>泛型实例与更具体的实例重叠时（<code>impl[T] Tr for Array[T]</code> 和 <code>impl Tr for Array[Int]</code>），不报错，
 使用先找到的泛型实例；MoonBit 拒绝这样的程序。同一类型的同一方法实现两次会报错。</li>
-<li><code>Array</code> 和元组没有 <code>Compare</code> 实例；整数字面量不按期望类型重载（<code>let x : Int64 = 3</code> 要写 <code>3L</code>）。</li>
+<li><code>Array</code> 没有 <code>Compare</code> 实例；整数字面量不按期望类型重载（<code>let x : Int64 = 3</code> 要写 <code>3L</code>）。</li>
 <li>对证明（非子单例的 <code>Prop</code>）的匹配可以出现在结果是证明的地方，但分支中的副作用（输出、修改
 变量）在编译后的程序中不会发生，因为证明被擦除。</li>
 <li>比较运算符可以连写（<code>a == b == c</code> 按左结合解析），MoonBit 不允许。</li>
 <li>含数组模式的 <code>match</code> 不做覆盖检查，也不细化类型。</li>
-<li><code>Map</code> 是 Prelude 用 MoonBit++ 实现的（按插入顺序，查找是线性的），不是 MoonBit 的 <code>Map</code>：参数或返回值
-是 MoonBit <code>Map</code> 的导入函数不能调用。</li>
-<li>没有 <code>BigInt</code> 字面量（<code>1N</code>）、<code>Int16</code>、<code>UInt16</code>；<code>Float</code> 的方法只有运算、比较和转换。</li>
+<li><code>Map</code> 和 <code>HashMap</code> 是 Prelude 用 MoonBit++ 实现的（<code>Map</code> 的查找是线性的，大的表用 <code>HashMap</code>），不是
+MoonBit 的 <code>Map</code>、<code>HashMap</code>：参数或返回值是 MoonBit 的这些类型的导入函数不能调用。</li>
+<li>没有 <code>BigInt</code> 字面量（<code>1N</code>）、<code>Int16</code>、<code>UInt16</code>；导入的 <code>@bigint</code> 中与 Prelude 同名的 <code>BigInt</code> 方法（如带
+<code>radix?</code> 的 <code>to_string</code>）被 Prelude 的取代；<code>Float</code> 的方法只有运算、比较和转换。</li>
 <li>类型检查时执行非纯函数时，用到数组、导入函数或捕获 <code>let mut</code> 的 lambda 的调用不执行（见<a href="lang/mutation.html">可变状态与循环</a>）。</li>
+<li>分阶段元编程的限制见<a href="lang/staging.html#限制">分阶段元编程</a>：写在函数里的拼接由检查器运行，生成器不能用
+数组、<code>print</code> 和导入的函数；用到所在代码变量的拼接不能有效应；生成代码里嵌套在另一个局部递归函数中的
+局部递归函数不会被特化（它的拼接留到运行时）。</li>
 <li>检查时限按实际时间计算，同一个文件在较慢的机器上可能超时（见<a href="lang/type-level.html#检查时限">检查时限</a>）。</li>
 </ul>
 <h2 id="导入"><a class="header" href="#导入">导入</a></h2>
@@ -214,6 +218,8 @@
 <ul>
 <li><code>Hash</code> 的值在解释器和编译后的程序中不同（编译后用 MoonBit 的哈希）。</li>
 <li>统一表示与原生代码之间按值转换，频繁跨边界传递大型数据会慢。</li>
+<li>原生代码中的运行时错误（越界、除以零等）直接终止程序，不执行 <code>defer</code>；解释器和统一表示会先执行
+<code>defer</code>。</li>
 </ul>
 <h2 id="工具"><a class="header" href="#工具">工具</a></h2>
 <ul>

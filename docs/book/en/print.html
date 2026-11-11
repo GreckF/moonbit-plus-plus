@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-754cddce.js"></script>
+        <script src="toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -252,7 +252,7 @@ fn main {
 <tr><th>Literal</th><th>Examples</th><th>Type</th></tr>
 </thead>
 <tbody>
-<tr><td>Integer</td><td><code>0</code>, <code>42</code>, <code>1_000</code>, <code>-1</code>, <code>0xFF</code>, <code>0o17</code>, <code>0b1010</code></td><td><code>Int</code>; expands to <code>S(…S(Z))</code> when the expected type is <code>Nat</code></td></tr>
+<tr><td>Integer</td><td><code>0</code>, <code>42</code>, <code>1_000</code>, <code>-1</code>, <code>0xFF</code>, <code>0o17</code>, <code>0b1010</code></td><td><code>Int</code>; <code>S(…S(Z))</code> when the expected type is <code>Nat</code> (literals above 64 are <code>int_to_nat(n)</code>, unfolded one level at a time only as far as checking needs)</td></tr>
 <tr><td>Floating point</td><td><code>1.5</code>, <code>2.0</code>, <code>1e-7</code>, <code>2.5E3</code></td><td><code>Double</code></td></tr>
 <tr><td>Other integers</td><td><code>1L</code>, <code>1U</code>, <code>1UL</code>, <code>0xFFU</code></td><td><code>Int64</code>, <code>UInt</code>, <code>UInt64</code></td></tr>
 <tr><td>Single-precision float</td><td><code>1.5F</code></td><td><code>Float</code></td></tr>
@@ -643,6 +643,9 @@ fn main {
 <h2 id="using-constructors"><a class="header" href="#using-constructors">Using constructors</a></h2>
 <ul>
 <li>The data type’s parameters are always inferred; <code>[...]</code> supplies only the constructor’s own implicit parameters, e.g. <code>Cons[n](x, xs)</code>.</li>
+<li>When the expected type is known, it determines the implicit arguments before the arguments are
+checked: in <code>MkIsZ(Refl) : IsZ(Z)</code>, <code>n</code> is <code>Z</code> before <code>Refl : f(n) === Z</code> is checked (calls of
+functions too, when their result type does not depend on the explicit arguments).</li>
 <li>Constructors with the same name are disambiguated by the expected type, or you can write the full name <code>Vector::Cons</code>.</li>
 <li>An enum whose universe is <code>Prop</code> is a proposition, e.g. <code>Id</code> in the Prelude (see <a href="#propositional-equality">Propositional Equality</a>).</li>
 </ul>
@@ -963,7 +966,8 @@ lemma insert_length(x : Int, xs : List[Int]) -&gt; length(insert(x, xs)) === S(l
 <li>This is done only when the goal is a proposition; a <code>match</code> in an ordinary function is not
 affected.</li>
 <li>Literal patterns (<code>true</code>, <code>0</code>, <code>"a"</code>) refine the matched variable too: in the arm, the variable is
-that literal.</li>
+that literal. So does a literal sub-pattern of a constructor: in <code>MkSing(true, e)</code>, the field is
+<code>true</code> in the type of the later field <code>e</code>.</li>
 </ul>
 <h2 id="eliminating-prop"><a class="header" href="#eliminating-prop">Eliminating Prop</a></h2>
 <p>When matching on data in <code>Prop</code> (proofs), the result must also be in <code>Prop</code>: proofs are erased by
@@ -1109,7 +1113,8 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 <tr><td><code>Id::sym(p)</code></td><td>from <code>x === y</code> derive <code>y === x</code></td></tr>
 <tr><td><code>Id::trans(p, q)</code></td><td>from <code>x === y</code> and <code>y === z</code> derive <code>x === z</code></td></tr>
 <tr><td><code>Id::cong(f, p)</code></td><td>from <code>x === y</code> derive <code>f(x) === f(y)</code></td></tr>
-<tr><td><code>Id::subst(p, motive, px)</code></td><td>from <code>x === y</code> and <code>motive(x)</code> derive <code>motive(y)</code>; <code>motive</code> may return <code>Type</code></td></tr>
+<tr><td><code>Id::subst(p, motive, px)</code></td><td>from <code>x === y</code> and <code>motive(x)</code> derive <code>motive(y)</code>; <code>motive</code> returns <code>Type</code></td></tr>
+<tr><td><code>Id::subst_prop(p, motive, px)</code></td><td>the same, with a <code>motive</code> returning <code>Prop</code> (rewriting a proposition, e.g. <code>NatLe(a, b)</code> to <code>NatLe(a, c)</code>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -1122,6 +1127,87 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 </code></pre>
 <p><code>==</code> is not the same as <code>===</code>: <code>==</code> compares values, producing a <code>Bool</code> that can be computed at run
 time; <code>===</code> is a proposition.</p>
+<h2 id="decidable-equality"><a class="header" href="#decidable-equality">Decidable equality</a></h2>
+<p><code>a == b</code> being <code>true</code> does not give <code>a === b</code> in the logic. When a comparison should give a proof
+(certified caches, hash tables), use <code>deq</code>, whose result is a <code>Dec[a === b]</code>, as Lean’s <code>Decidable</code>:</p>
+<pre><code class="language-text">enum False : Prop {}               // the proposition without proofs
+fn Not(P : Prop) -&gt; Prop { (P) -&gt; False }
+fn[T] absurd(f : False) -&gt; T       // anything from a contradiction
+
+enum Dec[P : Prop] {
+  Yes(P)                           // a proof of the equality
+  No(Not(P))                       // a proof that it does not hold
+}
+</code></pre>
+<pre><code class="language-moonbit">enum Color {
+  Red
+  Rgb(Int, Int, Int)
+} derive(DecEq)
+
+// a lookup by key: when found, with a proof that the keys are equal
+fn[K : DecEq, V] find(k : K, xs : List[(K, V)]) -&gt; Option[V] {
+  match xs {
+    Nil =&gt; None
+    Cons((k2, v), rest) =&gt;
+      match DecEq::deq(k, k2) {
+        Yes(_) =&gt; Some(v)
+        No(_) =&gt; find(k, rest)
+      }
+  }
+}
+
+lemma three : Int::deq(3, 3) === Yes(Refl) = Refl
+
+fn main {
+  println(find(2, Cons((1, "one"), Cons((2, "two"), Nil))))
+  println(DecEq::deq(Rgb(1, 2, 3), Rgb(1, 2, 3)) is Yes(_))
+}
+</code></pre>
+<ul>
+<li><code>Int</code>, <code>Int64</code>, <code>UInt</code>, <code>UInt64</code>, <code>Byte</code>, <code>Char</code>, <code>String</code> and <code>BigInt</code> have <code>T::deq(a, b)</code>. Their
+<code>==</code> is structural equality, so a comparison proves the equality or that it does not hold: the
+axioms <code>T::eq_sound : (a == b) === true -&gt; a === b</code> and <code>T::ne_sound : (a == b) === false -&gt; Not(a === b)</code> say so; they are not computed during checking and are erased when compiling. <code>Double</code> has none: <code>0.0 == -0.0</code>, but they are different values.</li>
+<li>The <code>deq</code> of <code>Bool</code>, <code>Unit</code> and <code>Nat</code> are ordinary definitions (<code>Nat</code>’s compares integers at run
+time).</li>
+<li>The trait <code>DecEq : Eq</code> has the method <code>deq(a : Self, b : Self) -&gt; Dec[a === b]</code>. The types above
+have instances, and so do <code>Option</code>, <code>List</code>, pairs and triples of such types.</li>
+<li><code>derive(DecEq)</code> works on enums and structs: it compares the constructors, <code>deq</code>s the fields one by
+one, and matches their proofs with <code>Refl</code> to get the <code>Refl</code> of the whole value; otherwise the
+refutation of a field (or different constructors) refutes the whole. It also derives <code>Eq</code> (which
+<code>DecEq</code> needs).</li>
+<li><code>reflect(b)</code> has the type <code>Reflect(b)</code>, which is <code>IsTrue(b === true)</code> or <code>IsFalse(b === false)</code>:
+it gives the value of a Boolean expression together with a proof, in the arms of a match.</li>
+</ul>
+<p>With the refutation in <code>No</code>, functions defined with <code>deq</code> have properties provable on variables: the
+<code>No</code> arm of <code>deq(p, p)</code> is ruled out with <code>absurd</code>.</p>
+<pre><code class="language-moonbit">fn upd(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; (String) -&gt; Nat {
+  n =&gt; match String::deq(n, p) {
+    Yes(_) =&gt; m
+    No(_) =&gt; rho(n)
+  }
+}
+
+lemma upd_same(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; upd(rho, p, m)(p) === m {
+  match String::deq(p, p) {
+    Yes(_) =&gt; Refl
+    No(nope) =&gt; absurd(nope(Refl))
+  }
+}
+
+lemma upd_other(rho : (String) -&gt; Nat, p : String, q : String, m : Nat, ne : Not(q === p)) -&gt;
+  upd(rho, p, m)(q) === rho(q) {
+  match String::deq(q, p) {
+    Yes(e) =&gt; absurd(ne(e))
+    No(_) =&gt; Refl
+  }
+}
+</code></pre>
+<h2 id="pointer-equality"><a class="header" href="#pointer-equality">Pointer equality</a></h2>
+<p><code>physical_equal(a, b)</code> is MoonBit’s <code>physical_equal</code>: whether the values are the same object (when
+it is <code>false</code>, they may still be equal). <code>ptr_deq(a, b)</code> is a <code>Known[a === b]</code>: <code>Proved(proof)</code> for
+the same object, <code>Unknown</code> otherwise (different objects may still be equal); a fast path before a
+structural comparison. Neither is computed during checking, so they give no
+proofs there.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lemma"><a class="header" href="#lemma">lemma</a></h1>
 <p>A <code>lemma</code> is the same as a <code>fn</code>, except that its result is usually a proposition. There are two forms:</p>
@@ -1539,6 +1625,8 @@ fn main {
 <li><code>Compare</code>: by constructor, in declaration order, then by fields from left to right. <code>Compare</code>
 needs <code>Eq</code>, so write <code>derive(Eq, Compare)</code>.</li>
 <li><code>Hash</code>: the position of the constructor and the hashes of the fields.</li>
+<li><code>DecEq</code>: <code>deq</code> on the fields one by one, with a proof when equal (see <a href="#decidable-equality">Decidable
+equality</a>); it also derives <code>Eq</code>.</li>
 <li><code>ToJson</code>, <code>FromJson</code>, <code>Debug</code>: derived by MoonBit itself, so the type must be <code>#mbt</code>; the
 generated MoonBit declaration has <code>derive(ToJson, @json.FromJson, Debug)</code> and the MoonBit++
 instances call these MoonBit methods (so they run in compiled programs only). <code>FromJson</code> needs
@@ -2231,8 +2319,268 @@ search computed during type checking.</p>
 <li>Effects cannot be used across packages.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="staged-metaprogramming"><a class="header" href="#staged-metaprogramming">Staged Metaprogramming</a></h1>
+<p>With staged metaprogramming a program makes the code of another: <code>code { e }</code> is the code of the
+expression <code>e</code>, and <code>${ c }</code> puts the code <code>c</code> where it stands. A splice written in a function runs
+<strong>when the program is checked</strong> and is replaced by the code it makes, so what the generator computes
+is not left for run time.</p>
+<pre><code class="language-moonbit">// x to the power n: the recursion on n is done by the generator
+fn power(n : Nat, x : Code[Int]) -&gt; Code[Int] {
+  match n {
+    Z =&gt; code { 1 }
+    S(k) =&gt; code { ${x} * ${power(k, x)} }
+  }
+}
+
+// once checked, the definition of cube is x * (x * (x * 1))
+fn cube(x : Int) -&gt; Int {
+  ${ power(3, code { x }) }
+}
+
+lemma cube_2 : cube(2) === 8 = Refl
+
+fn main {
+  println(cube(3))
+}
+</code></pre>
+<ul>
+<li><code>Code[T]</code> is the type of code of type <code>T</code>.</li>
+<li><code>code { e }</code> has type <code>Code[T]</code>, where <code>T</code> is the type of <code>e</code>. <code>code</code> is not a keyword: it is a
+quotation only when <code>{</code> follows.</li>
+<li><code>${ c }</code> needs <code>c : Code[T]</code>, and has type <code>T</code>. When <code>c</code> is a variable it can be written <code>$c</code>.</li>
+</ul>
+<p>Compiled to MoonBit, <code>cube</code> is <code>x * (x * (x * 1))</code>: no loop, and no call of <code>power</code>.</p>
+<h2 id="stages"><a class="header" href="#stages">Stages</a></h2>
+<p>The code in <code>code { }</code> runs later, the code in <code>${ }</code> runs first. The checker gives every piece of
+code a stage: the body of a declaration is at stage 0, <code>code { }</code> adds one, <code>${ }</code> subtracts one. A
+variable cannot be used at a stage lower than the one it is bound at, where its value is not known
+yet:</p>
+<pre><code class="language-text">fn bad(n : Nat, x : Int) -&gt; Int {
+  ${ power(n, code { x }) }
+}
+// error: n is not known when this splice runs: it is a variable of the
+// generated code (it is bound at stage 0 and used at stage -1). Use it
+// inside `code { }`
+</code></pre>
+<p>The other way is always fine: a value the generator knows can be written in the code, whether it is
+a number, a string, a value of a datatype, a function or a trait instance.</p>
+<pre><code class="language-moonbit">enum Color { Red; Green } derive(Show)
+
+fn label(c : Color, prefix : String) -&gt; Code[String] {
+  code { prefix + c.to_string() }
+}
+
+// "is " + Green.to_string()
+fn green() -&gt; String {
+  ${ label(Green, "is ") }
+}
+
+fn main {
+  println(green())
+}
+</code></pre>
+<p>Types and proofs are erased, so they can be used at any stage. A <code>let mut</code> variable cannot be used
+across stages; copy it with <code>let</code> first.</p>
+<h2 id="generators"><a class="header" href="#generators">Generators</a></h2>
+<p>A generator is an ordinary function returning <code>Code[T]</code>: it can recurse, match, call other
+generators, and use <code>let mut</code> and loops. The code it makes can have loops and mutable variables too:</p>
+<pre><code class="language-moonbit">// the code of body(0), …, body(n - 1), in order
+fn repeat(n : Int, body : (Int) -&gt; Code[Unit]) -&gt; Code[Unit] {
+  if n == 0 { code { () } } else {
+    code { ${repeat(n - 1, body)}; ${body(n - 1)} }
+  }
+}
+
+// s = s + 0 * m; s = s + 1 * m; s = s + 2 * m
+fn weighted(m : Int) -&gt; Int {
+  let mut s = 0
+  ${ repeat(3, i =&gt; code { s = s + i * m }) }
+  s
+}
+
+// code accumulated in a mutable variable
+fn sum_code(n : Int, x : Code[Int]) -&gt; Code[Int] {
+  let mut acc = code { 0 }
+  for i = 0; i &lt; n; i = i + 1 {
+    let a = acc
+    acc = code { ${a} + ${x} * i }
+  }
+  acc
+}
+
+fn g(x : Int) -&gt; Int {
+  ${ sum_code(3, code { x }) }
+}
+
+fn main {
+  println(weighted(10))
+  println(g(10))
+}
+</code></pre>
+<p>Code that is spliced twice is computed twice. To compute it once, generate a <code>let</code>, and take the
+rest of the code as a function:</p>
+<pre><code class="language-moonbit">fn genlet(c : Code[Int], k : (Code[Int]) -&gt; Code[Int]) -&gt; Code[Int] {
+  code { let t = ${c}; ${ k(code { t }) } }
+}
+
+fn square_sum(a : Code[Int], b : Code[Int]) -&gt; Code[Int] {
+  genlet(code { ${a} + ${b} }, s =&gt; code { ${s} * ${s} })
+}
+
+// { let t = x + y; t * t }
+fn f(x : Int, y : Int) -&gt; Int {
+  ${ square_sum(code { x }, code { y }) }
+}
+
+fn main {
+  println(f(1, 2))
+}
+</code></pre>
+<h2 id="with-dependent-types"><a class="header" href="#with-dependent-types">With dependent types</a></h2>
+<p>A generator runs when the program is checked, so it can use what only the type checker knows. The
+evaluator of a typed expression language, once staged, is its compiler, and the code it makes has no
+run-time type tags:</p>
+<pre><code class="language-moonbit">enum Exp : [T] -&gt; Type {
+  IntLit(Int) : Exp[Int]
+  Arg : Exp[Int]
+  Add(Exp[Int], Exp[Int]) : Exp[Int]
+  Less(Exp[Int], Exp[Int]) : Exp[Bool]
+  If[T](Exp[Bool], Exp[T], Exp[T]) : Exp[T]
+}
+
+fn[T] Exp::compile(self : Exp[T], arg : Code[Int]) -&gt; Code[T] {
+  match self {
+    IntLit(n) =&gt; code { n }
+    Arg =&gt; arg
+    Add(l, r) =&gt; code { ${l.compile(arg)} + ${r.compile(arg)} }
+    Less(l, r) =&gt; code { ${l.compile(arg)} &lt; ${r.compile(arg)} }
+    If[_](c, t, f) =&gt;
+      code { if ${c.compile(arg)} { ${t.compile(arg)} } else { ${f.compile(arg)} } }
+  }
+}
+
+// if x &lt; 10 { x + 1 } else { 0 }
+fn step(x : Int) -&gt; Int {
+  ${ If(Less(Arg, IntLit(10)), Add(Arg, IntLit(1)), IntLit(0)).compile(code { x }) }
+}
+
+fn main {
+  println(step(3))
+  println(step(30))
+}
+</code></pre>
+<p>A vector whose length is known needs no loop, and no case for <code>Nil</code>:</p>
+<pre><code class="language-moonbit">enum Vector[T] : Nat -&gt; Type {
+  Nil : Vector[T](0)
+  Cons[n : Nat](T, Vector[T](n)) : Vector[T](S(n))
+}
+
+fn sum_n(n : Nat, v : Code[Vector[Int](n)]) -&gt; Code[Int] {
+  match n {
+    Z =&gt; code { 0 }
+    S(k) =&gt; code { match ${v} { Cons(h, t) =&gt; h + ${sum_n(k, code { t })} } }
+  }
+}
+
+fn sum3(v : Vector[Int](3)) -&gt; Int {
+  ${ sum_n(3, code { v }) }
+}
+
+fn main {
+  println(sum3(Cons(1, Cons(2, Cons(3, Nil)))))
+}
+</code></pre>
+<h2 id="what-code-means"><a class="header" href="#what-code-means">What code means</a></h2>
+<p>Without its <code>code { }</code> and <code>${ }</code>, a program has the same result. That is how the type checker
+computes: <code>${ code { e } }</code> is <code>e</code>, and <code>c.run()</code> is what <code>c</code> holds. So properties of generators and
+of generated functions can be proved:</p>
+<pre><code class="language-moonbit">fn inc(c : Code[Int]) -&gt; Code[Int] {
+  code { ${c} + 1 }
+}
+
+lemma inc_run(c : Code[Int]) -&gt; inc(c).run() === c.run() + 1 { Refl }
+
+lemma eta(c : Code[Int]) -&gt; code { ${c} } === c { Refl }
+</code></pre>
+<h2 id="making-code-at-run-time"><a class="header" href="#making-code-at-run-time">Making code at run time</a></h2>
+<p>Code can also be made at run time, and run with <code>run</code>. What the generator computes is then computed
+when the code is made, not again when it runs:</p>
+<pre><code class="language-moonbit">fn power(n : Nat, x : Code[Int]) -&gt; Code[Int] {
+  match n {
+    Z =&gt; code { 1 }
+    S(k) =&gt; code { ${x} * ${power(k, x)} }
+  }
+}
+
+fn main {
+  let n = 10
+  // the recursion on n happens here
+  let c = power(int_to_nat(n), code { 2 })
+  // only multiplications here
+  println(c.run())
+}
+</code></pre>
+<p>Code at run time is a closure, not MoonBit source, so it is slower than a splice written in a
+function (which is expanded to native code).</p>
+<h2 id="splices-and-effects"><a class="header" href="#splices-and-effects">Splices and effects</a></h2>
+<p>A splice <code>a</code> in <code>code { … ${a} … }</code> runs when that code is made, not when it runs. So the errors <code>a</code>
+raises and the effects it performs are those of the generator:</p>
+<pre><code class="language-moonbit">suberror TooBig { TooBig }
+
+fn small(n : Int) -&gt; Code[Int] raise TooBig {
+  if n &gt; 9 { raise TooBig }
+  code { n }
+}
+
+fn pair(a : Int, b : Int) -&gt; Code[Int] raise TooBig {
+  code { ${small(a)} * 10 + ${small(b)} }
+}
+
+fn main {
+  let c = try pair(1, 20) catch { TooBig =&gt; code { 0 } }
+  println(c.run())
+}
+</code></pre>
+<p>Two kinds of splices cannot have effects (they cannot <code>raise</code>, nor perform operations):</p>
+<ul>
+<li>a splice written in a function, outside of <code>code { }</code>: it runs when the program is checked;</li>
+<li>a splice that uses the variables of the code it is in, such as
+<code>code { (y : Int) =&gt; ${ f(code { y }) } }</code>: it can only run when the code does.</li>
+</ul>
+<p>Code that raises errors when it runs has type <code>Code[T raise E]</code>:</p>
+<pre><code class="language-moonbit">suberror DivError { DivError(String) }
+
+fn div(a : Int, b : Int) -&gt; Int raise DivError {
+  if b == 0 { raise DivError("div by zero") }
+  a / b
+}
+
+fn half_of(c : Code[Int]) -&gt; Code[Int raise DivError] {
+  code { div(${c}, 2) }
+}
+
+fn f(x : Int) -&gt; Int raise DivError {
+  ${ half_of(code { x }) }
+}
+
+fn main {
+  try { println(f(8)) } catch { DivError(m) =&gt; println(m) }
+}
+</code></pre>
+<h2 id="limitations-1"><a class="header" href="#limitations-1">Limitations</a></h2>
+<ul>
+<li>A splice written in a function is run by the type checker, so generators cannot use arrays,
+<code>print</code> or imported MoonBit functions. When a splice cannot be computed, the error shows the
+expression it is stuck on.</li>
+<li>Code cannot be inspected or taken apart: a <code>Code[T]</code> can only be spliced and run.</li>
+<li><code>Code[T]</code> uses the uniform representation in compiled programs.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="prelude"><a class="header" href="#prelude">Prelude</a></h1>
-<p>The Prelude is loaded automatically into every program (<code>moonpp --no-prelude</code> turns it off).</p>
+<p>The Prelude is loaded automatically into every program (<code>moonpp --no-prelude</code> turns it off). A
+declaration of the program with the name of a Prelude type or trait replaces it: the Prelude’s
+methods and instances of that type, and its definitions using it, are gone (your own <code>HashMap</code>,
+say).</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2241,19 +2589,24 @@ search computed during type checking.</p>
 <tbody>
 <tr><td><code>Int</code>, <code>Double</code>, <code>Bool</code>, <code>Char</code>, <code>String</code>, <code>Unit</code>, <code>Array[T]</code>, <code>Error</code></td><td>Built-in types</td></tr>
 <tr><td><code>Int64</code>, <code>UInt</code>, <code>UInt64</code>, <code>Byte</code>, <code>Float</code></td><td>Other numeric types: arithmetic, comparison, bitwise operators (integers), <code>to_string</code>, <code>hash</code>; conversions <code>to_int</code>, <code>to_double</code>, and <code>Int</code>’s <code>to_int64</code>, <code>to_uint</code>, <code>to_uint64</code>, <code>to_byte</code>, <code>to_float</code>, etc.</td></tr>
-<tr><td><code>Map[K, V]</code></td><td>A map in insertion order: <code>Map::new()</code>, <code>Map::from_array</code>, <code>get</code>, <code>set</code>, <code>m[k]</code> (a <code>V?</code>), <code>m[k] = v</code>, <code>contains</code>, <code>remove</code>, <code>length</code>, <code>keys</code>, <code>values</code>, <code>to_array</code>; <code>for k, v in m</code></td></tr>
+<tr><td><code>Map[K, V]</code></td><td>A map in insertion order: <code>Map::new()</code>, <code>Map::from_array</code>, <code>get</code>, <code>set</code>, <code>m[k]</code> (a <code>V?</code>), <code>m[k] = v</code>, <code>contains</code>, <code>remove</code>, <code>length</code>, <code>keys</code>, <code>values</code>, <code>to_array</code>; <code>for k, v in m</code>. Lookups are linear</td></tr>
+<tr><td><code>HashMap[K, V]</code></td><td>A hash table (keys with <code>Hash + Eq</code>), iterated in insertion order; the same methods as <code>Map</code>, and <code>{}</code>, <code>{ k: v }</code> build one where a <code>HashMap</code> is expected</td></tr>
 <tr><td><code>assert_eq</code>, <code>assert_not_eq</code>, <code>assert_true</code>, <code>assert_false</code></td><td>Test assertions (they raise <code>Failure</code>)</td></tr>
-<tr><td><code>Nat</code> (<code>Z</code>, <code>S</code>)</td><td>Natural numbers; integer literals expand at type <code>Nat</code>; <code>n.to_int()</code>, <code>int_to_nat(i)</code>, <code>+</code>, <code>*</code>, <code>==</code></td></tr>
-<tr><td><code>Id[T](x)(y)</code>, <code>===</code>, <code>Refl</code></td><td>Propositional equality; <code>Id::sym</code>, <code>Id::trans</code>, <code>Id::cong</code>, <code>Id::subst</code></td></tr>
+<tr><td><code>Nat</code> (<code>Z</code>, <code>S</code>)</td><td>Natural numbers; integer literals expand at type <code>Nat</code>; <code>+</code>, <code>-</code> (truncated: 0 when the subtrahend is larger), <code>*</code>, <code>/</code>, <code>%</code> (<code>n / 0</code> is 0, <code>n % 0</code> is <code>n</code>), <code>==</code>, <code>&lt;</code> and the other comparisons, <code>compare</code>, <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> (shifting by a <code>Nat</code>), <code>n.gcd(m)</code>, <code>n.pow(m)</code>, <code>n.log2()</code> (<code>log2(0)</code> is 0), <code>n.to_int()</code>, <code>int_to_nat(i)</code>, <code>n.to_bigint()</code>, <code>Nat::of_bigint(b)</code> (negative numbers give 0). Unary definitions when checking, arbitrary-precision integers at run time (see <a href="#nat">Compiling to MoonBit</a>)</td></tr>
+<tr><td><code>BigInt</code></td><td>Arbitrary-precision integers (MoonBit’s <code>BigInt</code>; <code>@bigint.BigInt</code> is this type when <code>moonbitlang/core/bigint</code> is imported): <code>BigInt::from_int</code>, <code>from_int64</code>, <code>to_int</code>, <code>to_int64</code>, arithmetic, bitwise operators, comparisons, <code>pow</code>, <code>to_string</code>, <code>hash</code>. No literals; not computed during checking</td></tr>
+<tr><td><code>Id[T](x)(y)</code>, <code>===</code>, <code>Refl</code></td><td>Propositional equality; <code>Id::sym</code>, <code>Id::trans</code>, <code>Id::cong</code>, <code>Id::subst</code>, <code>Id::subst_prop</code></td></tr>
+<tr><td><code>False</code>, <code>Not(P)</code>, <code>absurd</code>; <code>Dec[P]</code> (<code>Yes(P)</code>, <code>No(Not(P))</code>), <code>T::deq</code>, <code>DecEq</code>, <code>reflect</code>; <code>physical_equal</code>, <code>ptr_deq</code> (<code>Known[P]</code>)</td><td>Negation, decidable and pointer equality (see <a href="#decidable-equality">Propositional Equality</a>)</td></tr>
+<tr><td><code>Code[T]</code>, <code>run</code></td><td>Code (<code>code { e }</code>) and running it at run time (see <a href="#staged-metaprogramming">Staged Metaprogramming</a>)</td></tr>
 <tr><td><code>Option[T]</code> (<code>None</code>, <code>Some</code>), <code>T?</code></td><td>Optional values</td></tr>
 <tr><td><code>Result[T, E]</code> (<code>Ok</code>, <code>Err</code>)</td><td>Results</td></tr>
 <tr><td><code>List[T]</code> (<code>Nil</code>, <code>Cons</code>)</td><td>Linked lists: <code>append</code>, <code>reverse</code>, <code>length</code>, <code>map</code>, <code>flat_map</code></td></tr>
-<tr><td><code>(a, b)</code>, <code>(a, b, c)</code></td><td>Tuples (<code>Tuple2</code>, <code>Tuple3</code>)</td></tr>
+<tr><td><code>(a, b)</code>, <code>(a, b, c)</code></td><td>Tuples (<code>Tuple2</code>, <code>Tuple3</code>); <code>Show</code>, <code>Eq</code>, <code>Compare</code>, <code>Hash</code> when their elements have them</td></tr>
 <tr><td><code>Failure</code>, <code>fail(msg)</code></td><td>General-purpose error</td></tr>
 <tr><td><code>Show</code>, <code>Eq</code>, <code>Compare</code>, <code>Add</code>, <code>Sub</code>, <code>Mul</code>, <code>Div</code>, <code>Mod</code>, <code>Neg</code>, <code>Default</code>, <code>Monad</code></td><td>Traits (see <a href="#traits">Traits</a>)</td></tr>
 <tr><td><code>println</code>, <code>print</code>, <code>print_string</code></td><td>Output (<code>println</code> and <code>print</code> require <code>Show</code>)</td></tr>
 <tr><td><code>abort(msg)</code>, <code>panic()</code></td><td>Terminate the program</td></tr>
 <tr><td><code>not(b)</code></td><td>Boolean negation</td></tr>
+<tr><td><code>ignore(x)</code></td><td>Discards a value</td></tr>
 </tbody>
 </table>
 </div>
@@ -2283,7 +2636,7 @@ search computed during type checking.</p>
 <h2 id="installing-a-release"><a class="header" href="#installing-a-release">Installing a release</a></h2>
 <p>Every version on the <a href="https://github.com/GreckF/mbtpp/releases">Releases</a> page comes with an npm
 package:</p>
-<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.6.0/moonpp-0.6.0.tgz
+<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.6.3/moonpp-0.6.3.tgz
 moonpp version
 </code></pre>
 <p>Pushing a <code>v*</code> tag makes GitHub Actions test, build, and publish a release
@@ -2377,7 +2730,7 @@ come from that. … list it in the package's moon.pkg: options("mbtpp-order": [ 
 <tr><td><code>moonpp fix [path]</code></td><td>Add <code>#mbt</code> to those <code>pub</code> declarations</td></tr>
 <tr><td><code>moonpp ide &lt;file&gt; [--overlay &lt;json&gt;]</code></td><td>Check the package containing the file for an editor and output JSON (see <a href="#editor">Editor</a>)</td></tr>
 <tr><td><code>moonpp run [path]</code></td><td>Run the main package (or the given package or file) with the interpreter</td></tr>
-<tr><td><code>moonpp run --compiled [path]</code></td><td>Compile to MoonBit and run with <code>moon run</code></td></tr>
+<tr><td><code>moonpp run --compiled [path] [-- args…]</code></td><td>Compile to MoonBit and run with <code>moon run</code>; the arguments after <code>--</code> go to the program</td></tr>
 <tr><td><code>moonpp test [path]</code></td><td>Run the <code>test "name" { … }</code> blocks with the interpreter; they can use <code>assert_eq</code>, <code>assert_true</code>, etc.</td></tr>
 <tr><td><code>moonpp build [path] [-o dir]</code></td><td>Compile to a MoonBit project and run <code>moon build</code></td></tr>
 <tr><td><code>moonpp add &lt;user/module[@version]&gt;</code></td><td>Add a dependency (<code>moon add</code>) and generate <code>.mbti</code> files for packages that lack an interface</td></tr>
@@ -2396,10 +2749,11 @@ come from that. … list it in the package's moon.pkg: options("mbtpp-order": [ 
 <tr><th>Option</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>--verbose</code></td><td>List interface items skipped during import</td></tr>
+<tr><td><code>--verbose</code></td><td>List interface items skipped during import; with <code>build</code> and <code>run --compiled</code>, also the functions without a native version, and why</td></tr>
 <tr><td><code>--no-prelude</code></td><td>Do not load the Prelude</td></tr>
 <tr><td><code>--compiled</code></td><td>With <code>run</code>, run the compiled output instead of interpreting</td></tr>
 <tr><td><code>-o</code>, <code>--output &lt;dir&gt;</code></td><td>Where <code>build</code> and <code>run --compiled</code> generate the project</td></tr>
+<tr><td><code>-- args…</code></td><td>Command line arguments for the program with <code>run --compiled</code> (read with <code>@sys.get_cli_args()</code>, say)</td></tr>
 </tbody>
 </table>
 </div>
@@ -2456,6 +2810,7 @@ source = "src"
   moon.work         workspace: itself, plus local modules (absolute paths)
   README.md
   .gitignore
+  package.json      {"type": "module"}: the JS backend emits ES modules, so node main.js works
   main/
     moon.pkg            imported MoonBit packages; main package
     main.mbt            compiled from src/main/main.mbtpp
@@ -2614,6 +2969,7 @@ program: <code>moonpp run --compiled</code> (see <a href="#calling-moonbit-funct
 <tbody>
 <tr><td><code>Int32</code> (i.e. <code>Int</code>), <code>Double</code>, <code>Bool</code>, <code>Char</code>, <code>String</code>, <code>Unit</code></td><td>The built-in types of the same name (<code>Int32</code> is <code>Int</code>)</td></tr>
 <tr><td><code>Int64</code>, <code>UInt</code>, <code>UInt64</code>, <code>Byte</code>, <code>Float</code></td><td>The built-in types of the same name</td></tr>
+<tr><td><code>BigInt</code> (<code>@bigint.BigInt</code>)</td><td>The built-in type <code>BigInt</code>; <code>@bigint.BigInt::m</code> is <code>BigInt::m</code></td></tr>
 <tr><td><code>Array[T]</code>, <code>T?</code>, <code>Result[T, E]</code></td><td>The types of the same name</td></tr>
 <tr><td><code>StringView</code>, <code>ArrayView[T]</code></td><td><code>String</code>, <code>Array[T]</code></td></tr>
 <tr><td><code>pub(all) enum</code>, <code>pub(all) struct</code></td><td>The same enum or struct, automatically <code>#mbt</code>; can be constructed and matched</td></tr>
@@ -2666,10 +3022,10 @@ parameters (see <a href="#async-functions">async Functions</a>); the <code>nocan
 <ul>
 <li><code>impl</code>s of traits that are neither Prelude traits nor imported traits (e.g. <code>@debug.Debug</code>
 when <code>moonbitlang/core/debug</code> is not imported);</li>
-<li><code>#deprecated</code> items;</li>
 <li>trait re-exports (except those of <code>@builtin</code>), and re-exported functions whose package is not
 imported.</li>
 </ul>
+<p><code>#deprecated</code> items are imported as usual (MoonBit, too, only warns about their uses).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="compiling-to-moonbit"><a class="header" href="#compiling-to-moonbit">Compiling to MoonBit</a></h1>
 <p>The compiler translates the type-checked program into MoonBit. <code>moonpp build</code> and <code>moonpp run --compiled</code> use it;
@@ -2684,14 +3040,25 @@ parameters and result are native types, and whose body is in the native fragment
 an ordinary (possibly generic) MoonBit function. The native types are:</p>
 <ul>
 <li><code>Int</code>, <code>Double</code>, <code>Bool</code>, <code>Char</code>, <code>String</code>, <code>Unit</code>;</li>
+<li><code>Nat</code>, as MoonBit’s <code>BigInt</code> (see <a href="#nat">Nat</a> below);</li>
 <li>type parameters and function types;</li>
 <li>arrays <code>Array[T]</code> (with <code>T</code> native), as MoonBit arrays;</li>
-<li>data types whose parameters are all types and whose fields are all native types.</li>
+<li>data types whose fields are all native types.</li>
 </ul>
 <p>Indices and erased fields disappear, for example:</p>
 <pre><code class="language-text">enum Vector[T] : Nat -&gt; Type { Nil : …; Cons[n : Nat](T, Vector[T](n)) : … }
 // compiles to
 enum E_Vector[T0] { Nil; Cons(T0, E_Vector[T0]) }
+</code></pre>
+<p>Parameters that are not types (value parameters, like <code>n</code> of <code>struct Scoped(n : Nat)</code>, and
+propositions) disappear like indices, so data types using them only in types or proof fields stay
+native. A data type with one constructor keeping one field (not of the type itself) after erasure
+becomes a MoonBit tuple struct, without an extra box:</p>
+<pre><code class="language-text">type Ex Int                          // struct E_Ex(Int)
+struct Scoped(n : Nat) {             // struct E_Scoped(E_Expr)
+  e : Expr
+  ok : closed(e, n) === true
+}
 </code></pre>
 <p><code>#mbt</code> types use their own names instead of <code>E_…</code> (see <a href="#mbt-types-and-traits">#mbt Types and Traits</a>).</p>
 <p>Instances of the Prelude’s <code>#mbt</code> traits (<code>Show</code>, <code>Eq</code>, <code>Compare</code>, <code>Hash</code>, <code>Default</code>, the operators, …)
@@ -2702,6 +3069,94 @@ and <code>Map</code>).</p>
 <p>Arrays are not converted between native code and the uniform representation: as copies, they could
 not share their mutations. A function with arrays among its parameters or result has a native and a
 uniform version; native code passes arrays to native code, and uniform code to uniform code.</p>
+<p>A global <code>let</code> of a native type whose definition is in the native fragment is native too: it is
+computed once, when first used, and native code refers to it directly, so the functions reading or
+writing it keep their native versions. Uniform code sees it converted; a global <code>let</code> holding
+arrays (or other parts that cannot be converted) is native only when no uniform code uses it, so
+that both sides see the same array.</p>
+<pre><code class="language-text">struct Arena { kinds : Array[Int] }
+let glob : Arena = { kinds: [1, 2, 3] }
+fn kind_glob(e : Int) -&gt; Int { glob.kinds[e] }   // fn f_kind_glob_t(e : Int) -&gt; Int
+</code></pre>
+<p>A native function that cannot raise is a MoonBit function without <code>raise</code> (on the JS backend, a call
+of a <code>raise</code> function allocates and checks a result object). Only <code>raise</code>, calls of functions that
+may raise (function values and trait methods included) and calls through the uniform representation
+raise; runtime errors in native code (an index out of bounds, a division by zero, no matching arm)
+are not error values: they print the message of the uniform code and stop the program.</p>
+<p>Uniform code can only call the uniform version of a function with arrays (or other parts that
+cannot be converted) among its parameters or result. So the entry should stay in the native
+fragment: <code>main</code> (like global <code>let</code>s) is native when its definition is in the native fragment, and
+may use <code>return</code>; when <code>main</code> can only be uniform, the functions of that kind that it calls run in
+the uniform representation too.</p>
+<p><code>moonpp build --verbose</code> lists the functions and global <code>let</code>s of the program (<code>main</code> included)
+without a native version, with the reason, followed through types and fields to its source, for
+example:</p>
+<pre><code class="language-text">without a native version (they run in the uniform representation):
+  bump: its body is not in the native fragment: in `glob`, the global let glob is not native
+  glob: it holds arrays, and code in the uniform representation uses it
+  sum_n: its signature has no native translation
+</code></pre>
+<h2 id="nat"><a class="header" href="#nat">Nat</a></h2>
+<p>When type checking, <code>Nat</code> is the unary <code>Z</code>, <code>S(n)</code>, and proofs compute with the definitions. At run
+time (in the interpreter and in compiled programs), a <code>Nat</code> is an arbitrary-precision integer,
+MoonBit’s <code>BigInt</code>:</p>
+<ul>
+<li><code>Z</code> is 0 and <code>S(e)</code> is <code>e + 1</code>; numerals are <code>BigInt</code> literals (such as <code>10N</code>).</li>
+<li>A pattern <code>S(…S(p))</code> (k levels) tests whether the value is ≥ k (= k when <code>p</code> is <code>Z</code>), and each
+level binds the value minus its depth.</li>
+<li>The Prelude’s <code>+</code>, <code>*</code>, <code>==</code>, <code>compare</code>, <code>to_int</code>, <code>to_string</code> on <code>Nat</code> and <code>int_to_nat</code> are
+<code>BigInt</code> operations.</li>
+</ul>
+<p>So arithmetic on <code>Nat</code> no longer takes time proportional to the numbers, and does not overflow the
+stack by deep recursion:</p>
+<pre><code class="language-text">fn fact(n : Nat) -&gt; Nat {
+  match n {
+    Z =&gt; 1
+    S(k) =&gt; n * fact(k)
+  }
+}
+// native translation
+fn f45_fact_t(n : BigInt) -&gt; BigInt raise {
+  match n {
+    n0 if n0 == 0N =&gt; 1N
+    n1 if n1 &gt;= 1N =&gt; n * f45_fact_t(n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<p><code>fact(30)</code> is <code>265252859812191058636308480000000</code>. Functions you define by structural recursion
+(another addition, say) still recurse once per level, each level being a <code>BigInt</code> operation. <code>Nat</code>
+is not a MoonBit type: the parameters and results of a <code>#mbt fn</code> cannot be <code>Nat</code>, since a <code>BigInt</code>
+from MoonBit could be negative.</p>
+<h3 id="types-shaped-like-nat"><a class="header" href="#types-shaped-like-nat">Types shaped like Nat</a></h3>
+<p>In compiled code, data types that have the shape of <code>Nat</code> after erasure are <code>BigInt</code>s as well: two
+constructors, one without kept fields (the zero), and one keeping a single field whose type is the
+data type itself (the successor). The most common one is the finite set <code>Fin</code>:</p>
+<pre><code class="language-text">enum Fin : (Nat) -&gt; Type {
+  FZ[n : Nat] : Fin(S(n))
+  FS[n : Nat](Fin(n)) : Fin(S(n))
+}
+</code></pre>
+<p>The implicit fields <code>n</code> of <code>FZ</code> and <code>FS</code> are only used in types and are erased, so a value of
+<code>Fin(n)</code> is just an index: <code>FS(FS(FZ))</code> is <code>2N</code>. Getting an element of a vector by a <code>Fin</code>
+therefore compiles to a recursion on an integer index:</p>
+<pre><code class="language-text">fn[T0] f46_vector_get_t(self : E_Vector[T0], i : BigInt) -&gt; T0 raise {
+  match (self, i) {
+    (E_Vector::Cons(x, _), n0) if n0 == 0N =&gt; x
+    (E_Vector::Cons(_, xs), n1) if n1 &gt;= 1N =&gt; f46_vector_get_t(xs, n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<ul>
+<li>A type of your own like <code>enum Peano { Zero; Succ(Peano) }</code> is compiled the same way.</li>
+<li>When an implicit field is used at run time (a pattern <code>FS[m](_) =&gt; m.to_int()</code>, say), it is not
+erased, and the type stays an ordinary enum.</li>
+<li>Propositions, error types, <code>#mbt</code> types and imported types keep their representations.</li>
+<li>Instances for such types (other than <code>Nat</code>) do not become MoonBit <code>impl</code>s, since they are all
+<code>BigInt</code> in MoonBit; code using those instances uses the uniform representation.</li>
+<li>The interpreter does this for <code>Nat</code> only (it does not erase).</li>
+</ul>
 <h2 id="uniform-representation"><a class="header" href="#uniform-representation">Uniform representation</a></h2>
 <p>Everything else (type-level computation, GADT refinement, non-<code>#mbt</code> traits, etc.) uses the uniform representation <code>Value</code>. It is
 an extensible enum (MoonBit’s <code>extenum</code>) in the runtime, with fixed variants <code>VInt</code>, <code>VFun</code>, and so on; each generated file uses
@@ -2753,6 +3208,12 @@ them.</li>
 <p>A <code>fib</code> program runs about 40 times faster when compiled (7.85 s interpreted, 0.18 s compiled). Before constructors became native
 variants of <code>Value</code>, data in the uniform representation was <code>VCon(constructor name, field array)</code> and matching compared strings; with native variants,
 evaluating an <code>Exp</code> tree with 2^18 leaves 20 times dropped from 2.65 s to 1.26 s.</p>
+<p>Values are converted recursively, by value, between native code and the uniform representation
+(<code>expr_to_value</code>, <code>expr_of_value</code>). For highly shared data (a DAG, like expressions sharing
+subterms), the conversion unfolds the sharing, and its size can grow exponentially. Functions on such
+data should stay in the native fragment, so that the data does not cross the boundary: for example,
+keep them away from code that needs the uniform representation (type-level computation, GADT
+refinement).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="calling-moonbit-functions"><a class="header" href="#calling-moonbit-functions">Calling MoonBit Functions</a></h1>
 <p>Compiled programs really call imported MoonBit functions:</p>
@@ -2958,7 +3419,7 @@ test file <code>export_wbtest.mbt</code> to the <code>main/</code> directory of 
 <li>A generic instance overlapping a more specific one (<code>impl[T] Tr for Array[T]</code> and
 <code>impl Tr for Array[Int]</code>) is not an error, and the generic one found first is used; MoonBit
 rejects such programs. Implementing the same method twice for the same type is an error.</li>
-<li><code>Array</code> and tuples have no <code>Compare</code> instance; integer literals are not overloaded by the expected
+<li><code>Array</code> has no <code>Compare</code> instance; integer literals are not overloaded by the expected
 type (<code>let x : Int64 = 3</code> needs <code>3L</code>).</li>
 <li>A match on a proof (of a <code>Prop</code> that is not a subsingleton) may appear where the result is a
 proof, but the side effects of its arms (output, assignments) do not happen in the compiled
@@ -2966,11 +3427,14 @@ program, where proofs are erased.</li>
 <li>Comparison operators can be chained (<code>a == b == c</code> parses left-associatively); MoonBit does not
 allow it.</li>
 <li>A <code>match</code> with array patterns is not checked for coverage and does not refine types.</li>
-<li><code>Map</code> is implemented in MoonBit++ by the Prelude (in insertion order, with linear lookups); it is
-not MoonBit’s <code>Map</code>, so imported functions taking or returning a MoonBit <code>Map</code> cannot be called.</li>
-<li>There are no <code>BigInt</code> literals (<code>1N</code>), <code>Int16</code> or <code>UInt16</code>; <code>Float</code> only has its operators,
+<li><code>Map</code> and <code>HashMap</code> are implemented in MoonBit++ by the Prelude (<code>Map</code> has linear lookups; use
+<code>HashMap</code> for large tables); they are not MoonBit’s <code>Map</code> and <code>HashMap</code>, so imported functions
+taking or returning those MoonBit types cannot be called.</li>
+<li>There are no <code>BigInt</code> literals (<code>1N</code>), <code>Int16</code> or <code>UInt16</code>; the methods of the imported <code>@bigint</code>
+named like the Prelude’s <code>BigInt</code> methods (<code>to_string</code> with <code>radix?</code>) give way to the Prelude’s; <code>Float</code> only has its operators,
 comparisons and conversions.</li>
 <li>When functions with mutable state are run during type checking, calls that use arrays, imported functions or lambdas capturing <code>let mut</code> variables are not run (see <a href="#mutable-state-and-loops">Mutable State and Loops</a>).</li>
+<li>The limitations of staged metaprogramming are in <a href="#limitations-1">Staged Metaprogramming</a>: a splice written in a function is run by the checker, so generators cannot use arrays, <code>print</code> or imported functions; a splice that uses the variables of the code it is in cannot have effects; in generated code, a recursive local function nested in another one is not specialized (its splices are left for run time).</li>
 <li>Time limits are measured in wall-clock time, so a file may time out on a slower machine (see <a href="#time-limits">Time limits</a>).</li>
 </ul>
 <h2 id="imports"><a class="header" href="#imports">Imports</a></h2>
@@ -2985,6 +3449,8 @@ comparisons and conversions.</li>
 <ul>
 <li><code>Hash</code> values differ between the interpreter and the compiled program (which uses MoonBit’s hashes).</li>
 <li>Values are converted by value between the uniform representation and native code, so frequently passing large data across the boundary is slow.</li>
+<li>A runtime error in native code (an index out of bounds, a division by zero, …) stops the program
+without running <code>defer</code>s; the interpreter and the uniform code run them first.</li>
 </ul>
 <h2 id="tooling"><a class="header" href="#tooling">Tooling</a></h2>
 <ul>

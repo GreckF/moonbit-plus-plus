@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,7 +194,7 @@
 <tr><th>字面量</th><th>例子</th><th>类型</th></tr>
 </thead>
 <tbody>
-<tr><td>整数</td><td><code>0</code>、<code>42</code>、<code>1_000</code>、<code>-1</code>、<code>0xFF</code>、<code>0o17</code>、<code>0b1010</code></td><td><code>Int</code>；期望类型是 <code>Nat</code> 时展开为 <code>S(…S(Z))</code></td></tr>
+<tr><td>整数</td><td><code>0</code>、<code>42</code>、<code>1_000</code>、<code>-1</code>、<code>0xFF</code>、<code>0o17</code>、<code>0b1010</code></td><td><code>Int</code>；期望类型是 <code>Nat</code> 时是 <code>S(…S(Z))</code>（大于 64 的字面量是 <code>int_to_nat(n)</code>，检查时只按需逐层展开）</td></tr>
 <tr><td>浮点</td><td><code>1.5</code>、<code>2.0</code>、<code>1e-7</code>、<code>2.5E3</code></td><td><code>Double</code></td></tr>
 <tr><td>其他整数</td><td><code>1L</code>、<code>1U</code>、<code>1UL</code>、<code>0xFFU</code></td><td><code>Int64</code>、<code>UInt</code>、<code>UInt64</code></td></tr>
 <tr><td>单精度浮点</td><td><code>1.5F</code></td><td><code>Float</code></td></tr>

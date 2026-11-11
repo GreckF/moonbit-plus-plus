@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,7 +194,7 @@
 <tr><th>Literal</th><th>Examples</th><th>Type</th></tr>
 </thead>
 <tbody>
-<tr><td>Integer</td><td><code>0</code>, <code>42</code>, <code>1_000</code>, <code>-1</code>, <code>0xFF</code>, <code>0o17</code>, <code>0b1010</code></td><td><code>Int</code>; expands to <code>S(…S(Z))</code> when the expected type is <code>Nat</code></td></tr>
+<tr><td>Integer</td><td><code>0</code>, <code>42</code>, <code>1_000</code>, <code>-1</code>, <code>0xFF</code>, <code>0o17</code>, <code>0b1010</code></td><td><code>Int</code>; <code>S(…S(Z))</code> when the expected type is <code>Nat</code> (literals above 64 are <code>int_to_nat(n)</code>, unfolded one level at a time only as far as checking needs)</td></tr>
 <tr><td>Floating point</td><td><code>1.5</code>, <code>2.0</code>, <code>1e-7</code>, <code>2.5E3</code></td><td><code>Double</code></td></tr>
 <tr><td>Other integers</td><td><code>1L</code>, <code>1U</code>, <code>1UL</code>, <code>0xFFU</code></td><td><code>Int64</code>, <code>UInt</code>, <code>UInt64</code></td></tr>
 <tr><td>Single-precision float</td><td><code>1.5F</code></td><td><code>Float</code></td></tr>

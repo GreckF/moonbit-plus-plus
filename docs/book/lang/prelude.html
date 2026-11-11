@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,7 +182,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="prelude"><a class="header" href="#prelude">Prelude</a></h1>
-<p>每个程序都自动加载 Prelude（<code>moonpp --no-prelude</code> 可以关闭）。</p>
+<p>每个程序都自动加载 Prelude（<code>moonpp --no-prelude</code> 可以关闭）。程序中与 Prelude 的类型或 trait 同名的
+声明取代它：Prelude 中这个类型的方法、实例和用到它的定义都不再存在（例如自己定义的 <code>HashMap</code>）。</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -191,19 +192,24 @@
 <tbody>
 <tr><td><code>Int</code>、<code>Double</code>、<code>Bool</code>、<code>Char</code>、<code>String</code>、<code>Unit</code>、<code>Array[T]</code>、<code>Error</code></td><td>内置类型</td></tr>
 <tr><td><code>Int64</code>、<code>UInt</code>、<code>UInt64</code>、<code>Byte</code>、<code>Float</code></td><td>其他数值类型：算术、比较、位运算（整数）、<code>to_string</code>、<code>hash</code>；<code>to_int</code>、<code>to_double</code>，<code>Int</code> 的 <code>to_int64</code>、<code>to_uint</code>、<code>to_uint64</code>、<code>to_byte</code>、<code>to_float</code> 等转换</td></tr>
-<tr><td><code>Map[K, V]</code></td><td>按插入顺序的映射：<code>Map::new()</code>、<code>Map::from_array</code>、<code>get</code>、<code>set</code>、<code>m[k]</code>（<code>V?</code>）、<code>m[k] = v</code>、<code>contains</code>、<code>remove</code>、<code>length</code>、<code>keys</code>、<code>values</code>、<code>to_array</code>；<code>for k, v in m</code></td></tr>
+<tr><td><code>Map[K, V]</code></td><td>按插入顺序的映射：<code>Map::new()</code>、<code>Map::from_array</code>、<code>get</code>、<code>set</code>、<code>m[k]</code>（<code>V?</code>）、<code>m[k] = v</code>、<code>contains</code>、<code>remove</code>、<code>length</code>、<code>keys</code>、<code>values</code>、<code>to_array</code>；<code>for k, v in m</code>。查找是线性的</td></tr>
+<tr><td><code>HashMap[K, V]</code></td><td>哈希表（键要有 <code>Hash + Eq</code>），按插入顺序迭代；方法与 <code>Map</code> 相同，期望类型是 <code>HashMap</code> 时 <code>{}</code>、<code>{ k: v }</code> 构造它</td></tr>
 <tr><td><code>assert_eq</code>、<code>assert_not_eq</code>、<code>assert_true</code>、<code>assert_false</code></td><td>测试断言（抛出 <code>Failure</code>）</td></tr>
-<tr><td><code>Nat</code>（<code>Z</code>、<code>S</code>）</td><td>自然数，整数字面量在 <code>Nat</code> 处展开；<code>n.to_int()</code>、<code>int_to_nat(i)</code>、<code>+</code>、<code>*</code>、<code>==</code></td></tr>
-<tr><td><code>Id[T](x)(y)</code>、<code>===</code>、<code>Refl</code></td><td>命题相等；<code>Id::sym</code>、<code>Id::trans</code>、<code>Id::cong</code>、<code>Id::subst</code></td></tr>
+<tr><td><code>Nat</code>（<code>Z</code>、<code>S</code>）</td><td>自然数，整数字面量在 <code>Nat</code> 处展开；<code>+</code>、<code>-</code>（截断：不够减时为 0）、<code>*</code>、<code>/</code>、<code>%</code>（<code>n / 0</code> 是 0，<code>n % 0</code> 是 <code>n</code>）、<code>==</code>、<code>&lt;</code> 等比较、<code>compare</code>、<code>&amp;</code>、<code>|</code>、<code>^</code>、<code>&lt;&lt;</code>、<code>&gt;&gt;</code>（移位量是 <code>Nat</code>）、<code>n.gcd(m)</code>、<code>n.pow(m)</code>、<code>n.log2()</code>（<code>log2(0)</code> 是 0）、<code>n.to_int()</code>、<code>int_to_nat(i)</code>、<code>n.to_bigint()</code>、<code>Nat::of_bigint(b)</code>（负数为 0）。检查时按一元定义计算，运行时是任意精度整数（见<a href="../interop/compile.html#nat">编译到 MoonBit</a>）</td></tr>
+<tr><td><code>BigInt</code></td><td>任意精度整数（MoonBit 的 <code>BigInt</code>；导入 <code>moonbitlang/core/bigint</code> 时 <code>@bigint.BigInt</code> 就是它）：<code>BigInt::from_int</code>、<code>from_int64</code>、<code>to_int</code>、<code>to_int64</code>、算术、位运算、比较、<code>pow</code>、<code>to_string</code>、<code>hash</code>。没有字面量；检查时不计算</td></tr>
+<tr><td><code>Id[T](x)(y)</code>、<code>===</code>、<code>Refl</code></td><td>命题相等；<code>Id::sym</code>、<code>Id::trans</code>、<code>Id::cong</code>、<code>Id::subst</code>、<code>Id::subst_prop</code></td></tr>
+<tr><td><code>False</code>、<code>Not(P)</code>、<code>absurd</code>；<code>Dec[P]</code>（<code>Yes(P)</code>、<code>No(Not(P))</code>）、<code>T::deq</code>、<code>DecEq</code>、<code>reflect</code>；<code>physical_equal</code>、<code>ptr_deq</code>（<code>Known[P]</code>）</td><td>否定、可判定相等与指针相等（见<a href="equality.html#可判定相等">命题相等</a>）</td></tr>
+<tr><td><code>Code[T]</code>、<code>run</code></td><td>代码（<code>code { e }</code>）与在运行时运行它（见<a href="staging.html">分阶段元编程</a>）</td></tr>
 <tr><td><code>Option[T]</code>（<code>None</code>、<code>Some</code>）、<code>T?</code></td><td>可选值</td></tr>
 <tr><td><code>Result[T, E]</code>（<code>Ok</code>、<code>Err</code>）</td><td>结果</td></tr>
 <tr><td><code>List[T]</code>（<code>Nil</code>、<code>Cons</code>）</td><td>链表：<code>append</code>、<code>reverse</code>、<code>length</code>、<code>map</code>、<code>flat_map</code></td></tr>
-<tr><td><code>(a, b)</code>、<code>(a, b, c)</code></td><td>元组（<code>Tuple2</code>、<code>Tuple3</code>）</td></tr>
+<tr><td><code>(a, b)</code>、<code>(a, b, c)</code></td><td>元组（<code>Tuple2</code>、<code>Tuple3</code>）；元素满足约束时有 <code>Show</code>、<code>Eq</code>、<code>Compare</code>、<code>Hash</code></td></tr>
 <tr><td><code>Failure</code>、<code>fail(msg)</code></td><td>通用错误</td></tr>
 <tr><td><code>Show</code>、<code>Eq</code>、<code>Compare</code>、<code>Add</code>、<code>Sub</code>、<code>Mul</code>、<code>Div</code>、<code>Mod</code>、<code>Neg</code>、<code>Default</code>、<code>Monad</code></td><td>trait（见 <a href="traits.html">trait</a>）</td></tr>
 <tr><td><code>println</code>、<code>print</code>、<code>print_string</code></td><td>输出（<code>println</code> 和 <code>print</code> 需要 <code>Show</code>）</td></tr>
 <tr><td><code>abort(msg)</code>、<code>panic()</code></td><td>终止程序</td></tr>
 <tr><td><code>not(b)</code></td><td>布尔取反</td></tr>
+<tr><td><code>ignore(x)</code></td><td>丢弃一个值</td></tr>
 </tbody>
 </table>
 </div>
@@ -228,7 +234,7 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../lang/effects.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../lang/staging.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -242,7 +248,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../lang/effects.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../lang/staging.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

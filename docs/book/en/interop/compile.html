@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,14 +194,25 @@ parameters and result are native types, and whose body is in the native fragment
 an ordinary (possibly generic) MoonBit function. The native types are:</p>
 <ul>
 <li><code>Int</code>, <code>Double</code>, <code>Bool</code>, <code>Char</code>, <code>String</code>, <code>Unit</code>;</li>
+<li><code>Nat</code>, as MoonBit’s <code>BigInt</code> (see <a href="#nat">Nat</a> below);</li>
 <li>type parameters and function types;</li>
 <li>arrays <code>Array[T]</code> (with <code>T</code> native), as MoonBit arrays;</li>
-<li>data types whose parameters are all types and whose fields are all native types.</li>
+<li>data types whose fields are all native types.</li>
 </ul>
 <p>Indices and erased fields disappear, for example:</p>
 <pre><code class="language-text">enum Vector[T] : Nat -&gt; Type { Nil : …; Cons[n : Nat](T, Vector[T](n)) : … }
 // compiles to
 enum E_Vector[T0] { Nil; Cons(T0, E_Vector[T0]) }
+</code></pre>
+<p>Parameters that are not types (value parameters, like <code>n</code> of <code>struct Scoped(n : Nat)</code>, and
+propositions) disappear like indices, so data types using them only in types or proof fields stay
+native. A data type with one constructor keeping one field (not of the type itself) after erasure
+becomes a MoonBit tuple struct, without an extra box:</p>
+<pre><code class="language-text">type Ex Int                          // struct E_Ex(Int)
+struct Scoped(n : Nat) {             // struct E_Scoped(E_Expr)
+  e : Expr
+  ok : closed(e, n) === true
+}
 </code></pre>
 <p><code>#mbt</code> types use their own names instead of <code>E_…</code> (see <a href="mbt-types.html">#mbt Types and Traits</a>).</p>
 <p>Instances of the Prelude’s <code>#mbt</code> traits (<code>Show</code>, <code>Eq</code>, <code>Compare</code>, <code>Hash</code>, <code>Default</code>, the operators, …)
@@ -212,6 +223,94 @@ and <code>Map</code>).</p>
 <p>Arrays are not converted between native code and the uniform representation: as copies, they could
 not share their mutations. A function with arrays among its parameters or result has a native and a
 uniform version; native code passes arrays to native code, and uniform code to uniform code.</p>
+<p>A global <code>let</code> of a native type whose definition is in the native fragment is native too: it is
+computed once, when first used, and native code refers to it directly, so the functions reading or
+writing it keep their native versions. Uniform code sees it converted; a global <code>let</code> holding
+arrays (or other parts that cannot be converted) is native only when no uniform code uses it, so
+that both sides see the same array.</p>
+<pre><code class="language-text">struct Arena { kinds : Array[Int] }
+let glob : Arena = { kinds: [1, 2, 3] }
+fn kind_glob(e : Int) -&gt; Int { glob.kinds[e] }   // fn f_kind_glob_t(e : Int) -&gt; Int
+</code></pre>
+<p>A native function that cannot raise is a MoonBit function without <code>raise</code> (on the JS backend, a call
+of a <code>raise</code> function allocates and checks a result object). Only <code>raise</code>, calls of functions that
+may raise (function values and trait methods included) and calls through the uniform representation
+raise; runtime errors in native code (an index out of bounds, a division by zero, no matching arm)
+are not error values: they print the message of the uniform code and stop the program.</p>
+<p>Uniform code can only call the uniform version of a function with arrays (or other parts that
+cannot be converted) among its parameters or result. So the entry should stay in the native
+fragment: <code>main</code> (like global <code>let</code>s) is native when its definition is in the native fragment, and
+may use <code>return</code>; when <code>main</code> can only be uniform, the functions of that kind that it calls run in
+the uniform representation too.</p>
+<p><code>moonpp build --verbose</code> lists the functions and global <code>let</code>s of the program (<code>main</code> included)
+without a native version, with the reason, followed through types and fields to its source, for
+example:</p>
+<pre><code class="language-text">without a native version (they run in the uniform representation):
+  bump: its body is not in the native fragment: in `glob`, the global let glob is not native
+  glob: it holds arrays, and code in the uniform representation uses it
+  sum_n: its signature has no native translation
+</code></pre>
+<h2 id="nat"><a class="header" href="#nat">Nat</a></h2>
+<p>When type checking, <code>Nat</code> is the unary <code>Z</code>, <code>S(n)</code>, and proofs compute with the definitions. At run
+time (in the interpreter and in compiled programs), a <code>Nat</code> is an arbitrary-precision integer,
+MoonBit’s <code>BigInt</code>:</p>
+<ul>
+<li><code>Z</code> is 0 and <code>S(e)</code> is <code>e + 1</code>; numerals are <code>BigInt</code> literals (such as <code>10N</code>).</li>
+<li>A pattern <code>S(…S(p))</code> (k levels) tests whether the value is ≥ k (= k when <code>p</code> is <code>Z</code>), and each
+level binds the value minus its depth.</li>
+<li>The Prelude’s <code>+</code>, <code>*</code>, <code>==</code>, <code>compare</code>, <code>to_int</code>, <code>to_string</code> on <code>Nat</code> and <code>int_to_nat</code> are
+<code>BigInt</code> operations.</li>
+</ul>
+<p>So arithmetic on <code>Nat</code> no longer takes time proportional to the numbers, and does not overflow the
+stack by deep recursion:</p>
+<pre><code class="language-text">fn fact(n : Nat) -&gt; Nat {
+  match n {
+    Z =&gt; 1
+    S(k) =&gt; n * fact(k)
+  }
+}
+// native translation
+fn f45_fact_t(n : BigInt) -&gt; BigInt raise {
+  match n {
+    n0 if n0 == 0N =&gt; 1N
+    n1 if n1 &gt;= 1N =&gt; n * f45_fact_t(n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<p><code>fact(30)</code> is <code>265252859812191058636308480000000</code>. Functions you define by structural recursion
+(another addition, say) still recurse once per level, each level being a <code>BigInt</code> operation. <code>Nat</code>
+is not a MoonBit type: the parameters and results of a <code>#mbt fn</code> cannot be <code>Nat</code>, since a <code>BigInt</code>
+from MoonBit could be negative.</p>
+<h3 id="types-shaped-like-nat"><a class="header" href="#types-shaped-like-nat">Types shaped like Nat</a></h3>
+<p>In compiled code, data types that have the shape of <code>Nat</code> after erasure are <code>BigInt</code>s as well: two
+constructors, one without kept fields (the zero), and one keeping a single field whose type is the
+data type itself (the successor). The most common one is the finite set <code>Fin</code>:</p>
+<pre><code class="language-text">enum Fin : (Nat) -&gt; Type {
+  FZ[n : Nat] : Fin(S(n))
+  FS[n : Nat](Fin(n)) : Fin(S(n))
+}
+</code></pre>
+<p>The implicit fields <code>n</code> of <code>FZ</code> and <code>FS</code> are only used in types and are erased, so a value of
+<code>Fin(n)</code> is just an index: <code>FS(FS(FZ))</code> is <code>2N</code>. Getting an element of a vector by a <code>Fin</code>
+therefore compiles to a recursion on an integer index:</p>
+<pre><code class="language-text">fn[T0] f46_vector_get_t(self : E_Vector[T0], i : BigInt) -&gt; T0 raise {
+  match (self, i) {
+    (E_Vector::Cons(x, _), n0) if n0 == 0N =&gt; x
+    (E_Vector::Cons(_, xs), n1) if n1 &gt;= 1N =&gt; f46_vector_get_t(xs, n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<ul>
+<li>A type of your own like <code>enum Peano { Zero; Succ(Peano) }</code> is compiled the same way.</li>
+<li>When an implicit field is used at run time (a pattern <code>FS[m](_) =&gt; m.to_int()</code>, say), it is not
+erased, and the type stays an ordinary enum.</li>
+<li>Propositions, error types, <code>#mbt</code> types and imported types keep their representations.</li>
+<li>Instances for such types (other than <code>Nat</code>) do not become MoonBit <code>impl</code>s, since they are all
+<code>BigInt</code> in MoonBit; code using those instances uses the uniform representation.</li>
+<li>The interpreter does this for <code>Nat</code> only (it does not erase).</li>
+</ul>
 <h2 id="uniform-representation"><a class="header" href="#uniform-representation">Uniform representation</a></h2>
 <p>Everything else (type-level computation, GADT refinement, non-<code>#mbt</code> traits, etc.) uses the uniform representation <code>Value</code>. It is
 an extensible enum (MoonBit’s <code>extenum</code>) in the runtime, with fixed variants <code>VInt</code>, <code>VFun</code>, and so on; each generated file uses
@@ -263,6 +362,12 @@ them.</li>
 <p>A <code>fib</code> program runs about 40 times faster when compiled (7.85 s interpreted, 0.18 s compiled). Before constructors became native
 variants of <code>Value</code>, data in the uniform representation was <code>VCon(constructor name, field array)</code> and matching compared strings; with native variants,
 evaluating an <code>Exp</code> tree with 2^18 leaves 20 times dropped from 2.65 s to 1.26 s.</p>
+<p>Values are converted recursively, by value, between native code and the uniform representation
+(<code>expr_to_value</code>, <code>expr_of_value</code>). For highly shared data (a DAG, like expressions sharing
+subterms), the conversion unfolds the sharing, and its size can grow exponentially. Functions on such
+data should stay in the native fragment, so that the data does not cross the boundary: for example,
+keep them away from code that needs the uniform representation (type-level computation, GADT
+refinement).</p>
 
                     </main>
 

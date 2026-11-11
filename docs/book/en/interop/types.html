@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,6 +191,7 @@
 <tbody>
 <tr><td><code>Int32</code> (i.e. <code>Int</code>), <code>Double</code>, <code>Bool</code>, <code>Char</code>, <code>String</code>, <code>Unit</code></td><td>The built-in types of the same name (<code>Int32</code> is <code>Int</code>)</td></tr>
 <tr><td><code>Int64</code>, <code>UInt</code>, <code>UInt64</code>, <code>Byte</code>, <code>Float</code></td><td>The built-in types of the same name</td></tr>
+<tr><td><code>BigInt</code> (<code>@bigint.BigInt</code>)</td><td>The built-in type <code>BigInt</code>; <code>@bigint.BigInt::m</code> is <code>BigInt::m</code></td></tr>
 <tr><td><code>Array[T]</code>, <code>T?</code>, <code>Result[T, E]</code></td><td>The types of the same name</td></tr>
 <tr><td><code>StringView</code>, <code>ArrayView[T]</code></td><td><code>String</code>, <code>Array[T]</code></td></tr>
 <tr><td><code>pub(all) enum</code>, <code>pub(all) struct</code></td><td>The same enum or struct, automatically <code>#mbt</code>; can be constructed and matched</td></tr>
@@ -243,10 +244,10 @@ parameters (see <a href="../lang/async.html">async Functions</a>); the <code>noc
 <ul>
 <li><code>impl</code>s of traits that are neither Prelude traits nor imported traits (e.g. <code>@debug.Debug</code>
 when <code>moonbitlang/core/debug</code> is not imported);</li>
-<li><code>#deprecated</code> items;</li>
 <li>trait re-exports (except those of <code>@builtin</code>), and re-exported functions whose package is not
 imported.</li>
 </ul>
+<p><code>#deprecated</code> items are imported as usual (MoonBit, too, only warns about their uses).</p>
 
                     </main>
 

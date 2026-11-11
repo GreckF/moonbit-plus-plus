@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,7 +193,7 @@
 <tr><td><code>moonpp fix [path]</code></td><td>Add <code>#mbt</code> to those <code>pub</code> declarations</td></tr>
 <tr><td><code>moonpp ide &lt;file&gt; [--overlay &lt;json&gt;]</code></td><td>Check the package containing the file for an editor and output JSON (see <a href="editor.html">Editor</a>)</td></tr>
 <tr><td><code>moonpp run [path]</code></td><td>Run the main package (or the given package or file) with the interpreter</td></tr>
-<tr><td><code>moonpp run --compiled [path]</code></td><td>Compile to MoonBit and run with <code>moon run</code></td></tr>
+<tr><td><code>moonpp run --compiled [path] [-- args…]</code></td><td>Compile to MoonBit and run with <code>moon run</code>; the arguments after <code>--</code> go to the program</td></tr>
 <tr><td><code>moonpp test [path]</code></td><td>Run the <code>test "name" { … }</code> blocks with the interpreter; they can use <code>assert_eq</code>, <code>assert_true</code>, etc.</td></tr>
 <tr><td><code>moonpp build [path] [-o dir]</code></td><td>Compile to a MoonBit project and run <code>moon build</code></td></tr>
 <tr><td><code>moonpp add &lt;user/module[@version]&gt;</code></td><td>Add a dependency (<code>moon add</code>) and generate <code>.mbti</code> files for packages that lack an interface</td></tr>
@@ -212,10 +212,11 @@
 <tr><th>Option</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>--verbose</code></td><td>List interface items skipped during import</td></tr>
+<tr><td><code>--verbose</code></td><td>List interface items skipped during import; with <code>build</code> and <code>run --compiled</code>, also the functions without a native version, and why</td></tr>
 <tr><td><code>--no-prelude</code></td><td>Do not load the Prelude</td></tr>
 <tr><td><code>--compiled</code></td><td>With <code>run</code>, run the compiled output instead of interpreting</td></tr>
 <tr><td><code>-o</code>, <code>--output &lt;dir&gt;</code></td><td>Where <code>build</code> and <code>run --compiled</code> generate the project</td></tr>
+<tr><td><code>-- args…</code></td><td>Command line arguments for the program with <code>run --compiled</code> (read with <code>@sys.get_cli_args()</code>, say)</td></tr>
 </tbody>
 </table>
 </div>

@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -244,6 +244,8 @@ fn main {
 <h2 id="使用构造子"><a class="header" href="#使用构造子">使用构造子</a></h2>
 <ul>
 <li>数据类型的参数总是推断的；<code>[...]</code> 只给构造子自己的隐式参数，例如 <code>Cons[n](x, xs)</code>。</li>
+<li>期望类型已知时，它先于参数决定隐式参数：<code>MkIsZ(Refl) : IsZ(Z)</code> 中 <code>n</code> 是 <code>Z</code>，然后才检查
+<code>Refl : f(n) === Z</code>（函数调用也是这样，只要结果类型不依赖显式参数）。</li>
 <li>重名构造子按期望类型区分，也可以写全名 <code>Vector::Cons</code>。</li>
 <li>宇宙为 <code>Prop</code> 的 enum 是命题，例如 Prelude 中的 <code>Id</code>（见<a href="equality.html">命题相等</a>）。</li>
 </ul>

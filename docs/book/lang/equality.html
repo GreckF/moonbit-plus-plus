@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,7 +207,8 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 <tr><td><code>Id::sym(p)</code></td><td><code>x === y</code> 推出 <code>y === x</code></td></tr>
 <tr><td><code>Id::trans(p, q)</code></td><td><code>x === y</code>、<code>y === z</code> 推出 <code>x === z</code></td></tr>
 <tr><td><code>Id::cong(f, p)</code></td><td><code>x === y</code> 推出 <code>f(x) === f(y)</code></td></tr>
-<tr><td><code>Id::subst(p, motive, px)</code></td><td><code>x === y</code> 与 <code>motive(x)</code> 推出 <code>motive(y)</code>；<code>motive</code> 可以返回 <code>Type</code></td></tr>
+<tr><td><code>Id::subst(p, motive, px)</code></td><td><code>x === y</code> 与 <code>motive(x)</code> 推出 <code>motive(y)</code>；<code>motive</code> 返回 <code>Type</code></td></tr>
+<tr><td><code>Id::subst_prop(p, motive, px)</code></td><td>同上，<code>motive</code> 返回 <code>Prop</code>（改写命题，例如 <code>NatLe(a, b)</code> 到 <code>NatLe(a, c)</code>）</td></tr>
 </tbody>
 </table>
 </div>
@@ -219,6 +220,83 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 }
 </code></pre>
 <p><code>==</code> 与 <code>===</code> 不同：<code>==</code> 是 <code>Bool</code> 值的比较，可以在运行时计算；<code>===</code> 是命题。</p>
+<h2 id="可判定相等"><a class="header" href="#可判定相等">可判定相等</a></h2>
+<p><code>a == b</code> 的结果是 <code>true</code> 并不能在逻辑中推出 <code>a === b</code>。需要从比较结果得到证明时（例如带证书的缓存、
+哈希表），使用 <code>deq</code>，它的结果是 <code>Dec[a === b]</code>，与 Lean 的 <code>Decidable</code> 相同：</p>
+<pre><code class="language-text">enum False : Prop {}               // 没有证明的命题
+fn Not(P : Prop) -&gt; Prop { (P) -&gt; False }
+fn[T] absurd(f : False) -&gt; T       // 由矛盾得到任何值
+
+enum Dec[P : Prop] {
+  Yes(P)                           // 相等的证明
+  No(Not(P))                       // 不相等的证明
+}
+</code></pre>
+<pre><code class="language-moonbit">enum Color {
+  Red
+  Rgb(Int, Int, Int)
+} derive(DecEq)
+
+// 按键查找：找到时附带“键相等”的证明
+fn[K : DecEq, V] find(k : K, xs : List[(K, V)]) -&gt; Option[V] {
+  match xs {
+    Nil =&gt; None
+    Cons((k2, v), rest) =&gt;
+      match DecEq::deq(k, k2) {
+        Yes(_) =&gt; Some(v)
+        No(_) =&gt; find(k, rest)
+      }
+  }
+}
+
+lemma three : Int::deq(3, 3) === Yes(Refl) = Refl
+
+fn main {
+  println(find(2, Cons((1, "one"), Cons((2, "two"), Nil))))
+  println(DecEq::deq(Rgb(1, 2, 3), Rgb(1, 2, 3)) is Yes(_))
+}
+</code></pre>
+<ul>
+<li><code>Int</code>、<code>Int64</code>、<code>UInt</code>、<code>UInt64</code>、<code>Byte</code>、<code>Char</code>、<code>String</code>、<code>BigInt</code> 有 <code>T::deq(a, b)</code>。它们的 <code>==</code>
+就是结构相等，所以比较的结果证明了相等或不相等：这由公理 <code>T::eq_sound : (a == b) === true -&gt; a === b</code> 与 <code>T::ne_sound : (a == b) === false -&gt; Not(a === b)</code> 保证，公理在检查时不计算，编译时被
+擦除。<code>Double</code> 没有：<code>0.0 == -0.0</code>，但它们是不同的值。</li>
+<li><code>Bool</code>、<code>Unit</code>、<code>Nat</code> 的 <code>deq</code> 是普通的定义（<code>Nat</code> 的在运行时直接比较整数）。</li>
+<li>trait <code>DecEq : Eq</code> 的方法是 <code>deq(a : Self, b : Self) -&gt; Dec[a === b]</code>。上面这些类型，以及元素满足
+它的 <code>Option</code>、<code>List</code>、二元组、三元组都有实例。</li>
+<li><code>derive(DecEq)</code> 用于 enum 和 struct：比较构造子，逐个字段 <code>deq</code>，把各字段的证明匹配为 <code>Refl</code> 后
+得到整个值的 <code>Refl</code>；不相等时由字段的反驳（或构造子不同）得到整个值的反驳。它同时 derive <code>Eq</code>
+（<code>DecEq</code> 需要 <code>Eq</code>）。</li>
+<li><code>reflect(b)</code> 的类型是 <code>Reflect(b)</code>，即 <code>IsTrue(b === true)</code> 或 <code>IsFalse(b === false)</code>，用来在分支中
+取得一个布尔表达式的值的证明。</li>
+</ul>
+<p>有了 <code>No</code> 的反驳，用 <code>deq</code> 定义的函数也能对变量证明性质：<code>deq(p, p)</code> 的 <code>No</code> 分支用 <code>absurd</code> 排除。</p>
+<pre><code class="language-moonbit">fn upd(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; (String) -&gt; Nat {
+  n =&gt; match String::deq(n, p) {
+    Yes(_) =&gt; m
+    No(_) =&gt; rho(n)
+  }
+}
+
+lemma upd_same(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; upd(rho, p, m)(p) === m {
+  match String::deq(p, p) {
+    Yes(_) =&gt; Refl
+    No(nope) =&gt; absurd(nope(Refl))
+  }
+}
+
+lemma upd_other(rho : (String) -&gt; Nat, p : String, q : String, m : Nat, ne : Not(q === p)) -&gt;
+  upd(rho, p, m)(q) === rho(q) {
+  match String::deq(q, p) {
+    Yes(e) =&gt; absurd(ne(e))
+    No(_) =&gt; Refl
+  }
+}
+</code></pre>
+<h2 id="指针相等"><a class="header" href="#指针相等">指针相等</a></h2>
+<p><code>physical_equal(a, b)</code> 是 MoonBit 的 <code>physical_equal</code>：是否是同一个对象（结果为 <code>false</code> 时两个值仍可能
+相等）。<code>ptr_deq(a, b)</code> 的结果是 <code>Known[a === b]</code>：是同一个对象时为 <code>Proved(证明)</code>，否则为 <code>Unknown</code>
+（不是同一个对象并不说明不相等），可以作为结构比较之前的快速路径。两者在检查时都不计算，所以检查时
+不能借它们得到证明。</p>
 
                     </main>
 

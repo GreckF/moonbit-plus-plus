@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -331,6 +331,8 @@ fn main {
 <li><code>Compare</code>: by constructor, in declaration order, then by fields from left to right. <code>Compare</code>
 needs <code>Eq</code>, so write <code>derive(Eq, Compare)</code>.</li>
 <li><code>Hash</code>: the position of the constructor and the hashes of the fields.</li>
+<li><code>DecEq</code>: <code>deq</code> on the fields one by one, with a proof when equal (see <a href="equality.html#decidable-equality">Decidable
+equality</a>); it also derives <code>Eq</code>.</li>
 <li><code>ToJson</code>, <code>FromJson</code>, <code>Debug</code>: derived by MoonBit itself, so the type must be <code>#mbt</code>; the
 generated MoonBit declaration has <code>derive(ToJson, @json.FromJson, Debug)</code> and the MoonBit++
 instances call these MoonBit methods (so they run in compiled programs only). <code>FromJson</code> needs

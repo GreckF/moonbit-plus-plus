@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -254,7 +254,8 @@ lemma insert_length(x : Int, xs : List[Int]) -&gt; length(insert(x, xs)) === S(l
 </code></pre>
 <ul>
 <li>只在目标是命题时这样做；普通函数中的 <code>match</code> 不受影响。</li>
-<li>字面量模式（<code>true</code>、<code>0</code>、<code>"a"</code>）也会细化被匹配的变量：分支中这个变量就是那个字面量。</li>
+<li>字面量模式（<code>true</code>、<code>0</code>、<code>"a"</code>）也会细化被匹配的变量：分支中这个变量就是那个字面量。作为构造子的
+子模式时也是这样，例如 <code>MkSing(true, e)</code> 中，后面字段 <code>e</code> 的类型里这个字段就是 <code>true</code>。</li>
 </ul>
 <h2 id="prop-的消去"><a class="header" href="#prop-的消去">Prop 的消去</a></h2>
 <p>匹配 <code>Prop</code> 中的数据（证明）时，结果也必须在 <code>Prop</code> 中，因为证明在编译时被擦除，运行时无法根据它

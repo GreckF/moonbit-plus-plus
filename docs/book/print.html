@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3307130a.js";
+            window.path_to_searchindex_js = "searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-2f5a2ad3.js"></script>
+        <script src="toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -252,7 +252,7 @@ fn main {
 <tr><th>字面量</th><th>例子</th><th>类型</th></tr>
 </thead>
 <tbody>
-<tr><td>整数</td><td><code>0</code>、<code>42</code>、<code>1_000</code>、<code>-1</code>、<code>0xFF</code>、<code>0o17</code>、<code>0b1010</code></td><td><code>Int</code>；期望类型是 <code>Nat</code> 时展开为 <code>S(…S(Z))</code></td></tr>
+<tr><td>整数</td><td><code>0</code>、<code>42</code>、<code>1_000</code>、<code>-1</code>、<code>0xFF</code>、<code>0o17</code>、<code>0b1010</code></td><td><code>Int</code>；期望类型是 <code>Nat</code> 时是 <code>S(…S(Z))</code>（大于 64 的字面量是 <code>int_to_nat(n)</code>，检查时只按需逐层展开）</td></tr>
 <tr><td>浮点</td><td><code>1.5</code>、<code>2.0</code>、<code>1e-7</code>、<code>2.5E3</code></td><td><code>Double</code></td></tr>
 <tr><td>其他整数</td><td><code>1L</code>、<code>1U</code>、<code>1UL</code>、<code>0xFFU</code></td><td><code>Int64</code>、<code>UInt</code>、<code>UInt64</code></td></tr>
 <tr><td>单精度浮点</td><td><code>1.5F</code></td><td><code>Float</code></td></tr>
@@ -637,6 +637,8 @@ fn main {
 <h2 id="使用构造子"><a class="header" href="#使用构造子">使用构造子</a></h2>
 <ul>
 <li>数据类型的参数总是推断的；<code>[...]</code> 只给构造子自己的隐式参数，例如 <code>Cons[n](x, xs)</code>。</li>
+<li>期望类型已知时，它先于参数决定隐式参数：<code>MkIsZ(Refl) : IsZ(Z)</code> 中 <code>n</code> 是 <code>Z</code>，然后才检查
+<code>Refl : f(n) === Z</code>（函数调用也是这样，只要结果类型不依赖显式参数）。</li>
 <li>重名构造子按期望类型区分，也可以写全名 <code>Vector::Cons</code>。</li>
 <li>宇宙为 <code>Prop</code> 的 enum 是命题，例如 Prelude 中的 <code>Id</code>（见<a href="#命题相等">命题相等</a>）。</li>
 </ul>
@@ -939,7 +941,8 @@ lemma insert_length(x : Int, xs : List[Int]) -&gt; length(insert(x, xs)) === S(l
 </code></pre>
 <ul>
 <li>只在目标是命题时这样做；普通函数中的 <code>match</code> 不受影响。</li>
-<li>字面量模式（<code>true</code>、<code>0</code>、<code>"a"</code>）也会细化被匹配的变量：分支中这个变量就是那个字面量。</li>
+<li>字面量模式（<code>true</code>、<code>0</code>、<code>"a"</code>）也会细化被匹配的变量：分支中这个变量就是那个字面量。作为构造子的
+子模式时也是这样，例如 <code>MkSing(true, e)</code> 中，后面字段 <code>e</code> 的类型里这个字段就是 <code>true</code>。</li>
 </ul>
 <h2 id="prop-的消去"><a class="header" href="#prop-的消去">Prop 的消去</a></h2>
 <p>匹配 <code>Prop</code> 中的数据（证明）时，结果也必须在 <code>Prop</code> 中，因为证明在编译时被擦除，运行时无法根据它
@@ -1077,7 +1080,8 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 <tr><td><code>Id::sym(p)</code></td><td><code>x === y</code> 推出 <code>y === x</code></td></tr>
 <tr><td><code>Id::trans(p, q)</code></td><td><code>x === y</code>、<code>y === z</code> 推出 <code>x === z</code></td></tr>
 <tr><td><code>Id::cong(f, p)</code></td><td><code>x === y</code> 推出 <code>f(x) === f(y)</code></td></tr>
-<tr><td><code>Id::subst(p, motive, px)</code></td><td><code>x === y</code> 与 <code>motive(x)</code> 推出 <code>motive(y)</code>；<code>motive</code> 可以返回 <code>Type</code></td></tr>
+<tr><td><code>Id::subst(p, motive, px)</code></td><td><code>x === y</code> 与 <code>motive(x)</code> 推出 <code>motive(y)</code>；<code>motive</code> 返回 <code>Type</code></td></tr>
+<tr><td><code>Id::subst_prop(p, motive, px)</code></td><td>同上，<code>motive</code> 返回 <code>Prop</code>（改写命题，例如 <code>NatLe(a, b)</code> 到 <code>NatLe(a, c)</code>）</td></tr>
 </tbody>
 </table>
 </div>
@@ -1089,6 +1093,83 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 }
 </code></pre>
 <p><code>==</code> 与 <code>===</code> 不同：<code>==</code> 是 <code>Bool</code> 值的比较，可以在运行时计算；<code>===</code> 是命题。</p>
+<h2 id="可判定相等"><a class="header" href="#可判定相等">可判定相等</a></h2>
+<p><code>a == b</code> 的结果是 <code>true</code> 并不能在逻辑中推出 <code>a === b</code>。需要从比较结果得到证明时（例如带证书的缓存、
+哈希表），使用 <code>deq</code>，它的结果是 <code>Dec[a === b]</code>，与 Lean 的 <code>Decidable</code> 相同：</p>
+<pre><code class="language-text">enum False : Prop {}               // 没有证明的命题
+fn Not(P : Prop) -&gt; Prop { (P) -&gt; False }
+fn[T] absurd(f : False) -&gt; T       // 由矛盾得到任何值
+
+enum Dec[P : Prop] {
+  Yes(P)                           // 相等的证明
+  No(Not(P))                       // 不相等的证明
+}
+</code></pre>
+<pre><code class="language-moonbit">enum Color {
+  Red
+  Rgb(Int, Int, Int)
+} derive(DecEq)
+
+// 按键查找：找到时附带“键相等”的证明
+fn[K : DecEq, V] find(k : K, xs : List[(K, V)]) -&gt; Option[V] {
+  match xs {
+    Nil =&gt; None
+    Cons((k2, v), rest) =&gt;
+      match DecEq::deq(k, k2) {
+        Yes(_) =&gt; Some(v)
+        No(_) =&gt; find(k, rest)
+      }
+  }
+}
+
+lemma three : Int::deq(3, 3) === Yes(Refl) = Refl
+
+fn main {
+  println(find(2, Cons((1, "one"), Cons((2, "two"), Nil))))
+  println(DecEq::deq(Rgb(1, 2, 3), Rgb(1, 2, 3)) is Yes(_))
+}
+</code></pre>
+<ul>
+<li><code>Int</code>、<code>Int64</code>、<code>UInt</code>、<code>UInt64</code>、<code>Byte</code>、<code>Char</code>、<code>String</code>、<code>BigInt</code> 有 <code>T::deq(a, b)</code>。它们的 <code>==</code>
+就是结构相等，所以比较的结果证明了相等或不相等：这由公理 <code>T::eq_sound : (a == b) === true -&gt; a === b</code> 与 <code>T::ne_sound : (a == b) === false -&gt; Not(a === b)</code> 保证，公理在检查时不计算，编译时被
+擦除。<code>Double</code> 没有：<code>0.0 == -0.0</code>，但它们是不同的值。</li>
+<li><code>Bool</code>、<code>Unit</code>、<code>Nat</code> 的 <code>deq</code> 是普通的定义（<code>Nat</code> 的在运行时直接比较整数）。</li>
+<li>trait <code>DecEq : Eq</code> 的方法是 <code>deq(a : Self, b : Self) -&gt; Dec[a === b]</code>。上面这些类型，以及元素满足
+它的 <code>Option</code>、<code>List</code>、二元组、三元组都有实例。</li>
+<li><code>derive(DecEq)</code> 用于 enum 和 struct：比较构造子，逐个字段 <code>deq</code>，把各字段的证明匹配为 <code>Refl</code> 后
+得到整个值的 <code>Refl</code>；不相等时由字段的反驳（或构造子不同）得到整个值的反驳。它同时 derive <code>Eq</code>
+（<code>DecEq</code> 需要 <code>Eq</code>）。</li>
+<li><code>reflect(b)</code> 的类型是 <code>Reflect(b)</code>，即 <code>IsTrue(b === true)</code> 或 <code>IsFalse(b === false)</code>，用来在分支中
+取得一个布尔表达式的值的证明。</li>
+</ul>
+<p>有了 <code>No</code> 的反驳，用 <code>deq</code> 定义的函数也能对变量证明性质：<code>deq(p, p)</code> 的 <code>No</code> 分支用 <code>absurd</code> 排除。</p>
+<pre><code class="language-moonbit">fn upd(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; (String) -&gt; Nat {
+  n =&gt; match String::deq(n, p) {
+    Yes(_) =&gt; m
+    No(_) =&gt; rho(n)
+  }
+}
+
+lemma upd_same(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; upd(rho, p, m)(p) === m {
+  match String::deq(p, p) {
+    Yes(_) =&gt; Refl
+    No(nope) =&gt; absurd(nope(Refl))
+  }
+}
+
+lemma upd_other(rho : (String) -&gt; Nat, p : String, q : String, m : Nat, ne : Not(q === p)) -&gt;
+  upd(rho, p, m)(q) === rho(q) {
+  match String::deq(q, p) {
+    Yes(e) =&gt; absurd(ne(e))
+    No(_) =&gt; Refl
+  }
+}
+</code></pre>
+<h2 id="指针相等"><a class="header" href="#指针相等">指针相等</a></h2>
+<p><code>physical_equal(a, b)</code> 是 MoonBit 的 <code>physical_equal</code>：是否是同一个对象（结果为 <code>false</code> 时两个值仍可能
+相等）。<code>ptr_deq(a, b)</code> 的结果是 <code>Known[a === b]</code>：是同一个对象时为 <code>Proved(证明)</code>，否则为 <code>Unknown</code>
+（不是同一个对象并不说明不相等），可以作为结构比较之前的快速路径。两者在检查时都不计算，所以检查时
+不能借它们得到证明。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lemma"><a class="header" href="#lemma">lemma</a></h1>
 <p><code>lemma</code> 与 <code>fn</code> 相同，只是结果通常是命题。有两种写法：</p>
@@ -1486,6 +1567,7 @@ fn main {
 <li><code>Compare</code>：先按构造子的声明顺序，再从左到右比较字段。<code>Compare</code> 需要 <code>Eq</code>，所以写
 <code>derive(Eq, Compare)</code>。</li>
 <li><code>Hash</code>：构造子的位置与各字段的哈希。</li>
+<li><code>DecEq</code>：逐个字段 <code>deq</code>，相等时给出证明（见<a href="#可判定相等">可判定相等</a>），同时 derive <code>Eq</code>。</li>
 <li><code>ToJson</code>、<code>FromJson</code>、<code>Debug</code>：由 MoonBit 自己 derive，所以类型必须是 <code>#mbt</code>；生成的
 MoonBit 声明带有 <code>derive(ToJson, @json.FromJson, Debug)</code>，MoonBit++ 的实例调用这些 MoonBit
 方法（因此只在编译后的程序中运行）。<code>FromJson</code> 需要导入 <code>moonbitlang/core/json</code>，<code>Debug</code>
@@ -2132,8 +2214,257 @@ lemma all_counts_ok() -&gt; all_counts() === Cons(2, Cons(1, Cons(1, Cons(0, Nil
 <li>效应不能跨包使用。</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="分阶段元编程"><a class="header" href="#分阶段元编程">分阶段元编程</a></h1>
+<p>分阶段元编程让一个程序生成另一个程序的代码：<code>code { e }</code> 是表达式 <code>e</code> 的代码，<code>${ c }</code> 把代码 <code>c</code>
+放在它所在的位置。写在函数里的拼接在<strong>检查程序时</strong>运行，被它生成的代码替换，所以生成器做的计算
+不会留到运行时。</p>
+<pre><code class="language-moonbit">// x 的 n 次方：对 n 的递归由生成器完成
+fn power(n : Nat, x : Code[Int]) -&gt; Code[Int] {
+  match n {
+    Z =&gt; code { 1 }
+    S(k) =&gt; code { ${x} * ${power(k, x)} }
+  }
+}
+
+// 检查之后，cube 的定义是 x * (x * (x * 1))
+fn cube(x : Int) -&gt; Int {
+  ${ power(3, code { x }) }
+}
+
+lemma cube_2 : cube(2) === 8 = Refl
+
+fn main {
+  println(cube(3))
+}
+</code></pre>
+<ul>
+<li><code>Code[T]</code> 是类型为 <code>T</code> 的代码的类型。</li>
+<li><code>code { e }</code> 的类型是 <code>Code[T]</code>，其中 <code>T</code> 是 <code>e</code> 的类型。<code>code</code> 不是关键字，只有后面紧跟 <code>{</code> 时
+才是引用。</li>
+<li><code>${ c }</code> 要求 <code>c : Code[T]</code>，它的类型是 <code>T</code>。<code>c</code> 是一个变量时可以写成 <code>$c</code>。</li>
+</ul>
+<p><code>cube</code> 编译成 MoonBit 之后是 <code>x * (x * (x * 1))</code>，没有循环，也没有 <code>power</code> 的调用。</p>
+<h2 id="阶段"><a class="header" href="#阶段">阶段</a></h2>
+<p><code>code { }</code> 里的代码以后才运行，<code>${ }</code> 里的代码要先运行。检查器给每段代码一个阶段：声明的定义体
+在阶段 0，<code>code { }</code> 加一，<code>${ }</code> 减一。变量不能在比绑定它的阶段更低的阶段使用——那时它的值还
+不知道：</p>
+<pre><code class="language-text">fn bad(n : Nat, x : Int) -&gt; Int {
+  ${ power(n, code { x }) }
+}
+// error: n is not known when this splice runs: it is a variable of the
+// generated code (it is bound at stage 0 and used at stage -1). Use it
+// inside `code { }`
+</code></pre>
+<p>反过来总是可以的：生成器知道的值可以直接写进代码，不管它是数、字符串、构造子的值、函数还是
+trait 实例。</p>
+<pre><code class="language-moonbit">enum Color { Red; Green } derive(Show)
+
+fn label(c : Color, prefix : String) -&gt; Code[String] {
+  code { prefix + c.to_string() }
+}
+
+// "is " + Green.to_string()
+fn green() -&gt; String {
+  ${ label(Green, "is ") }
+}
+
+fn main {
+  println(green())
+}
+</code></pre>
+<p>类型和证明会被擦除，所以在任何阶段都可以使用。<code>let mut</code> 变量不能跨阶段使用，先用 <code>let</code> 复制。</p>
+<h2 id="生成器"><a class="header" href="#生成器">生成器</a></h2>
+<p>生成器就是返回 <code>Code[T]</code> 的普通函数，可以递归、匹配、调用其他生成器，可以用 <code>let mut</code> 和循环。
+生成的代码也可以有循环和可变变量：</p>
+<pre><code class="language-moonbit">// 依次是 body(0)、…、body(n - 1) 的代码
+fn repeat(n : Int, body : (Int) -&gt; Code[Unit]) -&gt; Code[Unit] {
+  if n == 0 { code { () } } else {
+    code { ${repeat(n - 1, body)}; ${body(n - 1)} }
+  }
+}
+
+// s = s + 0 * m; s = s + 1 * m; s = s + 2 * m
+fn weighted(m : Int) -&gt; Int {
+  let mut s = 0
+  ${ repeat(3, i =&gt; code { s = s + i * m }) }
+  s
+}
+
+// 用可变变量累积代码
+fn sum_code(n : Int, x : Code[Int]) -&gt; Code[Int] {
+  let mut acc = code { 0 }
+  for i = 0; i &lt; n; i = i + 1 {
+    let a = acc
+    acc = code { ${a} + ${x} * i }
+  }
+  acc
+}
+
+fn g(x : Int) -&gt; Int {
+  ${ sum_code(3, code { x }) }
+}
+
+fn main {
+  println(weighted(10))
+  println(g(10))
+}
+</code></pre>
+<p>一段代码被拼接两次就会被计算两次。要只计算一次，就生成一个 <code>let</code>，并把后面的代码作为函数传入：</p>
+<pre><code class="language-moonbit">fn genlet(c : Code[Int], k : (Code[Int]) -&gt; Code[Int]) -&gt; Code[Int] {
+  code { let t = ${c}; ${ k(code { t }) } }
+}
+
+fn square_sum(a : Code[Int], b : Code[Int]) -&gt; Code[Int] {
+  genlet(code { ${a} + ${b} }, s =&gt; code { ${s} * ${s} })
+}
+
+// { let t = x + y; t * t }
+fn f(x : Int, y : Int) -&gt; Int {
+  ${ square_sum(code { x }, code { y }) }
+}
+
+fn main {
+  println(f(1, 2))
+}
+</code></pre>
+<h2 id="与依赖类型一起使用"><a class="header" href="#与依赖类型一起使用">与依赖类型一起使用</a></h2>
+<p>生成器在检查时运行，所以它可以利用只有类型检查器才知道的信息。带类型的表达式语言的求值器，
+分阶段之后就是它的编译器，而且生成的代码里没有运行时的类型标签：</p>
+<pre><code class="language-moonbit">enum Exp : [T] -&gt; Type {
+  IntLit(Int) : Exp[Int]
+  Arg : Exp[Int]
+  Add(Exp[Int], Exp[Int]) : Exp[Int]
+  Less(Exp[Int], Exp[Int]) : Exp[Bool]
+  If[T](Exp[Bool], Exp[T], Exp[T]) : Exp[T]
+}
+
+fn[T] Exp::compile(self : Exp[T], arg : Code[Int]) -&gt; Code[T] {
+  match self {
+    IntLit(n) =&gt; code { n }
+    Arg =&gt; arg
+    Add(l, r) =&gt; code { ${l.compile(arg)} + ${r.compile(arg)} }
+    Less(l, r) =&gt; code { ${l.compile(arg)} &lt; ${r.compile(arg)} }
+    If[_](c, t, f) =&gt;
+      code { if ${c.compile(arg)} { ${t.compile(arg)} } else { ${f.compile(arg)} } }
+  }
+}
+
+// if x &lt; 10 { x + 1 } else { 0 }
+fn step(x : Int) -&gt; Int {
+  ${ If(Less(Arg, IntLit(10)), Add(Arg, IntLit(1)), IntLit(0)).compile(code { x }) }
+}
+
+fn main {
+  println(step(3))
+  println(step(30))
+}
+</code></pre>
+<p>长度已知的向量可以不用循环、也不用处理 <code>Nil</code>：</p>
+<pre><code class="language-moonbit">enum Vector[T] : Nat -&gt; Type {
+  Nil : Vector[T](0)
+  Cons[n : Nat](T, Vector[T](n)) : Vector[T](S(n))
+}
+
+fn sum_n(n : Nat, v : Code[Vector[Int](n)]) -&gt; Code[Int] {
+  match n {
+    Z =&gt; code { 0 }
+    S(k) =&gt; code { match ${v} { Cons(h, t) =&gt; h + ${sum_n(k, code { t })} } }
+  }
+}
+
+fn sum3(v : Vector[Int](3)) -&gt; Int {
+  ${ sum_n(3, code { v }) }
+}
+
+fn main {
+  println(sum3(Cons(1, Cons(2, Cons(3, Nil)))))
+}
+</code></pre>
+<h2 id="代码的含义"><a class="header" href="#代码的含义">代码的含义</a></h2>
+<p>去掉 <code>code { }</code> 和 <code>${ }</code> 之后，程序的结果不变。类型检查器就是这样计算的：<code>${ code { e } }</code> 是
+<code>e</code>，<code>c.run()</code> 是 <code>c</code> 的内容。所以可以证明生成器和生成的函数的性质：</p>
+<pre><code class="language-moonbit">fn inc(c : Code[Int]) -&gt; Code[Int] {
+  code { ${c} + 1 }
+}
+
+lemma inc_run(c : Code[Int]) -&gt; inc(c).run() === c.run() + 1 { Refl }
+
+lemma eta(c : Code[Int]) -&gt; code { ${c} } === c { Refl }
+</code></pre>
+<h2 id="在运行时生成代码"><a class="header" href="#在运行时生成代码">在运行时生成代码</a></h2>
+<p>代码也可以在运行时生成，并用 <code>run</code> 运行。此时生成器的计算在生成代码时完成，运行代码时不再重复：</p>
+<pre><code class="language-moonbit">fn power(n : Nat, x : Code[Int]) -&gt; Code[Int] {
+  match n {
+    Z =&gt; code { 1 }
+    S(k) =&gt; code { ${x} * ${power(k, x)} }
+  }
+}
+
+fn main {
+  let n = 10
+  // 这里做对 n 的递归
+  let c = power(int_to_nat(n), code { 2 })
+  // 这里只做乘法
+  println(c.run())
+}
+</code></pre>
+<p>运行时的代码是闭包，不是 MoonBit 源代码，所以它比写在函数里的拼接（被展开成原生代码）慢。</p>
+<h2 id="拼接与效应"><a class="header" href="#拼接与效应">拼接与效应</a></h2>
+<p><code>code { … ${a} … }</code> 里的拼接 <code>a</code> 在这段代码被生成时运行，不是在代码运行时。所以 <code>a</code> 抛出的错误和
+执行的效应属于生成器：</p>
+<pre><code class="language-moonbit">suberror TooBig { TooBig }
+
+fn small(n : Int) -&gt; Code[Int] raise TooBig {
+  if n &gt; 9 { raise TooBig }
+  code { n }
+}
+
+fn pair(a : Int, b : Int) -&gt; Code[Int] raise TooBig {
+  code { ${small(a)} * 10 + ${small(b)} }
+}
+
+fn main {
+  let c = try pair(1, 20) catch { TooBig =&gt; code { 0 } }
+  println(c.run())
+}
+</code></pre>
+<p>有两种拼接不能有效应（不能 <code>raise</code>，不能执行效应操作）：</p>
+<ul>
+<li>写在函数里、不在 <code>code { }</code> 里的拼接：它在检查程序时运行；</li>
+<li>用到所在代码的变量的拼接，例如 <code>code { (y : Int) =&gt; ${ f(code { y }) } }</code>：它只能在代码运行时
+运行。</li>
+</ul>
+<p>会在运行时抛出错误的代码，类型是 <code>Code[T raise E]</code>：</p>
+<pre><code class="language-moonbit">suberror DivError { DivError(String) }
+
+fn div(a : Int, b : Int) -&gt; Int raise DivError {
+  if b == 0 { raise DivError("div by zero") }
+  a / b
+}
+
+fn half_of(c : Code[Int]) -&gt; Code[Int raise DivError] {
+  code { div(${c}, 2) }
+}
+
+fn f(x : Int) -&gt; Int raise DivError {
+  ${ half_of(code { x }) }
+}
+
+fn main {
+  try { println(f(8)) } catch { DivError(m) =&gt; println(m) }
+}
+</code></pre>
+<h2 id="限制-1"><a class="header" href="#限制-1">限制</a></h2>
+<ul>
+<li>写在函数里的拼接由类型检查器运行，所以生成器不能使用数组、<code>print</code> 和导入的 MoonBit 函数。
+算不出来时会报错，并显示卡住的表达式。</li>
+<li>不能检查或拆开一段代码：<code>Code[T]</code> 只能被拼接和运行。</li>
+<li><code>Code[T]</code> 在编译后的程序里使用统一表示。</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="prelude"><a class="header" href="#prelude">Prelude</a></h1>
-<p>每个程序都自动加载 Prelude（<code>moonpp --no-prelude</code> 可以关闭）。</p>
+<p>每个程序都自动加载 Prelude（<code>moonpp --no-prelude</code> 可以关闭）。程序中与 Prelude 的类型或 trait 同名的
+声明取代它：Prelude 中这个类型的方法、实例和用到它的定义都不再存在（例如自己定义的 <code>HashMap</code>）。</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2142,19 +2473,24 @@ lemma all_counts_ok() -&gt; all_counts() === Cons(2, Cons(1, Cons(1, Cons(0, Nil
 <tbody>
 <tr><td><code>Int</code>、<code>Double</code>、<code>Bool</code>、<code>Char</code>、<code>String</code>、<code>Unit</code>、<code>Array[T]</code>、<code>Error</code></td><td>内置类型</td></tr>
 <tr><td><code>Int64</code>、<code>UInt</code>、<code>UInt64</code>、<code>Byte</code>、<code>Float</code></td><td>其他数值类型：算术、比较、位运算（整数）、<code>to_string</code>、<code>hash</code>；<code>to_int</code>、<code>to_double</code>，<code>Int</code> 的 <code>to_int64</code>、<code>to_uint</code>、<code>to_uint64</code>、<code>to_byte</code>、<code>to_float</code> 等转换</td></tr>
-<tr><td><code>Map[K, V]</code></td><td>按插入顺序的映射：<code>Map::new()</code>、<code>Map::from_array</code>、<code>get</code>、<code>set</code>、<code>m[k]</code>（<code>V?</code>）、<code>m[k] = v</code>、<code>contains</code>、<code>remove</code>、<code>length</code>、<code>keys</code>、<code>values</code>、<code>to_array</code>；<code>for k, v in m</code></td></tr>
+<tr><td><code>Map[K, V]</code></td><td>按插入顺序的映射：<code>Map::new()</code>、<code>Map::from_array</code>、<code>get</code>、<code>set</code>、<code>m[k]</code>（<code>V?</code>）、<code>m[k] = v</code>、<code>contains</code>、<code>remove</code>、<code>length</code>、<code>keys</code>、<code>values</code>、<code>to_array</code>；<code>for k, v in m</code>。查找是线性的</td></tr>
+<tr><td><code>HashMap[K, V]</code></td><td>哈希表（键要有 <code>Hash + Eq</code>），按插入顺序迭代；方法与 <code>Map</code> 相同，期望类型是 <code>HashMap</code> 时 <code>{}</code>、<code>{ k: v }</code> 构造它</td></tr>
 <tr><td><code>assert_eq</code>、<code>assert_not_eq</code>、<code>assert_true</code>、<code>assert_false</code></td><td>测试断言（抛出 <code>Failure</code>）</td></tr>
-<tr><td><code>Nat</code>（<code>Z</code>、<code>S</code>）</td><td>自然数，整数字面量在 <code>Nat</code> 处展开；<code>n.to_int()</code>、<code>int_to_nat(i)</code>、<code>+</code>、<code>*</code>、<code>==</code></td></tr>
-<tr><td><code>Id[T](x)(y)</code>、<code>===</code>、<code>Refl</code></td><td>命题相等；<code>Id::sym</code>、<code>Id::trans</code>、<code>Id::cong</code>、<code>Id::subst</code></td></tr>
+<tr><td><code>Nat</code>（<code>Z</code>、<code>S</code>）</td><td>自然数，整数字面量在 <code>Nat</code> 处展开；<code>+</code>、<code>-</code>（截断：不够减时为 0）、<code>*</code>、<code>/</code>、<code>%</code>（<code>n / 0</code> 是 0，<code>n % 0</code> 是 <code>n</code>）、<code>==</code>、<code>&lt;</code> 等比较、<code>compare</code>、<code>&amp;</code>、<code>|</code>、<code>^</code>、<code>&lt;&lt;</code>、<code>&gt;&gt;</code>（移位量是 <code>Nat</code>）、<code>n.gcd(m)</code>、<code>n.pow(m)</code>、<code>n.log2()</code>（<code>log2(0)</code> 是 0）、<code>n.to_int()</code>、<code>int_to_nat(i)</code>、<code>n.to_bigint()</code>、<code>Nat::of_bigint(b)</code>（负数为 0）。检查时按一元定义计算，运行时是任意精度整数（见<a href="#nat">编译到 MoonBit</a>）</td></tr>
+<tr><td><code>BigInt</code></td><td>任意精度整数（MoonBit 的 <code>BigInt</code>；导入 <code>moonbitlang/core/bigint</code> 时 <code>@bigint.BigInt</code> 就是它）：<code>BigInt::from_int</code>、<code>from_int64</code>、<code>to_int</code>、<code>to_int64</code>、算术、位运算、比较、<code>pow</code>、<code>to_string</code>、<code>hash</code>。没有字面量；检查时不计算</td></tr>
+<tr><td><code>Id[T](x)(y)</code>、<code>===</code>、<code>Refl</code></td><td>命题相等；<code>Id::sym</code>、<code>Id::trans</code>、<code>Id::cong</code>、<code>Id::subst</code>、<code>Id::subst_prop</code></td></tr>
+<tr><td><code>False</code>、<code>Not(P)</code>、<code>absurd</code>；<code>Dec[P]</code>（<code>Yes(P)</code>、<code>No(Not(P))</code>）、<code>T::deq</code>、<code>DecEq</code>、<code>reflect</code>；<code>physical_equal</code>、<code>ptr_deq</code>（<code>Known[P]</code>）</td><td>否定、可判定相等与指针相等（见<a href="#可判定相等">命题相等</a>）</td></tr>
+<tr><td><code>Code[T]</code>、<code>run</code></td><td>代码（<code>code { e }</code>）与在运行时运行它（见<a href="#分阶段元编程">分阶段元编程</a>）</td></tr>
 <tr><td><code>Option[T]</code>（<code>None</code>、<code>Some</code>）、<code>T?</code></td><td>可选值</td></tr>
 <tr><td><code>Result[T, E]</code>（<code>Ok</code>、<code>Err</code>）</td><td>结果</td></tr>
 <tr><td><code>List[T]</code>（<code>Nil</code>、<code>Cons</code>）</td><td>链表：<code>append</code>、<code>reverse</code>、<code>length</code>、<code>map</code>、<code>flat_map</code></td></tr>
-<tr><td><code>(a, b)</code>、<code>(a, b, c)</code></td><td>元组（<code>Tuple2</code>、<code>Tuple3</code>）</td></tr>
+<tr><td><code>(a, b)</code>、<code>(a, b, c)</code></td><td>元组（<code>Tuple2</code>、<code>Tuple3</code>）；元素满足约束时有 <code>Show</code>、<code>Eq</code>、<code>Compare</code>、<code>Hash</code></td></tr>
 <tr><td><code>Failure</code>、<code>fail(msg)</code></td><td>通用错误</td></tr>
 <tr><td><code>Show</code>、<code>Eq</code>、<code>Compare</code>、<code>Add</code>、<code>Sub</code>、<code>Mul</code>、<code>Div</code>、<code>Mod</code>、<code>Neg</code>、<code>Default</code>、<code>Monad</code></td><td>trait（见 <a href="#trait">trait</a>）</td></tr>
 <tr><td><code>println</code>、<code>print</code>、<code>print_string</code></td><td>输出（<code>println</code> 和 <code>print</code> 需要 <code>Show</code>）</td></tr>
 <tr><td><code>abort(msg)</code>、<code>panic()</code></td><td>终止程序</td></tr>
 <tr><td><code>not(b)</code></td><td>布尔取反</td></tr>
+<tr><td><code>ignore(x)</code></td><td>丢弃一个值</td></tr>
 </tbody>
 </table>
 </div>
@@ -2183,7 +2519,7 @@ lemma all_counts_ok() -&gt; all_counts() === Cons(2, Cons(1, Cons(1, Cons(0, Nil
 </ul>
 <h2 id="安装发布版"><a class="header" href="#安装发布版">安装发布版</a></h2>
 <p><a href="https://github.com/GreckF/mbtpp/releases">Releases</a> 页面的每个版本都附有 npm 包：</p>
-<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.6.0/moonpp-0.6.0.tgz
+<pre><code class="language-bash">npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.6.3/moonpp-0.6.3.tgz
 moonpp version
 </code></pre>
 <p>推送 <code>v*</code> tag 时，GitHub Actions 会测试、构建并发布（<code>.github/workflows/release.yml</code>）。</p>
@@ -2270,7 +2606,7 @@ come from that. … list it in the package's moon.pkg: options("mbtpp-order": [ 
 <tr><td><code>moonpp fix [路径]</code></td><td>给这些 <code>pub</code> 声明加上 <code>#mbt</code></td></tr>
 <tr><td><code>moonpp ide &lt;文件&gt; [--overlay &lt;json&gt;]</code></td><td>为编辑器检查文件所在的包，输出 JSON（见<a href="#编辑器">编辑器</a>）</td></tr>
 <tr><td><code>moonpp run [路径]</code></td><td>用解释器运行 main 包（或指定的包、文件）</td></tr>
-<tr><td><code>moonpp run --compiled [路径]</code></td><td>编译到 MoonBit 并用 <code>moon run</code> 运行</td></tr>
+<tr><td><code>moonpp run --compiled [路径] [-- 参数…]</code></td><td>编译到 MoonBit 并用 <code>moon run</code> 运行；<code>--</code> 之后的参数传给程序</td></tr>
 <tr><td><code>moonpp test [路径]</code></td><td>用解释器运行 <code>test "名字" { … }</code> 块，块中可以用 <code>assert_eq</code>、<code>assert_true</code> 等</td></tr>
 <tr><td><code>moonpp build [路径] [-o 目录]</code></td><td>编译成 MoonBit 项目并 <code>moon build</code></td></tr>
 <tr><td><code>moonpp add &lt;user/module[@版本]&gt;</code></td><td>添加依赖（<code>moon add</code>），并为缺少接口的包生成 <code>.mbti</code></td></tr>
@@ -2289,10 +2625,11 @@ come from that. … list it in the package's moon.pkg: options("mbtpp-order": [ 
 <tr><th>选项</th><th>作用</th></tr>
 </thead>
 <tbody>
-<tr><td><code>--verbose</code></td><td>列出导入时被跳过的接口项</td></tr>
+<tr><td><code>--verbose</code></td><td>列出导入时被跳过的接口项；<code>build</code>、<code>run --compiled</code> 时还列出没有原生版本的函数及原因</td></tr>
 <tr><td><code>--no-prelude</code></td><td>不加载 Prelude</td></tr>
 <tr><td><code>--compiled</code></td><td><code>run</code> 时运行编译结果而不是解释执行</td></tr>
 <tr><td><code>-o</code>、<code>--output &lt;目录&gt;</code></td><td><code>build</code>、<code>run --compiled</code> 时生成项目的位置</td></tr>
+<tr><td><code>-- 参数…</code></td><td><code>run --compiled</code> 时传给程序的命令行参数（例如用 <code>@sys.get_cli_args()</code> 读取）</td></tr>
 </tbody>
 </table>
 </div>
@@ -2346,6 +2683,7 @@ source = "src"
   moon.work         工作区：自身，加上本地模块（绝对路径）
   README.md
   .gitignore
+  package.json      {"type": "module"}：JS 后端的产物是 ES module，可以直接 node main.js
   main/
     moon.pkg            导入的 MoonBit 包；main 包
     main.mbt            src/main/main.mbtpp 编译的结果
@@ -2494,6 +2832,7 @@ fn main {
 <tbody>
 <tr><td><code>Int32</code>（即 <code>Int</code>）、<code>Double</code>、<code>Bool</code>、<code>Char</code>、<code>String</code>、<code>Unit</code></td><td>同名内置类型（<code>Int32</code> 即 <code>Int</code>）</td></tr>
 <tr><td><code>Int64</code>、<code>UInt</code>、<code>UInt64</code>、<code>Byte</code>、<code>Float</code></td><td>同名内置类型</td></tr>
+<tr><td><code>BigInt</code>（<code>@bigint.BigInt</code>）</td><td>内置类型 <code>BigInt</code>；<code>@bigint.BigInt::m</code> 即 <code>BigInt::m</code></td></tr>
 <tr><td><code>Array[T]</code>、<code>T?</code>、<code>Result[T, E]</code></td><td>同名类型</td></tr>
 <tr><td><code>StringView</code>、<code>ArrayView[T]</code></td><td><code>String</code>、<code>Array[T]</code></td></tr>
 <tr><td><code>pub(all) enum</code>、<code>pub(all) struct</code></td><td>同样的 enum、struct，自动 <code>#mbt</code>；可以构造和匹配</td></tr>
@@ -2543,9 +2882,9 @@ MoonBit 填入。填入的位置是生成的 <code>.mbt</code> 中的位置。</
 <ul>
 <li>trait 既不是 Prelude trait、也不是导入的 trait 的 <code>impl</code>（例如没有导入 <code>moonbitlang/core/debug</code>
 时的 <code>@debug.Debug</code>）；</li>
-<li><code>#deprecated</code> 的项；</li>
 <li>trait 的重新导出（<code>@builtin</code> 的除外），以及来源包未导入的函数的重新导出。</li>
 </ul>
+<p><code>#deprecated</code> 的项照常导入（MoonBit 也只对它们的使用给出警告）。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="编译到-moonbit"><a class="header" href="#编译到-moonbit">编译到 MoonBit</a></h1>
 <p>编译器把类型检查后的程序翻译成 MoonBit。<code>moonpp build</code> 和 <code>moonpp run --compiled</code> 使用它；
@@ -2557,14 +2896,24 @@ MoonBit 填入。填入的位置是生成的 <code>.mbt</code> 中的位置。</
 都是原生类型、函数体也在原生片段中的函数，翻译成普通的（可以是泛型的）MoonBit 函数。原生类型是：</p>
 <ul>
 <li><code>Int</code>、<code>Double</code>、<code>Bool</code>、<code>Char</code>、<code>String</code>、<code>Unit</code>；</li>
+<li><code>Nat</code>，即 MoonBit 的 <code>BigInt</code>（见下面的 <a href="#nat">Nat</a>）；</li>
 <li>类型参数和函数类型；</li>
 <li>数组 <code>Array[T]</code>（<code>T</code> 是原生类型），即 MoonBit 的数组；</li>
-<li>参数都是类型、字段都是原生类型的数据类型。</li>
+<li>字段都是原生类型的数据类型。</li>
 </ul>
 <p>索引和被擦除的字段消失，例如：</p>
 <pre><code class="language-text">enum Vector[T] : Nat -&gt; Type { Nil : …; Cons[n : Nat](T, Vector[T](n)) : … }
 // 编译为
 enum E_Vector[T0] { Nil; Cons(T0, E_Vector[T0]) }
+</code></pre>
+<p>不是类型的参数（值参数，如 <code>struct Scoped(n : Nat)</code> 的 <code>n</code>，以及命题参数）也像索引一样去掉，所以只在
+类型或证明字段中用到它们的数据类型仍是原生的。擦除之后只有一个构造子、只保留一个字段（且字段不是
+这个类型本身）的数据类型编译成 MoonBit 的元组 struct，不额外装箱：</p>
+<pre><code class="language-text">type Ex Int                          // struct E_Ex(Int)
+struct Scoped(n : Nat) {             // struct E_Scoped(E_Expr)
+  e : Expr
+  ok : closed(e, n) === true
+}
 </code></pre>
 <p><code>#mbt</code> 类型使用自己的名字而不是 <code>E_…</code>（见 <a href="#mbt-类型与-trait">#mbt 类型与 trait</a>）。</p>
 <p>Prelude 中 <code>#mbt</code> trait（<code>Show</code>、<code>Eq</code>、<code>Compare</code>、<code>Hash</code>、<code>Default</code>、运算符等）的实例，在原生代码
@@ -2573,6 +2922,83 @@ impl，它们的输出与比较和 Prelude 的实例相同。因此在 async 函
 这些数据（以及数组和 <code>Map</code>）。</p>
 <p>数组不会在原生代码与统一表示之间转换：两边的数组若是副本，修改就不能共享。参数或结果含数组的
 函数有原生和统一表示两个版本，原生代码之间、统一表示代码之间各自直接传递数组。</p>
+<p>类型是原生类型、定义在原生片段中的全局 <code>let</code> 也是原生的：它在第一次使用时计算一次，原生代码直接
+引用它，所以读写它的函数仍有原生版本。统一表示中的代码看到的是它转换后的值；含数组（或其他不能
+转换的部分）的全局 <code>let</code> 只有在没有统一表示代码使用它时才是原生的，以保证两边是同一个数组。</p>
+<pre><code class="language-text">struct Arena { kinds : Array[Int] }
+let glob : Arena = { kinds: [1, 2, 3] }
+fn kind_glob(e : Int) -&gt; Int { glob.kinds[e] }   // fn f_kind_glob_t(e : Int) -&gt; Int
+</code></pre>
+<p>不会抛出错误的原生函数编译成不带 <code>raise</code> 的 MoonBit 函数（在 JS 后端，调用 <code>raise</code> 函数要分配和检查
+结果对象）。会抛出的只有 <code>raise</code>、调用会抛出的函数（包括函数值和 trait 方法）以及经过统一表示的调用；
+原生代码中的运行时错误（数组越界、除以零、没有匹配的分支）不是错误值，它们输出与统一表示相同的信息
+后终止程序。</p>
+<p>参数或结果含数组（或其他不能转换的部分）的函数，统一表示的代码只能调用它的统一版本。所以入口要
+留在原生片段中：<code>main</code>（以及全局 <code>let</code>）的定义在原生片段中时是原生的，可以使用 <code>return</code>；一旦
+<code>main</code> 只能用统一表示，它调用的这类函数也都在统一表示中运行。</p>
+<p><code>moonpp build --verbose</code> 列出程序中没有原生版本的函数和全局 <code>let</code>（包括 <code>main</code>），以及原因，
+原因会沿着类型和字段一直追到源头，例如：</p>
+<pre><code class="language-text">without a native version (they run in the uniform representation):
+  bump: its body is not in the native fragment: in `glob`, the global let glob is not native
+  glob: it holds arrays, and code in the uniform representation uses it
+  sum_n: its signature has no native translation
+</code></pre>
+<h2 id="nat"><a class="header" href="#nat">Nat</a></h2>
+<p>类型检查时，<code>Nat</code> 是一进制的 <code>Z</code>、<code>S(n)</code>，证明按定义计算。运行时（解释器和编译后的程序）中，<code>Nat</code>
+是任意精度的整数，即 MoonBit 的 <code>BigInt</code>：</p>
+<ul>
+<li><code>Z</code> 是 0，<code>S(e)</code> 是 <code>e + 1</code>；数字字面量直接是 <code>BigInt</code> 字面量（如 <code>10N</code>）。</li>
+<li>模式 <code>S(…S(p))</code>（k 层）检查值是否 ≥ k（<code>p</code> 是 <code>Z</code> 时检查是否 = k），各层绑定的值是原值减去
+相应的层数。</li>
+<li>Prelude 中 <code>Nat</code> 的 <code>+</code>、<code>*</code>、<code>==</code>、<code>compare</code>、<code>to_int</code>、<code>to_string</code> 和 <code>int_to_nat</code> 是
+<code>BigInt</code> 的运算。</li>
+</ul>
+<p>所以 <code>Nat</code> 的算术不再随数值线性增长，也不会因为深度递归而栈溢出：</p>
+<pre><code class="language-text">fn fact(n : Nat) -&gt; Nat {
+  match n {
+    Z =&gt; 1
+    S(k) =&gt; n * fact(k)
+  }
+}
+// 原生翻译
+fn f45_fact_t(n : BigInt) -&gt; BigInt raise {
+  match n {
+    n0 if n0 == 0N =&gt; 1N
+    n1 if n1 &gt;= 1N =&gt; n * f45_fact_t(n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<p><code>fact(30)</code> 的结果是 <code>265252859812191058636308480000000</code>。自己按结构递归定义的函数（例如另写的加法）
+仍然每层递归一次，只是每一层是 <code>BigInt</code> 的运算。<code>Nat</code> 不是 MoonBit 类型：<code>#mbt fn</code> 的参数和结果
+不能是 <code>Nat</code>，因为 MoonBit 传入的 <code>BigInt</code> 可能是负数。</p>
+<h3 id="形状与-nat-相同的类型"><a class="header" href="#形状与-nat-相同的类型">形状与 Nat 相同的类型</a></h3>
+<p>编译后，擦除之后形状与 <code>Nat</code> 相同的数据类型也用 <code>BigInt</code> 表示：两个构造子，一个没有保留的字段（零），
+另一个只保留一个字段，类型是这个数据类型本身（后继）。最常见的是有限集 <code>Fin</code>：</p>
+<pre><code class="language-text">enum Fin : (Nat) -&gt; Type {
+  FZ[n : Nat] : Fin(S(n))
+  FS[n : Nat](Fin(n)) : Fin(S(n))
+}
+</code></pre>
+<p><code>FZ</code>、<code>FS</code> 的隐式字段 <code>n</code> 只用于类型，被擦除，所以 <code>Fin(n)</code> 的值就是一个下标，<code>FS(FS(FZ))</code> 是
+<code>2N</code>。按 <code>Fin</code> 取向量元素因此编译为按整数下标逐层递归：</p>
+<pre><code class="language-text">fn[T0] f46_vector_get_t(self : E_Vector[T0], i : BigInt) -&gt; T0 raise {
+  match (self, i) {
+    (E_Vector::Cons(x, _), n0) if n0 == 0N =&gt; x
+    (E_Vector::Cons(_, xs), n1) if n1 &gt;= 1N =&gt; f46_vector_get_t(xs, n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<ul>
+<li>自己定义的 <code>enum Peano { Zero; Succ(Peano) }</code> 也是这样。</li>
+<li>隐式字段在运行时用到时（例如模式 <code>FS[m](_) =&gt; m.to_int()</code>），它不被擦除，类型仍是普通的
+enum。</li>
+<li>命题、错误类型、<code>#mbt</code> 类型和导入的类型保持原来的表示。</li>
+<li>这样的类型（<code>Nat</code> 除外）的实例不会成为 MoonBit 的 <code>impl</code>，因为它们在 MoonBit 中都是 <code>BigInt</code>；
+用到这些实例的代码使用统一表示。</li>
+<li>解释器只对 <code>Nat</code> 这样做（解释器不做擦除）。</li>
+</ul>
 <h2 id="统一表示"><a class="header" href="#统一表示">统一表示</a></h2>
 <p>其余部分（类型层计算、GADT 细化、非 <code>#mbt</code> 的 trait 等）使用统一值表示 <code>Value</code>。它是运行时
 中的一个可扩展 enum（MoonBit 的 <code>extenum</code>），固定变体是 <code>VInt</code>、<code>VFun</code> 等；每个生成的文件用
@@ -2621,6 +3047,9 @@ impl，它们的输出与比较和 Prelude 的实例相同。因此在 async 函
 <p>一个 <code>fib</code> 程序编译后约快 40 倍（解释器 7.85 秒，编译后 0.18 秒）。构造子成为 <code>Value</code> 的原生
 变体之前，统一表示中的数据是 <code>VCon(构造子名, 字段数组)</code>，匹配要比较字符串；改为原生变体后，
 对一棵 2^18 个叶子的 <code>Exp</code> 树求值 20 次，从 2.65 秒降到 1.26 秒。</p>
+<p>原生代码与统一表示之间按值递归转换（<code>expr_to_value</code>、<code>expr_of_value</code>）。如果数据是高度共享的
+DAG（例如共享子项的表达式），转换会展开共享，大小可能变成指数级。处理这种数据的函数应当留在原生
+片段中，避免让它们跨过边界：例如不要让它们经过类型层计算、GADT 细化等只能用统一表示的代码。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="调用-moonbit-函数"><a class="header" href="#调用-moonbit-函数">调用 MoonBit 函数</a></h1>
 <p>编译后的程序真正调用导入的 MoonBit 函数：</p>
@@ -2823,15 +3252,19 @@ or a bound that is not #mbt)
 <code>Some("x")</code>。</li>
 <li>泛型实例与更具体的实例重叠时（<code>impl[T] Tr for Array[T]</code> 和 <code>impl Tr for Array[Int]</code>），不报错，
 使用先找到的泛型实例；MoonBit 拒绝这样的程序。同一类型的同一方法实现两次会报错。</li>
-<li><code>Array</code> 和元组没有 <code>Compare</code> 实例；整数字面量不按期望类型重载（<code>let x : Int64 = 3</code> 要写 <code>3L</code>）。</li>
+<li><code>Array</code> 没有 <code>Compare</code> 实例；整数字面量不按期望类型重载（<code>let x : Int64 = 3</code> 要写 <code>3L</code>）。</li>
 <li>对证明（非子单例的 <code>Prop</code>）的匹配可以出现在结果是证明的地方，但分支中的副作用（输出、修改
 变量）在编译后的程序中不会发生，因为证明被擦除。</li>
 <li>比较运算符可以连写（<code>a == b == c</code> 按左结合解析），MoonBit 不允许。</li>
 <li>含数组模式的 <code>match</code> 不做覆盖检查，也不细化类型。</li>
-<li><code>Map</code> 是 Prelude 用 MoonBit++ 实现的（按插入顺序，查找是线性的），不是 MoonBit 的 <code>Map</code>：参数或返回值
-是 MoonBit <code>Map</code> 的导入函数不能调用。</li>
-<li>没有 <code>BigInt</code> 字面量（<code>1N</code>）、<code>Int16</code>、<code>UInt16</code>；<code>Float</code> 的方法只有运算、比较和转换。</li>
+<li><code>Map</code> 和 <code>HashMap</code> 是 Prelude 用 MoonBit++ 实现的（<code>Map</code> 的查找是线性的，大的表用 <code>HashMap</code>），不是
+MoonBit 的 <code>Map</code>、<code>HashMap</code>：参数或返回值是 MoonBit 的这些类型的导入函数不能调用。</li>
+<li>没有 <code>BigInt</code> 字面量（<code>1N</code>）、<code>Int16</code>、<code>UInt16</code>；导入的 <code>@bigint</code> 中与 Prelude 同名的 <code>BigInt</code> 方法（如带
+<code>radix?</code> 的 <code>to_string</code>）被 Prelude 的取代；<code>Float</code> 的方法只有运算、比较和转换。</li>
 <li>类型检查时执行非纯函数时，用到数组、导入函数或捕获 <code>let mut</code> 的 lambda 的调用不执行（见<a href="#可变状态与循环">可变状态与循环</a>）。</li>
+<li>分阶段元编程的限制见<a href="#限制-1">分阶段元编程</a>：写在函数里的拼接由检查器运行，生成器不能用
+数组、<code>print</code> 和导入的函数；用到所在代码变量的拼接不能有效应；生成代码里嵌套在另一个局部递归函数中的
+局部递归函数不会被特化（它的拼接留到运行时）。</li>
 <li>检查时限按实际时间计算，同一个文件在较慢的机器上可能超时（见<a href="#检查时限">检查时限</a>）。</li>
 </ul>
 <h2 id="导入"><a class="header" href="#导入">导入</a></h2>
@@ -2846,6 +3279,8 @@ or a bound that is not #mbt)
 <ul>
 <li><code>Hash</code> 的值在解释器和编译后的程序中不同（编译后用 MoonBit 的哈希）。</li>
 <li>统一表示与原生代码之间按值转换，频繁跨边界传递大型数据会慢。</li>
+<li>原生代码中的运行时错误（越界、除以零等）直接终止程序，不执行 <code>defer</code>；解释器和统一表示会先执行
+<code>defer</code>。</li>
 </ul>
 <h2 id="工具"><a class="header" href="#工具">工具</a></h2>
 <ul>

@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,6 +191,7 @@
 <tbody>
 <tr><td><code>Int32</code>（即 <code>Int</code>）、<code>Double</code>、<code>Bool</code>、<code>Char</code>、<code>String</code>、<code>Unit</code></td><td>同名内置类型（<code>Int32</code> 即 <code>Int</code>）</td></tr>
 <tr><td><code>Int64</code>、<code>UInt</code>、<code>UInt64</code>、<code>Byte</code>、<code>Float</code></td><td>同名内置类型</td></tr>
+<tr><td><code>BigInt</code>（<code>@bigint.BigInt</code>）</td><td>内置类型 <code>BigInt</code>；<code>@bigint.BigInt::m</code> 即 <code>BigInt::m</code></td></tr>
 <tr><td><code>Array[T]</code>、<code>T?</code>、<code>Result[T, E]</code></td><td>同名类型</td></tr>
 <tr><td><code>StringView</code>、<code>ArrayView[T]</code></td><td><code>String</code>、<code>Array[T]</code></td></tr>
 <tr><td><code>pub(all) enum</code>、<code>pub(all) struct</code></td><td>同样的 enum、struct，自动 <code>#mbt</code>；可以构造和匹配</td></tr>
@@ -240,9 +241,9 @@ MoonBit 填入。填入的位置是生成的 <code>.mbt</code> 中的位置。</
 <ul>
 <li>trait 既不是 Prelude trait、也不是导入的 trait 的 <code>impl</code>（例如没有导入 <code>moonbitlang/core/debug</code>
 时的 <code>@debug.Debug</code>）；</li>
-<li><code>#deprecated</code> 的项；</li>
 <li>trait 的重新导出（<code>@builtin</code> 的除外），以及来源包未导入的函数的重新导出。</li>
 </ul>
+<p><code>#deprecated</code> 的项照常导入（MoonBit 也只对它们的使用给出警告）。</p>
 
                     </main>
 

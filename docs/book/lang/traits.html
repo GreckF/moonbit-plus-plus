@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -322,6 +322,7 @@ fn main {
 <li><code>Compare</code>：先按构造子的声明顺序，再从左到右比较字段。<code>Compare</code> 需要 <code>Eq</code>，所以写
 <code>derive(Eq, Compare)</code>。</li>
 <li><code>Hash</code>：构造子的位置与各字段的哈希。</li>
+<li><code>DecEq</code>：逐个字段 <code>deq</code>，相等时给出证明（见<a href="equality.html#可判定相等">可判定相等</a>），同时 derive <code>Eq</code>。</li>
 <li><code>ToJson</code>、<code>FromJson</code>、<code>Debug</code>：由 MoonBit 自己 derive，所以类型必须是 <code>#mbt</code>；生成的
 MoonBit 声明带有 <code>derive(ToJson, @json.FromJson, Debug)</code>，MoonBit++ 的实例调用这些 MoonBit
 方法（因此只在编译后的程序中运行）。<code>FromJson</code> 需要导入 <code>moonbitlang/core/json</code>，<code>Debug</code>

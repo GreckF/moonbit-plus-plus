@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,14 +191,24 @@
 都是原生类型、函数体也在原生片段中的函数，翻译成普通的（可以是泛型的）MoonBit 函数。原生类型是：</p>
 <ul>
 <li><code>Int</code>、<code>Double</code>、<code>Bool</code>、<code>Char</code>、<code>String</code>、<code>Unit</code>；</li>
+<li><code>Nat</code>，即 MoonBit 的 <code>BigInt</code>（见下面的 <a href="#nat">Nat</a>）；</li>
 <li>类型参数和函数类型；</li>
 <li>数组 <code>Array[T]</code>（<code>T</code> 是原生类型），即 MoonBit 的数组；</li>
-<li>参数都是类型、字段都是原生类型的数据类型。</li>
+<li>字段都是原生类型的数据类型。</li>
 </ul>
 <p>索引和被擦除的字段消失，例如：</p>
 <pre><code class="language-text">enum Vector[T] : Nat -&gt; Type { Nil : …; Cons[n : Nat](T, Vector[T](n)) : … }
 // 编译为
 enum E_Vector[T0] { Nil; Cons(T0, E_Vector[T0]) }
+</code></pre>
+<p>不是类型的参数（值参数，如 <code>struct Scoped(n : Nat)</code> 的 <code>n</code>，以及命题参数）也像索引一样去掉，所以只在
+类型或证明字段中用到它们的数据类型仍是原生的。擦除之后只有一个构造子、只保留一个字段（且字段不是
+这个类型本身）的数据类型编译成 MoonBit 的元组 struct，不额外装箱：</p>
+<pre><code class="language-text">type Ex Int                          // struct E_Ex(Int)
+struct Scoped(n : Nat) {             // struct E_Scoped(E_Expr)
+  e : Expr
+  ok : closed(e, n) === true
+}
 </code></pre>
 <p><code>#mbt</code> 类型使用自己的名字而不是 <code>E_…</code>（见 <a href="mbt-types.html">#mbt 类型与 trait</a>）。</p>
 <p>Prelude 中 <code>#mbt</code> trait（<code>Show</code>、<code>Eq</code>、<code>Compare</code>、<code>Hash</code>、<code>Default</code>、运算符等）的实例，在原生代码
@@ -207,6 +217,83 @@ impl，它们的输出与比较和 Prelude 的实例相同。因此在 async 函
 这些数据（以及数组和 <code>Map</code>）。</p>
 <p>数组不会在原生代码与统一表示之间转换：两边的数组若是副本，修改就不能共享。参数或结果含数组的
 函数有原生和统一表示两个版本，原生代码之间、统一表示代码之间各自直接传递数组。</p>
+<p>类型是原生类型、定义在原生片段中的全局 <code>let</code> 也是原生的：它在第一次使用时计算一次，原生代码直接
+引用它，所以读写它的函数仍有原生版本。统一表示中的代码看到的是它转换后的值；含数组（或其他不能
+转换的部分）的全局 <code>let</code> 只有在没有统一表示代码使用它时才是原生的，以保证两边是同一个数组。</p>
+<pre><code class="language-text">struct Arena { kinds : Array[Int] }
+let glob : Arena = { kinds: [1, 2, 3] }
+fn kind_glob(e : Int) -&gt; Int { glob.kinds[e] }   // fn f_kind_glob_t(e : Int) -&gt; Int
+</code></pre>
+<p>不会抛出错误的原生函数编译成不带 <code>raise</code> 的 MoonBit 函数（在 JS 后端，调用 <code>raise</code> 函数要分配和检查
+结果对象）。会抛出的只有 <code>raise</code>、调用会抛出的函数（包括函数值和 trait 方法）以及经过统一表示的调用；
+原生代码中的运行时错误（数组越界、除以零、没有匹配的分支）不是错误值，它们输出与统一表示相同的信息
+后终止程序。</p>
+<p>参数或结果含数组（或其他不能转换的部分）的函数，统一表示的代码只能调用它的统一版本。所以入口要
+留在原生片段中：<code>main</code>（以及全局 <code>let</code>）的定义在原生片段中时是原生的，可以使用 <code>return</code>；一旦
+<code>main</code> 只能用统一表示，它调用的这类函数也都在统一表示中运行。</p>
+<p><code>moonpp build --verbose</code> 列出程序中没有原生版本的函数和全局 <code>let</code>（包括 <code>main</code>），以及原因，
+原因会沿着类型和字段一直追到源头，例如：</p>
+<pre><code class="language-text">without a native version (they run in the uniform representation):
+  bump: its body is not in the native fragment: in `glob`, the global let glob is not native
+  glob: it holds arrays, and code in the uniform representation uses it
+  sum_n: its signature has no native translation
+</code></pre>
+<h2 id="nat"><a class="header" href="#nat">Nat</a></h2>
+<p>类型检查时，<code>Nat</code> 是一进制的 <code>Z</code>、<code>S(n)</code>，证明按定义计算。运行时（解释器和编译后的程序）中，<code>Nat</code>
+是任意精度的整数，即 MoonBit 的 <code>BigInt</code>：</p>
+<ul>
+<li><code>Z</code> 是 0，<code>S(e)</code> 是 <code>e + 1</code>；数字字面量直接是 <code>BigInt</code> 字面量（如 <code>10N</code>）。</li>
+<li>模式 <code>S(…S(p))</code>（k 层）检查值是否 ≥ k（<code>p</code> 是 <code>Z</code> 时检查是否 = k），各层绑定的值是原值减去
+相应的层数。</li>
+<li>Prelude 中 <code>Nat</code> 的 <code>+</code>、<code>*</code>、<code>==</code>、<code>compare</code>、<code>to_int</code>、<code>to_string</code> 和 <code>int_to_nat</code> 是
+<code>BigInt</code> 的运算。</li>
+</ul>
+<p>所以 <code>Nat</code> 的算术不再随数值线性增长，也不会因为深度递归而栈溢出：</p>
+<pre><code class="language-text">fn fact(n : Nat) -&gt; Nat {
+  match n {
+    Z =&gt; 1
+    S(k) =&gt; n * fact(k)
+  }
+}
+// 原生翻译
+fn f45_fact_t(n : BigInt) -&gt; BigInt raise {
+  match n {
+    n0 if n0 == 0N =&gt; 1N
+    n1 if n1 &gt;= 1N =&gt; n * f45_fact_t(n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<p><code>fact(30)</code> 的结果是 <code>265252859812191058636308480000000</code>。自己按结构递归定义的函数（例如另写的加法）
+仍然每层递归一次，只是每一层是 <code>BigInt</code> 的运算。<code>Nat</code> 不是 MoonBit 类型：<code>#mbt fn</code> 的参数和结果
+不能是 <code>Nat</code>，因为 MoonBit 传入的 <code>BigInt</code> 可能是负数。</p>
+<h3 id="形状与-nat-相同的类型"><a class="header" href="#形状与-nat-相同的类型">形状与 Nat 相同的类型</a></h3>
+<p>编译后，擦除之后形状与 <code>Nat</code> 相同的数据类型也用 <code>BigInt</code> 表示：两个构造子，一个没有保留的字段（零），
+另一个只保留一个字段，类型是这个数据类型本身（后继）。最常见的是有限集 <code>Fin</code>：</p>
+<pre><code class="language-text">enum Fin : (Nat) -&gt; Type {
+  FZ[n : Nat] : Fin(S(n))
+  FS[n : Nat](Fin(n)) : Fin(S(n))
+}
+</code></pre>
+<p><code>FZ</code>、<code>FS</code> 的隐式字段 <code>n</code> 只用于类型，被擦除，所以 <code>Fin(n)</code> 的值就是一个下标，<code>FS(FS(FZ))</code> 是
+<code>2N</code>。按 <code>Fin</code> 取向量元素因此编译为按整数下标逐层递归：</p>
+<pre><code class="language-text">fn[T0] f46_vector_get_t(self : E_Vector[T0], i : BigInt) -&gt; T0 raise {
+  match (self, i) {
+    (E_Vector::Cons(x, _), n0) if n0 == 0N =&gt; x
+    (E_Vector::Cons(_, xs), n1) if n1 &gt;= 1N =&gt; f46_vector_get_t(xs, n1 - 1N)
+    _ =&gt; rt_fail("no match")
+  }
+}
+</code></pre>
+<ul>
+<li>自己定义的 <code>enum Peano { Zero; Succ(Peano) }</code> 也是这样。</li>
+<li>隐式字段在运行时用到时（例如模式 <code>FS[m](_) =&gt; m.to_int()</code>），它不被擦除，类型仍是普通的
+enum。</li>
+<li>命题、错误类型、<code>#mbt</code> 类型和导入的类型保持原来的表示。</li>
+<li>这样的类型（<code>Nat</code> 除外）的实例不会成为 MoonBit 的 <code>impl</code>，因为它们在 MoonBit 中都是 <code>BigInt</code>；
+用到这些实例的代码使用统一表示。</li>
+<li>解释器只对 <code>Nat</code> 这样做（解释器不做擦除）。</li>
+</ul>
 <h2 id="统一表示"><a class="header" href="#统一表示">统一表示</a></h2>
 <p>其余部分（类型层计算、GADT 细化、非 <code>#mbt</code> 的 trait 等）使用统一值表示 <code>Value</code>。它是运行时
 中的一个可扩展 enum（MoonBit 的 <code>extenum</code>），固定变体是 <code>VInt</code>、<code>VFun</code> 等；每个生成的文件用
@@ -255,6 +342,9 @@ impl，它们的输出与比较和 Prelude 的实例相同。因此在 async 函
 <p>一个 <code>fib</code> 程序编译后约快 40 倍（解释器 7.85 秒，编译后 0.18 秒）。构造子成为 <code>Value</code> 的原生
 变体之前，统一表示中的数据是 <code>VCon(构造子名, 字段数组)</code>，匹配要比较字符串；改为原生变体后，
 对一棵 2^18 个叶子的 <code>Exp</code> 树求值 20 次，从 2.65 秒降到 1.26 秒。</p>
+<p>原生代码与统一表示之间按值递归转换（<code>expr_to_value</code>、<code>expr_of_value</code>）。如果数据是高度共享的
+DAG（例如共享子项的表达式），转换会展开共享，大小可能变成指数级。处理这种数据的函数应当留在原生
+片段中，避免让它们跨过边界：例如不要让它们经过类型层计算、GADT 细化等只能用统一表示的代码。</p>
 
                     </main>
 

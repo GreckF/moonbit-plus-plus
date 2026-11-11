@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -244,6 +244,9 @@ fn main {
 <h2 id="using-constructors"><a class="header" href="#using-constructors">Using constructors</a></h2>
 <ul>
 <li>The data type’s parameters are always inferred; <code>[...]</code> supplies only the constructor’s own implicit parameters, e.g. <code>Cons[n](x, xs)</code>.</li>
+<li>When the expected type is known, it determines the implicit arguments before the arguments are
+checked: in <code>MkIsZ(Refl) : IsZ(Z)</code>, <code>n</code> is <code>Z</code> before <code>Refl : f(n) === Z</code> is checked (calls of
+functions too, when their result type does not depend on the explicit arguments).</li>
 <li>Constructors with the same name are disambiguated by the expected type, or you can write the full name <code>Vector::Cons</code>.</li>
 <li>An enum whose universe is <code>Prop</code> is a proposition, e.g. <code>Id</code> in the Prelude (see <a href="equality.html">Propositional Equality</a>).</li>
 </ul>

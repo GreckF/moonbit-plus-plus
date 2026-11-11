@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -261,7 +261,8 @@ lemma insert_length(x : Int, xs : List[Int]) -&gt; length(insert(x, xs)) === S(l
 <li>This is done only when the goal is a proposition; a <code>match</code> in an ordinary function is not
 affected.</li>
 <li>Literal patterns (<code>true</code>, <code>0</code>, <code>"a"</code>) refine the matched variable too: in the arm, the variable is
-that literal.</li>
+that literal. So does a literal sub-pattern of a constructor: in <code>MkSing(true, e)</code>, the field is
+<code>true</code> in the type of the later field <code>e</code>.</li>
 </ul>
 <h2 id="eliminating-prop"><a class="header" href="#eliminating-prop">Eliminating Prop</a></h2>
 <p>When matching on data in <code>Prop</code> (proofs), the result must also be in <code>Prop</code>: proofs are erased by

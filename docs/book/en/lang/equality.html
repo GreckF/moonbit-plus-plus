@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-55df5e9a.js";
+            window.path_to_searchindex_js = "../searchindex-0a28263a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-754cddce.js"></script>
+        <script src="../toc-f32828f8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,7 +207,8 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 <tr><td><code>Id::sym(p)</code></td><td>from <code>x === y</code> derive <code>y === x</code></td></tr>
 <tr><td><code>Id::trans(p, q)</code></td><td>from <code>x === y</code> and <code>y === z</code> derive <code>x === z</code></td></tr>
 <tr><td><code>Id::cong(f, p)</code></td><td>from <code>x === y</code> derive <code>f(x) === f(y)</code></td></tr>
-<tr><td><code>Id::subst(p, motive, px)</code></td><td>from <code>x === y</code> and <code>motive(x)</code> derive <code>motive(y)</code>; <code>motive</code> may return <code>Type</code></td></tr>
+<tr><td><code>Id::subst(p, motive, px)</code></td><td>from <code>x === y</code> and <code>motive(x)</code> derive <code>motive(y)</code>; <code>motive</code> returns <code>Type</code></td></tr>
+<tr><td><code>Id::subst_prop(p, motive, px)</code></td><td>the same, with a <code>motive</code> returning <code>Prop</code> (rewriting a proposition, e.g. <code>NatLe(a, b)</code> to <code>NatLe(a, c)</code>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -220,6 +221,87 @@ lemma plus_zero_left(n : Nat) -&gt; (0 : Nat) + n === n {
 </code></pre>
 <p><code>==</code> is not the same as <code>===</code>: <code>==</code> compares values, producing a <code>Bool</code> that can be computed at run
 time; <code>===</code> is a proposition.</p>
+<h2 id="decidable-equality"><a class="header" href="#decidable-equality">Decidable equality</a></h2>
+<p><code>a == b</code> being <code>true</code> does not give <code>a === b</code> in the logic. When a comparison should give a proof
+(certified caches, hash tables), use <code>deq</code>, whose result is a <code>Dec[a === b]</code>, as Lean’s <code>Decidable</code>:</p>
+<pre><code class="language-text">enum False : Prop {}               // the proposition without proofs
+fn Not(P : Prop) -&gt; Prop { (P) -&gt; False }
+fn[T] absurd(f : False) -&gt; T       // anything from a contradiction
+
+enum Dec[P : Prop] {
+  Yes(P)                           // a proof of the equality
+  No(Not(P))                       // a proof that it does not hold
+}
+</code></pre>
+<pre><code class="language-moonbit">enum Color {
+  Red
+  Rgb(Int, Int, Int)
+} derive(DecEq)
+
+// a lookup by key: when found, with a proof that the keys are equal
+fn[K : DecEq, V] find(k : K, xs : List[(K, V)]) -&gt; Option[V] {
+  match xs {
+    Nil =&gt; None
+    Cons((k2, v), rest) =&gt;
+      match DecEq::deq(k, k2) {
+        Yes(_) =&gt; Some(v)
+        No(_) =&gt; find(k, rest)
+      }
+  }
+}
+
+lemma three : Int::deq(3, 3) === Yes(Refl) = Refl
+
+fn main {
+  println(find(2, Cons((1, "one"), Cons((2, "two"), Nil))))
+  println(DecEq::deq(Rgb(1, 2, 3), Rgb(1, 2, 3)) is Yes(_))
+}
+</code></pre>
+<ul>
+<li><code>Int</code>, <code>Int64</code>, <code>UInt</code>, <code>UInt64</code>, <code>Byte</code>, <code>Char</code>, <code>String</code> and <code>BigInt</code> have <code>T::deq(a, b)</code>. Their
+<code>==</code> is structural equality, so a comparison proves the equality or that it does not hold: the
+axioms <code>T::eq_sound : (a == b) === true -&gt; a === b</code> and <code>T::ne_sound : (a == b) === false -&gt; Not(a === b)</code> say so; they are not computed during checking and are erased when compiling. <code>Double</code> has none: <code>0.0 == -0.0</code>, but they are different values.</li>
+<li>The <code>deq</code> of <code>Bool</code>, <code>Unit</code> and <code>Nat</code> are ordinary definitions (<code>Nat</code>’s compares integers at run
+time).</li>
+<li>The trait <code>DecEq : Eq</code> has the method <code>deq(a : Self, b : Self) -&gt; Dec[a === b]</code>. The types above
+have instances, and so do <code>Option</code>, <code>List</code>, pairs and triples of such types.</li>
+<li><code>derive(DecEq)</code> works on enums and structs: it compares the constructors, <code>deq</code>s the fields one by
+one, and matches their proofs with <code>Refl</code> to get the <code>Refl</code> of the whole value; otherwise the
+refutation of a field (or different constructors) refutes the whole. It also derives <code>Eq</code> (which
+<code>DecEq</code> needs).</li>
+<li><code>reflect(b)</code> has the type <code>Reflect(b)</code>, which is <code>IsTrue(b === true)</code> or <code>IsFalse(b === false)</code>:
+it gives the value of a Boolean expression together with a proof, in the arms of a match.</li>
+</ul>
+<p>With the refutation in <code>No</code>, functions defined with <code>deq</code> have properties provable on variables: the
+<code>No</code> arm of <code>deq(p, p)</code> is ruled out with <code>absurd</code>.</p>
+<pre><code class="language-moonbit">fn upd(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; (String) -&gt; Nat {
+  n =&gt; match String::deq(n, p) {
+    Yes(_) =&gt; m
+    No(_) =&gt; rho(n)
+  }
+}
+
+lemma upd_same(rho : (String) -&gt; Nat, p : String, m : Nat) -&gt; upd(rho, p, m)(p) === m {
+  match String::deq(p, p) {
+    Yes(_) =&gt; Refl
+    No(nope) =&gt; absurd(nope(Refl))
+  }
+}
+
+lemma upd_other(rho : (String) -&gt; Nat, p : String, q : String, m : Nat, ne : Not(q === p)) -&gt;
+  upd(rho, p, m)(q) === rho(q) {
+  match String::deq(q, p) {
+    Yes(e) =&gt; absurd(ne(e))
+    No(_) =&gt; Refl
+  }
+}
+</code></pre>
+<h2 id="pointer-equality"><a class="header" href="#pointer-equality">Pointer equality</a></h2>
+<p><code>physical_equal(a, b)</code> is MoonBit’s <code>physical_equal</code>: whether the values are the same object (when
+it is <code>false</code>, they may still be equal). <code>ptr_deq(a, b)</code> is a <code>Known[a === b]</code>: <code>Proved(proof)</code> for
+the same object, <code>Unknown</code> otherwise (different objects may still be equal); a fast path before a
+structural comparison. Neither is computed during checking, so they give no
+proofs there.</p>
 
                     </main>
 

@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3307130a.js";
+            window.path_to_searchindex_js = "../searchindex-9507495a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2f5a2ad3.js"></script>
+        <script src="../toc-8396c56b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,7 +193,7 @@
 <tr><td><code>moonpp fix [路径]</code></td><td>给这些 <code>pub</code> 声明加上 <code>#mbt</code></td></tr>
 <tr><td><code>moonpp ide &lt;文件&gt; [--overlay &lt;json&gt;]</code></td><td>为编辑器检查文件所在的包，输出 JSON（见<a href="editor.html">编辑器</a>）</td></tr>
 <tr><td><code>moonpp run [路径]</code></td><td>用解释器运行 main 包（或指定的包、文件）</td></tr>
-<tr><td><code>moonpp run --compiled [路径]</code></td><td>编译到 MoonBit 并用 <code>moon run</code> 运行</td></tr>
+<tr><td><code>moonpp run --compiled [路径] [-- 参数…]</code></td><td>编译到 MoonBit 并用 <code>moon run</code> 运行；<code>--</code> 之后的参数传给程序</td></tr>
 <tr><td><code>moonpp test [路径]</code></td><td>用解释器运行 <code>test "名字" { … }</code> 块，块中可以用 <code>assert_eq</code>、<code>assert_true</code> 等</td></tr>
 <tr><td><code>moonpp build [路径] [-o 目录]</code></td><td>编译成 MoonBit 项目并 <code>moon build</code></td></tr>
 <tr><td><code>moonpp add &lt;user/module[@版本]&gt;</code></td><td>添加依赖（<code>moon add</code>），并为缺少接口的包生成 <code>.mbti</code></td></tr>
@@ -212,10 +212,11 @@
 <tr><th>选项</th><th>作用</th></tr>
 </thead>
 <tbody>
-<tr><td><code>--verbose</code></td><td>列出导入时被跳过的接口项</td></tr>
+<tr><td><code>--verbose</code></td><td>列出导入时被跳过的接口项；<code>build</code>、<code>run --compiled</code> 时还列出没有原生版本的函数及原因</td></tr>
 <tr><td><code>--no-prelude</code></td><td>不加载 Prelude</td></tr>
 <tr><td><code>--compiled</code></td><td><code>run</code> 时运行编译结果而不是解释执行</td></tr>
 <tr><td><code>-o</code>、<code>--output &lt;目录&gt;</code></td><td><code>build</code>、<code>run --compiled</code> 时生成项目的位置</td></tr>
+<tr><td><code>-- 参数…</code></td><td><code>run --compiled</code> 时传给程序的命令行参数（例如用 <code>@sys.get_cli_args()</code> 读取）</td></tr>
 </tbody>
 </table>
 </div>
