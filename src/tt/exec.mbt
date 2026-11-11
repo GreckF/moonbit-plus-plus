@@ -194,6 +194,20 @@ fn unit_val() -> Val {
 ///|
 /// Run `t`.
 fn exec(xe : XEnv, t : Tm) -> Val raise ExecStop {
+  let r = exec_term(xe, t)
+  // a splice runs as the program does: an error that a call gives is
+  // thrown, and caught by a `try` of the run (staging.mbt)
+  if unfold_everything.val {
+    match r {
+      VPrim("%raise", [(e, _), ..]) => raise Thrown(e)
+      _ => ()
+    }
+  }
+  r
+}
+
+///|
+fn exec_term(xe : XEnv, t : Tm) -> Val raise ExecStop {
   if time_up() {
     raise XStuck
   }

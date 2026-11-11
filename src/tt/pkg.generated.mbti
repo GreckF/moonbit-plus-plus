@@ -51,6 +51,10 @@ pub fn eval(Array[Val], Tm) -> Val
 
 pub let external_instances : Array[String]
 
+pub let ffi_error : @ref.Ref[String?]
+
+pub let ffi_host : @ref.Ref[FfiHost?]
+
 pub fn force(Val) -> Val
 
 pub fn force_meta(Val) -> Val
@@ -305,6 +309,11 @@ pub(all) struct DataInfo {
   is_trait : Bool
   is_error : Bool
   builtin : Bool
+}
+
+pub(all) struct FfiHost {
+  prepare : (Array[String]) -> String?
+  call : (String, String) -> String
 }
 
 pub(all) struct GEntry {

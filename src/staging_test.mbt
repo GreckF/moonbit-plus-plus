@@ -766,3 +766,116 @@ test "generators use arrays and print" {
   )
   @tt.staging_echo.val = true
 }
+
+///|
+/// A host that runs `demo` functions, in MoonBit (the real one is built by
+/// moonpp, see ffi.mbt): `twice`, `rev` and `maybe`.
+fn demo_host() -> @tt.FfiHost {
+  {
+    prepare: names => {
+      if names.contains("fail_prepare") {
+        Some("no driver")
+      } else {
+        None
+      }
+    },
+    call: (name, args) => {
+      match (name, args) {
+        ("twice", "a1;i21;") => "oi42;"
+        ("greet", _) => "os5:hello"
+        ("rev", "a2;ua3;i1;i2;i3;") => "oa3;i3;i2;i1;"
+        ("maybe", "a1;i0;") => "ok12:Option::None0;"
+        ("maybe", "a1;i5;") => "ok12:Option::Some1;i5;"
+        ("boom", _) => "r4:boom"
+        _ =>
+          "e" +
+          (name + " " + args).length().to_string() +
+          ":" +
+          name +
+          " " +
+          args
+      }
+    },
+  }
+}
+
+///|
+test "generators call imported MoonBit functions through a host" {
+  @tt.ffi_host.val = Some(demo_host())
+  @tt.staging_echo.val = false
+  let src =
+    #|fn twice(x : Int) -> Int = "@mbt:demo.twice"
+    #|fn greet() -> String = "@mbt:demo.greet"
+    #|fn[T] rev(xs : Array[T]) -> Array[T] = "@mbt:demo.rev"
+    #|fn maybe(x : Int) -> Int? = "@mbt:demo.maybe"
+    #|
+    #|fn gen(n : Int) -> Code[Int] { let k = twice(n); code { k + 1 } }
+    #|fn f() -> Int { ${ gen(21) } }
+    #|
+    #|fn msg() -> String { ${ let s = greet(); code { s } } }
+    #|fn order() -> Int { ${ let xs = rev([1, 2, 3]); code { xs[0] } } }
+    #|fn opt() -> Int { ${ match maybe(5) { Some(v) => code { v }; None => code { 0 } } } }
+    #|fn none() -> Int { ${ match maybe(0) { Some(v) => code { v }; None => code { -1 } } } }
+    #|fn main { println(f()); println(msg()); println(order()); println(opt()); println(none()) }
+  inspect(
+    expanded(src, "f"),
+    content=(
+      #|(_) => 42 + 1
+    ),
+  )
+  inspect(
+    expanded(src, "msg"),
+    content=(
+      #|(_) => "hello"
+    ),
+  )
+  inspect(
+    expanded(src, "order"),
+    content=(
+      #|(_) => Array::op_get([3, 2, 1], 0)
+    ),
+  )
+  inspect(
+    expanded(src, "opt"),
+    content=(
+      #|(_) => 5
+    ),
+  )
+  inspect(
+    expanded(src, "none"),
+    content=(
+      #|(_) => -1
+    ),
+  )
+  // an error raised by the MoonBit function is an error of the generator
+  inspect(
+    expanded(
+      (
+        #|fn boom() -> Int raise = "@mbt:demo.boom"
+        #|fn gen() -> Code[Int] {
+        #|  try { let x = boom(); code { x } } catch { _ => code { 0 } }
+        #|}
+        #|fn g() -> Int { ${ gen() } }
+      ),
+      "g",
+    ),
+    content=(
+      #|(_) => 0
+    ),
+  )
+  // an imported function that is not in the host
+  inspect(
+    check_source(
+      "t.mbtpp",
+      (
+        #|fn unknown(x : Int) -> Int = "@mbt:demo.unknown"
+        #|fn g() -> Int { ${ let x = unknown(1); code { x } } }
+      ),
+    ),
+    content=(
+      #|t.mbtpp:2:1: error: the MoonBit function unknown could not be called: unknown a1;i1;
+    ),
+  )
+  @tt.ffi_host.val = None
+  @tt.staging_echo.val = true
+}

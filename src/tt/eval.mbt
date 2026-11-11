@@ -165,6 +165,11 @@ fn reduce_prim(n : String, sp : Spine, lazy~ : Bool = false) -> Val {
     Some({ kind: GPrim(p, arity), .. }) if sp.length() == arity &&
       unfold_everything.val &&
       run_prim(p, sp) is Some(r) => r
+    // imported MoonBit functions, called in the host (ffi.mbt)
+    Some({ kind: GPrim(p, arity), .. }) if sp.length() == arity &&
+      unfold_everything.val &&
+      p.has_prefix("@mbt:") &&
+      run_ffi(n, sp) is Some(r) => r
     Some({ kind: GPrim("%splice" | "%run", arity), .. }) if sp.length() >= arity =>
       match splice_val(sp, arity, lazy) {
         Some(w) => w

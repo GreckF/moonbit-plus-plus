@@ -44,6 +44,7 @@ pub let staging_echo : Ref[Bool] = Ref::new(true)
 
 ///|
 fn reset_staging() -> Unit {
+  reset_ffi()
   staging_output.clear()
   staging_used.val = false
   lifted_stages.clear()
@@ -997,6 +998,10 @@ fn splice_code(
         pos,
         "this splice cannot be run when the program is checked: the code it makes is stuck on\n  " +
         show_tm(names.names, quote(lvl, v)) +
+        (match ffi_error.val {
+          Some(msg) => "\n" + msg
+          None => ""
+        }) +
         "\n(a generator can use arrays and `print`, but not variables of the generated code or, without moonpp, imported MoonBit functions; to run the code at run time instead, use .run())",
       )
   }
@@ -1312,6 +1317,28 @@ fn unstage_all() -> Unit raise ElabError {
   }
   staging_used.val = false
   let splice : Map[String, Bool] = { "%splice": true }
+  // the imported MoonBit functions the splices may call are made callable
+  // by the host, if there is one (ffi.mbt)
+  match ffi_host.val {
+    Some(host) => {
+      let imported = imported_functions_of_splices()
+      if imported.length() > 0 {
+        match (host.prepare)(imported) {
+          Some(msg) =>
+            raise ElabError(
+              { line: 0, col: 0, },
+              "cannot make the imported MoonBit functions of the splices callable: " +
+              msg,
+            )
+          None =>
+            for n in imported {
+              ffi_ready.set(n, true)
+            }
+        }
+      }
+    }
+    None => ()
+  }
   let names : Array[String] = globals.keys().collect()
   for n in names {
     let g = globals.get(n).unwrap()
@@ -1354,6 +1381,15 @@ fn unstage_all() -> Unit raise ElabError {
         match res {
           Ok(t) => g.kind = GFunc(Some(t), contains_imperative(t), arity)
           Err(e) => raise e
+        }
+        // an imported function that the host could not call
+        match ffi_error.val {
+          Some(msg) =>
+            raise ElabError(
+              decl_pos.get(n).unwrap_or({ line: 0, col: 0, }),
+              msg,
+            )
+          None => ()
         }
       }
       _ => ()
