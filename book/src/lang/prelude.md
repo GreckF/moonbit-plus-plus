@@ -14,6 +14,7 @@
 | `BigInt` | 任意精度整数（MoonBit 的 `BigInt`；导入 `moonbitlang/core/bigint` 时 `@bigint.BigInt` 就是它）：`BigInt::from_int`、`from_int64`、`to_int`、`to_int64`、算术、位运算、比较、`pow`、`to_string`、`hash`。没有字面量；检查时不计算 |
 | `Id[T](x)(y)`、`===`、`Refl` | 命题相等；`Id::sym`、`Id::trans`、`Id::cong`、`Id::subst`、`Id::subst_prop` |
 | `False`、`Not(P)`、`absurd`；`Dec[P]`（`Yes(P)`、`No(Not(P))`）、`T::deq`、`DecEq`、`reflect`；`physical_equal`、`ptr_deq`（`Known[P]`） | 否定、可判定相等与指针相等（见[命题相等](equality.md#可判定相等)） |
+| `Code[T]`、`run` | 代码（`code { e }`）与在运行时运行它（见[分阶段元编程](staging.md)） |
 | `Option[T]`（`None`、`Some`）、`T?` | 可选值 |
 | `Result[T, E]`（`Ok`、`Err`） | 结果 |
 | `List[T]`（`Nil`、`Cons`） | 链表：`append`、`reverse`、`length`、`map`、`flat_map` |

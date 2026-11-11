@@ -30,6 +30,7 @@
 - [Error Handling](lang/errors.md)
 - [async Functions](lang/async.md)
 - [Algebraic Effects](lang/effects.md)
+- [Staged Metaprogramming](lang/staging.md)
 - [Prelude](lang/prelude.md)
 
 # moonpp

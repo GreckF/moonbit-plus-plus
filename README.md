@@ -9,7 +9,8 @@ A small dependently typed language with MoonBit syntax, written in MoonBit. On
 top of MoonBit's `fn`, `enum`, `struct`, `trait`, `match`, `let mut`, loops,
 errors and `async`, it has dependent types, indexed types, dependent pattern
 matching, propositions and proofs (with a few tactics and controlled
-unfolding), and algebraic effects.
+unfolding), algebraic effects, and staged metaprogramming (`code { e }` and
+`${ c }`, run when the program is checked).
 It comes with
 
 - a **dependent type checker**;
@@ -134,7 +135,8 @@ and [book/src](book/src) (an [mdBook](https://github.com/rust-lang/mdBook):
 `node scripts/build-book.mjs` writes `docs/book` and `docs/book/en`,
 `node scripts/check-book.mjs` checks the examples). The design
 notes are in [doc/mbtpp/proposal.md](doc/mbtpp/proposal.md) (algebraic effects:
-[doc/mbtpp/effects.md](doc/mbtpp/effects.md), in Chinese), the implementation in
+[doc/mbtpp/effects.md](doc/mbtpp/effects.md), staged metaprogramming:
+[doc/mbtpp/staging.md](doc/mbtpp/staging.md), in Chinese), the implementation in
 [doc/mbtpp/implementation.md](doc/mbtpp/implementation.md), and the references in
 [doc/mbtpp/references.md](doc/mbtpp/references.md).
 

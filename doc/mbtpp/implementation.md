@@ -20,6 +20,9 @@
     global instances).
   - `tactic.mbt`: `intros`, `exact`, `rfl`, `destruct`, `rewrite`, `apply`,
     `assume`.
+  - `staging.mbt`: staged metaprogramming (`code { e }`, `${ c }`, see
+    [staging.md](staging.md)): stages, the hoisting of splices, and the
+    expansion of the splices of stage 0 once a package is checked.
   - `prelude.mbt`: the prelude, written in MoonBit++.
 - `src/interp`: a tree-walking interpreter over elaborated core terms.
 - `src/codegen`: the compiler to MoonBit (see below).
@@ -105,6 +108,14 @@
   instance constraints it left behind) instead of failing the program.
   Unknown types and traits become opaque; an opaque trait is solved by its
   (empty) record constructor.
+- Code (`code { e }`) is not a new construct of the core: it is
+  `%quote(s, env => e)`, a primitive applied to the code of the splices of
+  `e` that do not depend on its variables (evaluated when the code is made)
+  and to its body; `${ c }` is `%splice(c, line, col)` and `c.run()` is
+  `%run(c)`, which run `c`. The evaluator reduces a splice of known code;
+  the interpreter and the uniform code represent code by a closure. The
+  splices of stage 0 are gone from the definitions once a package is
+  checked.
 - There is no termination or positivity checking, so type checking can loop.
 
 ## Differences from the original description

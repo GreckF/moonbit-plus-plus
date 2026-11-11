@@ -16,6 +16,7 @@ say).
 | `BigInt` | Arbitrary-precision integers (MoonBit's `BigInt`; `@bigint.BigInt` is this type when `moonbitlang/core/bigint` is imported): `BigInt::from_int`, `from_int64`, `to_int`, `to_int64`, arithmetic, bitwise operators, comparisons, `pow`, `to_string`, `hash`. No literals; not computed during checking |
 | `Id[T](x)(y)`, `===`, `Refl` | Propositional equality; `Id::sym`, `Id::trans`, `Id::cong`, `Id::subst`, `Id::subst_prop` |
 | `False`, `Not(P)`, `absurd`; `Dec[P]` (`Yes(P)`, `No(Not(P))`), `T::deq`, `DecEq`, `reflect`; `physical_equal`, `ptr_deq` (`Known[P]`) | Negation, decidable and pointer equality (see [Propositional Equality](equality.md#decidable-equality)) |
+| `Code[T]`, `run` | Code (`code { e }`) and running it at run time (see [Staged Metaprogramming](staging.md)) |
 | `Option[T]` (`None`, `Some`), `T?` | Optional values |
 | `Result[T, E]` (`Ok`, `Err`) | Results |
 | `List[T]` (`Nil`, `Cons`) | Linked lists: `append`, `reverse`, `length`, `map`, `flat_map` |

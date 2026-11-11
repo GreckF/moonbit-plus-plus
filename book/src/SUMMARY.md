@@ -30,6 +30,7 @@
 - [错误处理](lang/errors.md)
 - [async 函数](lang/async.md)
 - [代数效应](lang/effects.md)
+- [分阶段元编程](lang/staging.md)
 - [Prelude](lang/prelude.md)
 
 # moonpp

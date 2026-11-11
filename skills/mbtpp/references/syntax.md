@@ -300,6 +300,33 @@ lemma two() -> add(1, 1) === 2 { unfold(add) { Refl } }
 - `#opaque(sealed)`：除自己的定义体外不能展开。
 - 可以和 `#mbt`、`#timelimit` 一起写。
 
+## 分阶段元编程
+
+```moonbit
+fn power(n : Nat, x : Code[Int]) -> Code[Int] {
+  match n {
+    Z => code { 1 }
+    S(k) => code { ${x} * ${power(k, x)} }
+  }
+}
+
+// 检查时展开为 x * (x * (x * 1))
+fn cube(x : Int) -> Int { ${ power(3, code { x }) } }
+
+fn main {
+  println(cube(3))
+  println(power(10, code { 2 }).run())   // 运行时生成并运行
+}
+```
+
+- `code { e }`：`e` 的代码，类型 `Code[T]`；`${ c }`（变量可写 `$c`）：拼接代码；`c.run()`：运行时运行。
+- 写在函数里的拼接在检查时运行，被生成的代码替换；生成器是返回 `Code[T]` 的普通函数。
+- 阶段：拼接里不能用运行时才知道的变量（把它写进 `code { }`）；生成器知道的值可以直接写进代码；
+  `let mut` 变量不能跨 `code { }`。
+- 效应：`code { }` 里不依赖其变量的拼接在代码生成时运行，效应属于生成器；函数里的拼接和用到代码
+  变量的拼接必须是纯的。运行时有效应的代码是 `Code[T raise E]`、`Code[T!Eff]`。
+- 生成器不能用数组、`print` 和导入的 MoonBit 函数；`Code` 不能被匹配。
+
 ## trait
 
 ```moonbit

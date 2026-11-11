@@ -46,6 +46,25 @@ MoonBit++ 的设计与实现所参考的文献。每条注明用在哪里；采�
    <https://agda.readthedocs.io/en/latest/language/opaque-definitions.html>
    — 不用扩展类型、在展开处检查的实现方式；默认透明（[unfolding.md](unfolding.md)）。
 
+## 分阶段元编程
+
+14. Oleg Kiselyov. The Design and Implementation of BER MetaOCaml: System Description. FLOPS 2014,
+   LNCS 8475.
+   — `code { }` 与 `${ }`（MetaOCaml 的括号与逃逸）、`run`；拼接在代码生成时求值
+   （[staging.md](staging.md)，`src/tt/staging.mbt`）。
+15. Ningning Xie, Leo White, Olivier Nicole, Jeremy Yallop. MacoCaml: Staging Composable and
+   Compilable Macros. ICFP 2023.
+   — 阶段 0 的拼接在编译期运行并被生成的代码替换；阶段可以低于 0（[staging.md](staging.md)）。
+16. András Kovács. Staged Compilation with Two-Level Type Theory. ICFP 2022. arXiv:2209.09729.
+   <https://arxiv.org/abs/2209.09729>
+   — 带依赖类型的分阶段：展开就是对生成器求值，转换检查不区分阶段
+   （[staging.md](staging.md)，`expand`）。
+17. Emir Pašalić, Walid Taha, Tim Sheard. Tagless Staged Interpreters for Typed Languages. ICFP 2002.
+   — 用依赖类型写的求值器分阶段后是没有类型标签的编译器（[手册](../../book/src/lang/staging.md)
+   与 [examples/staging.mbtpp](../../examples/staging.mbtpp) 中的 `Exp::compile`）。
+18. Jun Inoue, Walid Taha. Reasoning about Multi-Stage Programs. ESOP 2012, LNCS 7211.
+   — 擦除阶段标注不改变程序的含义：这里作为代码的语义，检查器按它计算（[staging.md](staging.md)）。
+
 ## 编译
 
 12. Edwin Brady, Conor McBride, James McKinna. Inductive Families Need Not Store Their Indices.

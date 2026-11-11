@@ -7,7 +7,8 @@
 
 一门使用 MoonBit 语法的小型依赖类型语言，用 MoonBit 编写。在 MoonBit 的 `fn`、`enum`、
 `struct`、`trait`、`match`、`let mut`、循环、错误和 `async` 之上，加入了依赖类型、索引类型、
-依赖模式匹配、命题与证明（以及简单的策略和受控展开）和代数效应。包括：
+依赖模式匹配、命题与证明（以及简单的策略和受控展开）、代数效应，以及分阶段元编程（`code { e }` 与
+`${ c }`，在检查程序时运行）。包括：
 
 - **依赖类型检查器**；
 - 树遍历的**解释器**；
@@ -113,7 +114,8 @@ moonpp run --compiled          # 编译到 MoonBit 并用 `moon run` 运行
 `node scripts/build-book.mjs` 生成 `docs/book` 和 `docs/book/en`，
 `node scripts/check-book.mjs` 检查其中的示例）。设计说明见
 [doc/mbtpp/proposal.md](doc/mbtpp/proposal.md)（代数效应见
-[doc/mbtpp/effects.md](doc/mbtpp/effects.md)），实现说明见
+[doc/mbtpp/effects.md](doc/mbtpp/effects.md)，分阶段元编程见
+[doc/mbtpp/staging.md](doc/mbtpp/staging.md)），实现说明见
 [doc/mbtpp/implementation.md](doc/mbtpp/implementation.md)，参考文献见
 [doc/mbtpp/references.md](doc/mbtpp/references.md)。
 

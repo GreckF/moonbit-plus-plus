@@ -25,6 +25,7 @@
   named like the Prelude's `BigInt` methods (`to_string` with `radix?`) give way to the Prelude's; `Float` only has its operators,
   comparisons and conversions.
 - When functions with mutable state are run during type checking, calls that use arrays, imported functions or lambdas capturing `let mut` variables are not run (see [Mutable State and Loops](lang/mutation.md)).
+- The limitations of staged metaprogramming are in [Staged Metaprogramming](lang/staging.md#limitations): a splice written in a function is run by the checker, so generators cannot use arrays, `print` or imported functions; a splice that uses the variables of the code it is in cannot have effects; in generated code, a recursive local function nested in another one is not specialized (its splices are left for run time).
 - Time limits are measured in wall-clock time, so a file may time out on a slower machine (see [Time limits](lang/type-level.md#time-limits)).
 
 ## Imports
