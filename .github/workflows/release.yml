@@ -53,6 +53,8 @@ jobs:
           moonpp version
           moonpp check examples/basic.mbtpp
           moonpp run examples/vector.mbtpp
+          # splices that call MoonBit functions need the driver built with `moon`
+          moonpp run examples/import_staging/main.mbtpp
 
       - name: Package the VS Code extension
         run: python3 scripts/package-vscode.py mbtpp-vscode.vsix
