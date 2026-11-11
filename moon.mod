@@ -1,6 +1,6 @@
 name = "username/mbtpp"
 
-version = "0.6.3"
+version = "0.7.0"
 
 import {
   "moonbitlang/x@0.5.6",
