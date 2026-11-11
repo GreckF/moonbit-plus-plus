@@ -1428,6 +1428,7 @@ fn check_lam(
       in_loop: false,
       arm_lams: false,
       in_fun_arm: true,
+      splice_note: "",
     }
   } else {
     {
@@ -1439,6 +1440,7 @@ fn check_lam(
       eff_row: codomain_row(ty),
       handled: [],
       in_fun_arm: false,
+      splice_note: "",
     }
   }
   let tb = check(bc, body, body_ty)

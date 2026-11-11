@@ -399,7 +399,7 @@ test "local recursive functions in generators and in code" {
   inspect(
     expanded(src, "g"),
     content=(
-      #|(x) => { let go = loop_code$go$N(code { x }, ()); go(4, 0) }
+      #|(x) => { let go = loop_code$go$N$s2(x); go(4, 0) }
     ),
   )
   inspect(
@@ -426,6 +426,286 @@ test "code is compared by what it does" {
     ),
     content=(
       #|ok
+    ),
+  )
+}
+
+///|
+test "the splices of code run when the code is made" {
+  // an error raised in a splice is raised by what makes the code
+  let src =
+    #|suberror E { E }
+    #|fn gen(b : Bool) -> Code[Int] raise E {
+    #|  code { 1 + ${ if b { raise E }; code { 2 } } }
+    #|}
+    #|fn main {
+    #|  let c = try gen(true) catch { E => code { 0 } }
+    #|  println(c.run())
+    #|  let d = try gen(false) catch { E => code { 0 } }
+    #|  println(d.run())
+    #|}
+  inspect(
+    expanded(src, "gen"),
+    content=(
+      #|(b) => code { 1 + ${ { match b { true => raise E; _ => () }; code { 2 } } } }
+    ),
+  )
+  inspect(
+    run_source("t.mbtpp", src),
+    content=(
+      #|0
+      #|3
+      #|
+    ),
+  )
+  // so is an effect performed in a splice
+  inspect(
+    run_source(
+      "t.mbtpp",
+      (
+        #|effect Fresh { Fresh() -> Int }
+        #|fn name() -> Code[Int]!Fresh { let n = perform Fresh(); code { n } }
+        #|fn gen() -> Code[Int]!Fresh { code { ${name()} * 10 + ${name()} } }
+        #|fn main {
+        #|  let mut k = 0
+        #|  let c = try { gen() } catch { Fresh() => { k = k + 1; resume(k) } }
+        #|  println(k)
+        #|  println(c.run())
+        #|}
+      ),
+    ),
+    content=(
+      #|2
+      #|12
+      #|
+    ),
+  )
+}
+
+///|
+test "splices that cannot have effects" {
+  // a splice that uses the variables of the code runs with the code
+  inspect(
+    check_source(
+      "t.mbtpp",
+      (
+        #|suberror E { E }
+        #|fn f(c : Code[Int]) -> Code[Int] raise E { raise E }
+        #|fn gen() -> Code[(Int) -> Int] raise E {
+        #|  code { (y : Int) => ${ f(code { y }) } }
+        #|}
+      ),
+    ),
+    content=(
+      #|t.mbtpp:4:27: error: this call may raise an error; use it inside `try` or in a function declared with `raise`
+      #|hint: this splice uses variables of the code it is in, so it runs when that code does: it cannot raise errors or perform effects
+    ),
+  )
+  // a splice in a definition runs when the program is checked
+  inspect(
+    check_source(
+      "t.mbtpp",
+      (
+        #|suberror E { E }
+        #|fn f() -> Code[Int] raise E { raise E }
+        #|fn g() -> Int { ${ f() } }
+      ),
+    ),
+    content=(
+      #|t.mbtpp:3:21: error: this call may raise an error; use it inside `try` or in a function declared with `raise`
+      #|hint: a splice in a definition runs when the program is checked: it cannot raise errors or perform effects
+    ),
+  )
+  inspect(
+    check_source(
+      "t.mbtpp",
+      (
+        #|fn g(x : Int) -> Int { ${ x + 1 } }
+      ),
+    ),
+    content=(
+      #|t.mbtpp:1:27: error: x is not known when this splice runs: it is a variable of the generated code (it is bound at stage 0 and used at stage -1). Use it inside `code { }`
+    ),
+  )
+}
+
+///|
+test "generators with mutable state, and let insertion" {
+  let src =
+    #|fn sum_code(n : Int, x : Code[Int]) -> Code[Int] {
+    #|  let mut acc = code { 0 }
+    #|  for i = 0; i < n; i = i + 1 {
+    #|    let a = acc
+    #|    acc = code { ${a} + ${x} * i }
+    #|  }
+    #|  acc
+    #|}
+    #|fn g(x : Int) -> Int { ${ sum_code(3, code { x }) } }
+    #|
+    #|// `let t = c; k(t)`: the code `c` is evaluated once
+    #|fn genlet(c : Code[Int], k : (Code[Int]) -> Code[Int]) -> Code[Int] {
+    #|  code { let t = ${c}; ${ k(code { t }) } }
+    #|}
+    #|fn square_sum(a : Code[Int], b : Code[Int]) -> Code[Int] {
+    #|  genlet(code { ${a} + ${b} }, s => code { ${s} * ${s} })
+    #|}
+    #|fn f(x : Int, y : Int) -> Int { ${ square_sum(code { x }, code { y }) } }
+    #|fn main { println(g(10)); println(f(1, 2)) }
+  inspect(
+    expanded(src, "g"),
+    content=(
+      #|(x) => ((0 + (x * 0)) + (x * 1)) + (x * 2)
+    ),
+  )
+  inspect(
+    expanded(src, "f"),
+    content=(
+      #|(x, y) => { let t = x + y; t * t }
+    ),
+  )
+  inspect(
+    run_source("t.mbtpp", src),
+    content=(
+      #|30
+      #|9
+      #|
+    ),
+  )
+}
+
+///|
+test "what the generator knows about types" {
+  let src =
+    #|enum Vector[T] : Nat -> Type {
+    #|  Nil : Vector[T](0)
+    #|  Cons[n : Nat](T, Vector[T](n)) : Vector[T](S(n))
+    #|}
+    #|// the length is known: no loop, and no case for Nil
+    #|fn sum_n(n : Nat, v : Code[Vector[Int](n)]) -> Code[Int] {
+    #|  match n {
+    #|    Z => code { 0 }
+    #|    S(k) => code { match ${v} { Cons(h, t) => h + ${sum_n(k, code { t })} } }
+    #|  }
+    #|}
+    #|fn sum3(v : Vector[Int](3)) -> Int { ${ sum_n(3, code { v }) } }
+    #|
+    #|// the instance is known
+    #|fn[T : Add] double(x : Code[T]) -> Code[T] { code { ${x} + ${x} } }
+    #|fn twice(x : Int) -> Int { ${ double(code { x }) } }
+    #|fn again(s : String) -> String { ${ double(code { s }) } }
+    #|
+    #|fn main {
+    #|  println(sum3(Cons(1, Cons(2, Cons(3, Nil)))))
+    #|  println(twice(4))
+    #|  println(again("ab"))
+    #|}
+  inspect(
+    expanded(src, "sum3"),
+    content=(
+      #|(v) => match v { Cons(_, h, t) => h + match t { Cons(_, h1, t1) => h1 + match t1 { Cons(_, h2, t2) => h2 + 0 } } }
+    ),
+  )
+  inspect(
+    expanded(src, "twice"),
+    content=(
+      #|(x) => x + x
+    ),
+  )
+  inspect(
+    expanded(src, "again"),
+    content=(
+      #|(s) => s + s
+    ),
+  )
+  inspect(
+    run_source("t.mbtpp", src),
+    content=(
+      #|6
+      #|8
+      #|abab
+      #|
+    ),
+  )
+  inspect(
+    fn_code(src, "twice"),
+    content=(
+      #|fn f_twice_t(x : Int) -> Int raise {
+      #|(Add::add(x, x) : Int)
+      #|}
+      #|fn f_twice(a0 : Value) -> Value raise {
+      #|  VInt(f_twice_t(as_int(a0)))
+      #|}
+    ),
+  )
+}
+
+///|
+test "splices in lambdas and arms, opaque generators, nested code" {
+  let src =
+    #|#opaque
+    #|fn power(n : Nat, x : Code[Int]) -> Code[Int] {
+    #|  match n {
+    #|    Z => code { 1 }
+    #|    S(k) => code { ${x} * ${power(k, x)} }
+    #|  }
+    #|}
+    #|fn g(o : Option[Int]) -> (Int) -> Int {
+    #|  match o {
+    #|    None => y => ${ power(2, code { y }) }
+    #|    Some(z) => y => ${ power(1, code { y + z }) }
+    #|  }
+    #|}
+    #|#unfold(power)
+    #|lemma g_none(y : Int) -> g(None)(y) === y * (y * 1) { Refl }
+    #|fn main {
+    #|  println(g(None)(5))
+    #|  println(g(Some(1))(5))
+    #|  let c = code { code { 1 + 2 } }
+    #|  println(c.run().run())
+    #|  let f = code { (x : Int) => x * 2 }
+    #|  let d = code { $f(21) }
+    #|  println(d.run())
+    #|}
+  inspect(
+    expanded(src, "g"),
+    content=(
+      #|(o) => match o { None => (y) => y * (y * 1); Some(z) => (y) => (y + z) * 1 }
+    ),
+  )
+  inspect(
+    run_source("t.mbtpp", src),
+    content=(
+      #|25
+      #|6
+      #|3
+      #|42
+      #|
+    ),
+  )
+}
+
+///|
+test "generated code compiles to MoonBit" {
+  let src =
+    #|fn twice(c : Code[Int]) -> Code[Int] { code { ${c} + ${c} } }
+    #|fn main {
+    #|  let n = 20
+    #|  println(twice(code { n + 1 }).run())
+    #|}
+  inspect(
+    fn_code(src, "twice"),
+    content=(
+      #|fn f_twice(c : Value) -> Value raise {
+      #|make_code({
+      #|let s0 = c
+      #|{
+      #|let s1 = c
+      #|VFun(j => match j {
+      #|(VInt(0)) => (s0)
+      #|(VInt(1)) => (s1)
+      #|_ => rt_fail("no match")
+      #|})
+      #|}
     ),
   )
 }

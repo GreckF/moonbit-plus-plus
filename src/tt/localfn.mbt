@@ -57,9 +57,11 @@ fn mention_walk(e : @parser.Expr, x : String, found : Ref[Bool]) -> Unit {
       walk(a)
       code_depth.val = code_depth.val + 1
     }
+    // a splice given code (of the variables around it, most likely) runs
+    // when that code does
     EApp(_, EVar(_, "%splice"), None, Some([a])) if code_depth.val == 0 => {
       code_depth.val = -1
-      if escapes(a, x) {
+      if (mentions(a, "%quote") && mentions(a, x)) || escapes(a, x) {
         found.val = true
       }
       code_depth.val = 0

@@ -42,6 +42,9 @@ pub(all) struct Cxt {
   /// In `code { }`: the context where the innermost one is written (its
   /// splices that do not depend on the code are run there).
   quote_cxt : Cxt?
+  /// In a splice that cannot have effects: why (a hint for the errors about
+  /// effects).
+  splice_note : String
 }
 
 ///|
@@ -66,6 +69,7 @@ pub fn empty_cxt(pos : Pos) -> Cxt {
     stage: 0,
     stage_marks: [],
     quote_cxt: None,
+    splice_note: "",
   }
 }
 

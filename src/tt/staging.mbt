@@ -299,8 +299,14 @@ fn runs_with_quote(cxt : Cxt, g : Cxt, x : @parser.Expr) -> Bool {
 /// The context of a splice that runs when the code it is in does, or when
 /// the program is checked: one stage earlier, without effects.
 fn pure_splice_cxt(cxt : Cxt, outer : Cxt?) -> Cxt {
+  let note = if cxt.quote_cxt is Some(_) {
+    "\nhint: this splice uses variables of the code it is in, so it runs when that code does: it cannot raise errors or perform effects"
+  } else {
+    "\nhint: a splice in a definition runs when the program is checked: it cannot raise errors or perform effects"
+  }
   {
     ..cxt.shift_stage(-1),
+    splice_note: note,
     can_raise: false,
     can_async: false,
     ret_ty: None,
@@ -686,12 +692,38 @@ fn has_return(t : Tm) -> Bool {
 }
 
 ///|
+/// The variables in scope in generated code: their names, and their types
+/// when they are known (those of parameters and `let`s).
+priv struct Scope {
+  names : Array[String]
+  types : Array[Val?]
+}
+
+///|
+fn Scope::length(self : Scope) -> Int32 {
+  self.names.length()
+}
+
+///|
+fn Scope::bind_all(self : Scope, xs : Array[String]) -> Scope {
+  {
+    names: concat(self.names, xs),
+    types: concat(self.types, xs.map(_ => None)),
+  }
+}
+
+///|
+fn Scope::bind_typed(self : Scope, x : String, ty : Val) -> Scope {
+  { names: push1(self.names, x), types: push1(self.types, Some(ty)), }
+}
+
+///|
 /// `t` (in the environment `env`) as a term in the scope `names`, with its
 /// splices of depth 0 expanded: the variables of `t` are replaced by their
 /// values, and the rest is kept as it is written (nothing is computed in
 /// code that is not run now). `code { }` raises the depth, `${ }` lowers it.
 fn expand(
-  names : Array[String],
+  names : Scope,
   env : Env,
   depth : Int32,
   t : Tm,
@@ -702,10 +734,19 @@ fn expand(
   let erased = (x : Tm) => expand(names, env, no_expand, x)
   let under = (xs : Array[String], x : Tm) => {
     expand(
-      concat(names, xs),
+      names.bind_all(xs),
       concat(env, fresh_vars(lvl, xs.length())),
       depth,
       x,
+    )
+  }
+  // under a variable whose type is known
+  let under_typed = (x : String, ty : Tm, b : Tm) => {
+    expand(
+      names.bind_typed(x, eval(env, ty)),
+      env_push(env, v_var(lvl)),
+      depth,
+      b,
     )
   }
   let clause = (cl : Clause) => {
@@ -726,8 +767,8 @@ fn expand(
     Lam(x, i, g, b) => Lam(x, i, g, under([x], b))
     Pi(_, _, _, _, _) | Raises(_, _) if depth != no_expand => erased(t)
     Pi(x, i, g, a, b) => Pi(x, i, g, go(a), under([x], b))
-    Let(x, a, v, b) => Let(x, erased(a), go(v), under([x], b))
-    LetMut(x, a, v, b) => LetMut(x, erased(a), go(v), under([x], b))
+    Let(x, a, v, b) => Let(x, erased(a), go(v), under_typed(x, a, b))
+    LetMut(x, a, v, b) => LetMut(x, erased(a), go(v), under_typed(x, a, b))
     App(_, _, _) => {
       let (h, args) = flatten_app(t)
       let rest = (k : Int32) => {
@@ -764,6 +805,21 @@ fn expand(
                 ..rest(4),
               ],
             )
+          }
+        // a local function of code that is being generated: the function
+        // for what is known of its context
+        Global(g) if depth == 0 &&
+          local_fn_arity(g) is Some(n) &&
+          args.length() >= n =>
+          match
+            specialize(
+              names,
+              g,
+              n,
+              args[0:n].to_array().map(a => eval(env, a.0)),
+            ) {
+            Some(f) => apps(f, rest(n))
+            None => apps(h, rest(0))
           }
         _ => apps(go(h), rest(0))
       }
@@ -812,7 +868,7 @@ fn statement(t : Tm) -> Tm? {
 ///|
 /// The code that `c` makes, in place of `${ c }`.
 fn splice_code(
-  names : Array[String],
+  names : Scope,
   env : Env,
   c : Tm,
   pos : Pos?,
@@ -830,7 +886,7 @@ fn splice_code(
               "_",
               Expl,
               true,
-              expand(concat(names, ["_"]), env_push(cl.env, s), 0, cl.body),
+              expand(names.bind_all(["_"]), env_push(cl.env, s), 0, cl.body),
             ),
             Lit(LUnit),
             Expl,
@@ -842,13 +898,13 @@ fn splice_code(
       unstage_fail(
         pos,
         "this splice raised an error when it was run: " +
-        show_tm(names, quote(lvl, e)),
+        show_tm(names.names, quote(lvl, e)),
       )
     _ =>
       unstage_fail(
         pos,
         "this splice cannot be run when the program is checked: the code it makes is stuck on\n  " +
-        show_tm(names, quote(lvl, v)) +
+        show_tm(names.names, quote(lvl, v)) +
         "\n(code generators cannot use arrays, `print`, imported MoonBit functions, or variables of the generated code; to run the code at run time instead, use .run())",
       )
   }
@@ -858,7 +914,7 @@ fn splice_code(
 /// The value `v`, known when a splice runs, as a term of the generated code
 /// (in the scope `names`): variables of the generated code are themselves;
 /// functions, code and blocked computations are kept as they are written.
-fn reify(names : Array[String], v : Val) -> Tm raise ElabError {
+fn reify(names : Scope, v : Val) -> Tm raise ElabError {
   let lvl = names.length()
   let sp_tm = (h : Tm, sp : Spine) => {
     apps(h, sp.map(a => (reify(names, a.0), a.1)))
@@ -888,7 +944,7 @@ fn reify(names : Array[String], v : Val) -> Tm raise ElabError {
         i,
         g,
         expand(
-          concat(names, [x]),
+          names.bind_all([x]),
           env_push(cl.env, v_var(lvl)),
           no_expand,
           cl.body,
@@ -901,7 +957,7 @@ fn reify(names : Array[String], v : Val) -> Tm raise ElabError {
           slot_names(p, xs)
         }
         let env2 = concat(env, fresh_vars(lvl, xs.length()))
-        let names2 = concat(names, xs)
+        let names2 = names.bind_all(xs)
         let cond = match cl.cond {
           Some(c) => Some(expand(names2, env2, no_expand, c))
           None => None
@@ -952,6 +1008,209 @@ fn nat_val(v : Val) -> Int32? {
   None
 }
 
+// ---------------------------------------------------------------------------
+// Local functions of generated code
+
+///|
+/// Apply `f` to the subterms of `t`, with the number of binders above them
+/// (`d` above `t`).
+fn tm_map_d(t : Tm, d : Int32, f : (Tm, Int32) -> Tm) -> Tm {
+  let clause = (cl : Clause) => {
+    let k = pats_slots(cl.pats)
+    cl.map(x => f(x, d + k))
+  }
+  match t {
+    Lam(x, i, g, b) => Lam(x, i, g, f(b, d + 1))
+    Pi(x, i, g, a, b) => Pi(x, i, g, f(a, d), f(b, d + 1))
+    Let(x, a, v, b) => Let(x, f(a, d), f(v, d), f(b, d + 1))
+    LetMut(x, a, v, b) => LetMut(x, f(a, d), f(v, d), f(b, d + 1))
+    Match(ss, cls) => Match(ss.map(x => f(x, d)), cls.map(clause))
+    Try(b, cls) => Try(f(b, d), cls.map(clause))
+    _ => tm_map(t, x => f(x, d))
+  }
+}
+
+///|
+/// Rename the free variables of `t` (under `d` binders): `r` maps their
+/// indices outside of these binders.
+fn map_free(t : Tm, d : Int32, r : (Int32) -> Int32) -> Tm {
+  match t {
+    Var(ix) => if ix >= d { Var(d + r(ix - d)) } else { t }
+    Assign(ix, v) =>
+      Assign(if ix >= d { d + r(ix - d) } else { ix }, map_free(v, d, r))
+    _ => tm_map_d(t, d, (x, d2) => map_free(x, d2, r))
+  }
+}
+
+///|
+/// A local function of quoted code (lifted to the global `g`, which takes
+/// the variables of its context first, see localfn.mbt) and the number of
+/// these variables.
+fn local_fn_arity(g : String) -> Int32? {
+  match (lifted_stages.get(g), globals.get(g)) {
+    (Some(stage), Some({ kind: GFunc(Some(_), _, n), .. })) if stage >= 1 =>
+      Some(n)
+    _ => None
+  }
+}
+
+///|
+/// The specializations made for the definition being expanded: the local
+/// function, the values of its context, the new global and the variables
+/// (levels) of the generated code it takes.
+let specialized : Array[(String, Array[Val], String, Array[Int32])] = []
+
+///|
+/// The specialization being made: its recursive calls are `%spec` until the
+/// variables it takes are known.
+let specializing : Ref[(String, Array[Val])?] = Ref::new(None)
+
+///|
+let specialized_count : Ref[Int32] = Ref::new(0)
+
+///|
+fn same_values(lvl : Int32, vs : Array[Val], ws : Array[Val]) -> Bool {
+  if vs.length() != ws.length() {
+    return false
+  }
+  let ts : LTypes = Array::make(lvl, None)
+  let snap = snapshot_metas()
+  for k = 0; k < vs.length(); k = k + 1 {
+    let same = try {
+      unify(ts, vs[k], ws[k])
+      true
+    } catch {
+      _ => false
+    }
+    if !same {
+      restore_metas(snap)
+      return false
+    }
+  }
+  true
+}
+
+///|
+/// The local function `g` of code that is being generated, for the values
+/// `vals` of the `n` variables of its context: a new global function, whose
+/// body is that of `g` with what is known replaced (its splices are
+/// expanded), applied to the variables of the generated code it uses. As
+/// the function is recursive, so is the new one. `None` inside another
+/// specialization (the call of `g` is then kept: it runs its splices at run
+/// time).
+fn specialize(
+  sc : Scope,
+  g : String,
+  n : Int32,
+  vals : Array[Val],
+) -> Tm? raise ElabError {
+  let lvl = sc.length()
+  let call = (name : String, levels : Array[Int32]) => {
+    apps(Global(name), levels.map(l => (Var(lvl - 1 - l), Expl)))
+  }
+  for s in specialized {
+    if s.0 == g && same_values(lvl, s.1, vals) {
+      return Some(call(s.2, s.3))
+    }
+  }
+  match specializing.val {
+    Some((g2, vals2)) =>
+      return if g2 == g && same_values(lvl, vals2, vals) {
+        Some(Global("%spec"))
+      } else {
+        None
+      }
+    None => ()
+  }
+  let ge = globals.get(g).unwrap()
+  let mut body = match ge.kind {
+    GFunc(Some(b), _, _) => b
+    _ => return None
+  }
+  let mut fty = ge.vty
+  for k = 0; k < n; k = k + 1 {
+    match (body, force(fty)) {
+      (Lam(_, _, _, b), VPi(_, _, _, _, cl)) => {
+        body = b
+        fty = inst(cl, vals[k])
+      }
+      _ => return None
+    }
+  }
+  specializing.val = Some((g, vals))
+  let res : Result[Tm, ElabError] = Ok(expand(sc, vals, 0, body)) catch {
+    ElabError(p, m) => Err(ElabError(p, m))
+  }
+  specializing.val = None
+  let t = match res {
+    Ok(t) => t
+    Err(e) => raise e
+  }
+  let fty_tm = quote_full(lvl, fty)
+  // the variables of the generated code that the function uses: its
+  // parameters
+  let used = Array::make(lvl, false)
+  let note = (x : Tm) => {
+    ignore(
+      var_exists(x, 0, ix => {
+        if ix < lvl {
+          used[lvl - 1 - ix] = true
+        }
+        false
+      }),
+    )
+  }
+  note(t)
+  note(fty_tm)
+  let levels : Array[Int32] = []
+  for l = 0; l < lvl; l = l + 1 {
+    if used[l] {
+      levels.push(l)
+    }
+  }
+  let m = levels.length()
+  let position = (l : Int32) => levels.search(l).unwrap_or(0)
+  let rename = (x : Tm) => map_free(x, 0, ix => m - 1 - position(lvl - 1 - ix))
+  specialized_count.val = specialized_count.val + 1
+  let name = g + "$s" + specialized_count.val.to_string()
+  // the recursive calls
+  fn self_calls(x : Tm, d : Int32) -> Tm {
+    match x {
+      Global("%spec") =>
+        apps(Global(name), levels.map(l => (Var(d + lvl - 1 - l), Expl)))
+      _ => tm_map_d(x, d, self_calls)
+    }
+  }
+
+  let mut ty = rename(fty_tm)
+  let mut def = rename(self_calls(t, 0))
+  for i = m - 1; i >= 0; i = i - 1 {
+    let l = levels[i]
+    // the type of a parameter, if it is known and only mentions the
+    // parameters before it
+    let pty = match sc.types[l] {
+      Some(v) => {
+        let a = quote_full(lvl, v)
+        if var_exists(a, 0, ix => ix >= lvl || !used[lvl - 1 - ix]) {
+          Global("%Any")
+        } else {
+          shift_tm(rename(a), i - m, 0)
+        }
+      }
+      None => Global("%Any")
+    }
+    ty = Pi(sc.names[l], Expl, i == m - 1, pty, ty)
+    def = Lam(sc.names[l], Expl, i == m - 1, def)
+  }
+  register(name, ty, GFunc(Some(def), contains_imperative(def), m))
+  match global_files.get(g) {
+    Some(f) => global_files.set(name, f)
+    None => ()
+  }
+  specialized.push((g, vals, name, levels))
+  Some(call(name, levels))
+}
+
 ///|
 /// Run the splices of stage 0 of every definition, and replace them by the
 /// code they make.
@@ -976,7 +1235,25 @@ fn unstage_all() -> Unit raise ElabError {
         unfold_everything.val = true
         let res : Result[Tm, ElabError] = try {
           let mut out = body
-          with_time_limit(n, () => out = expand([], [], depth, body))
+          with_time_limit(n, () => {
+            specialized.clear()
+            specializing.val = None
+            // the parameters, with their types
+            let lams : Array[(String, Icit, Bool)] = []
+            let mut sc : Scope = { names: [], types: [], }
+            let mut ty = g.vty
+            let mut b = body
+            while b is Lam(x, i, gr, rest) && force(ty) is VPi(_, _, _, a, cl) {
+              lams.push((x, i, gr))
+              ty = inst(cl, v_var(sc.length()))
+              sc = sc.bind_typed(x, a)
+              b = rest
+            }
+            out = wrap_lams(
+              lams,
+              expand(sc, fresh_vars(0, sc.length()), depth, b),
+            )
+          })
           Ok(out)
         } catch {
           ElabError(p, m) => Err(ElabError(p, m))

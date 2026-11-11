@@ -694,7 +694,8 @@ fn require_effect(cxt : Cxt, item : Val) -> Unit raise ElabError {
   match name {
     Some("%Exn") =>
       cxt.fail(
-        "this call may raise an error; use it inside `try` or in a function declared with `raise`",
+        "this call may raise an error; use it inside `try` or in a function declared with `raise`" +
+        cxt.splice_note,
       )
     Some("%AsyncE") =>
       cxt.fail(
@@ -707,7 +708,8 @@ fn require_effect(cxt : Cxt, item : Val) -> Unit raise ElabError {
     cxt.show(item) +
     ", which is not handled here and not in the effects of the function (add `!" +
     cxt.show(item) +
-    "` to its type)",
+    "` to its type)" +
+    cxt.splice_note,
   )
 }
 
