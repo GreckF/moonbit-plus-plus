@@ -90,6 +90,9 @@ fn has_effect(v : Val, print_ok : Bool) -> Bool {
     VPi(_, _, _, a, cl) =>
       has_effect(a, false) || cl.env.iter().any(x => has_effect(x, false))
     VRaises(a, e) => has_effect(a, false) || has_effect(e, false)
+    // an array is a value when a splice runs (staging.mbt)
+    VArrLit(vs) if unfold_everything.val =>
+      vs.iter().any(x => has_effect(x, false))
     VStuck(_, _, _) | VArrLit(_) => true
     VU | VProp | VLit(_) => false
   }
@@ -206,6 +209,8 @@ fn exec(xe : XEnv, t : Tm) -> Val raise ExecStop {
     LetMut(_, _, v, b) => exec(xe.push(exec(xe, v), true), b)
     Let(_, _, v, b) => {
       let x = exec(xe, v)
+      // a splice runs calls when they are made (staging.mbt)
+      let x = if unfold_everything.val { force(x) } else { x }
       // the run stops at an `abort`
       if is_abort(x) {
         raise XStuck
@@ -230,6 +235,7 @@ fn exec(xe : XEnv, t : Tm) -> Val raise ExecStop {
     }
     Seq(a, b) => {
       let x = exec(xe, a)
+      let x = if unfold_everything.val { force(x) } else { x }
       if has_effect(x, true) {
         raise XStuck
       }
@@ -349,8 +355,14 @@ fn exec(xe : XEnv, t : Tm) -> Val raise ExecStop {
       } else {
         eval(xe.snapshot(), t)
       }
-    // arrays are mutable: not run
-    ArrayLit(_) => raise XStuck
+    // arrays are mutable: not run, except by a splice (staging.mbt), where
+    // each evaluation makes an array
+    ArrayLit(es) =>
+      if unfold_everything.val {
+        VArrLit(es.map(e => exec(xe, e)))
+      } else {
+        raise XStuck
+      }
     Global(_) | Lit(_) | U | PropU | Pi(_, _, _, _, _) | Raises(_, _) =>
       eval(xe.snapshot(), t)
     _ => raise XStuck

@@ -34,13 +34,102 @@ let lifted_stages : Map[String, Int32] = {}
 let unfold_everything : Ref[Bool] = Ref::new(false)
 
 ///|
+/// What the splices print while they run (`print` and `println` in a
+/// generator), in order.
+pub let staging_output : Array[String] = []
+
+///|
+/// Are the messages of splices also printed when they are made?
+pub let staging_echo : Ref[Bool] = Ref::new(true)
+
+///|
 fn reset_staging() -> Unit {
+  staging_output.clear()
   staging_used.val = false
   lifted_stages.clear()
   unfold_everything.val = false
   specialized.clear()
   specializing.val = None
   specialized_count.val = 0
+}
+
+///|
+/// The primitives that a splice runs for real when it is applied to all its
+/// arguments (`spliced` code runs when the program is checked, with the
+/// state it makes): arrays, which are mutable values there, and `print`.
+/// `None` if the primitive is not one of them or an argument is not known.
+fn run_prim(p : String, sp : Spine) -> Val? {
+  let args : Array[Val] = []
+  for a in sp {
+    if a.1 == Expl {
+      args.push(a.0)
+    }
+  }
+  let arr = (k : Int32) => {
+    match force(args[k]) {
+      VArrLit(xs) => Some(xs)
+      _ => None
+    }
+  }
+  let int = (k : Int32) => {
+    match force(args[k]) {
+      VLit(LInt(i)) => Some(i)
+      _ => None
+    }
+  }
+  match (p, args.length()) {
+    ("%array_new", _) => Some(VArrLit([]))
+    ("%array_make", 2) =>
+      match int(0) {
+        Some(n) if n >= 0 => Some(VArrLit(Array::make(n, args[1])))
+        _ => None
+      }
+    ("%array_length", 1) =>
+      match arr(0) {
+        Some(xs) => Some(VLit(LInt(xs.length())))
+        None => None
+      }
+    ("%array_get", 2) =>
+      match (arr(0), int(1)) {
+        (Some(xs), Some(i)) if i >= 0 && i < xs.length() => Some(xs[i])
+        _ => None
+      }
+    ("%array_set", 3) =>
+      match (arr(0), int(1)) {
+        (Some(xs), Some(i)) if i >= 0 && i < xs.length() => {
+          xs[i] = args[2]
+          Some(VLit(LUnit))
+        }
+        _ => None
+      }
+    ("%array_push", 2) =>
+      match arr(0) {
+        Some(xs) => {
+          xs.push(args[1])
+          Some(VLit(LUnit))
+        }
+        None => None
+      }
+    ("%print", 1) =>
+      match force(args[0]) {
+        VLit(LStr(s)) => {
+          staging_output.push(s)
+          if staging_echo.val {
+            // (`println` adds the newline that `println(x)` of MoonBit++ wrote)
+            println(
+              if s.has_suffix("\n") {
+                s.unsafe_substring(start=0, end=s.length() - 1)
+              } else {
+                s
+              },
+            )
+          }
+          Some(VLit(LUnit))
+        }
+        _ => None
+      }
+    _ => None
+  }
 }
 
 ///|
@@ -908,7 +997,7 @@ fn splice_code(
         pos,
         "this splice cannot be run when the program is checked: the code it makes is stuck on\n  " +
         show_tm(names.names, quote(lvl, v)) +
-        "\n(code generators cannot use arrays, `print`, imported MoonBit functions, or variables of the generated code; to run the code at run time instead, use .run())",
+        "\n(a generator can use arrays and `print`, but not variables of the generated code or, without moonpp, imported MoonBit functions; to run the code at run time instead, use .run())",
       )
   }
 }

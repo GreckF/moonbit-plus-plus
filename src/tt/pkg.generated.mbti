@@ -185,6 +185,10 @@ pub let source_files : Array[String]
 
 pub fn split_pos(@parser.Pos) -> (Int32, Int32)
 
+pub let staging_echo : @ref.Ref[Bool]
+
+pub let staging_output : Array[String]
+
 pub fn strict(Val) -> Val?
 
 pub fn tm_effect(Tm) -> (Bool, Tm?)

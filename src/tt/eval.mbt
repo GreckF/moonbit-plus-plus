@@ -161,6 +161,10 @@ pub fn app_spine(f : Val, sp : Spine) -> Val {
 fn reduce_prim(n : String, sp : Spine, lazy~ : Bool = false) -> Val {
   match globals.get(n) {
     // `${ c }`, `c.run()`: the code `c` is run (see staging.mbt)
+    // arrays and `print`, when a splice runs (staging.mbt)
+    Some({ kind: GPrim(p, arity), .. }) if sp.length() == arity &&
+      unfold_everything.val &&
+      run_prim(p, sp) is Some(r) => r
     Some({ kind: GPrim("%splice" | "%run", arity), .. }) if sp.length() >= arity =>
       match splice_val(sp, arity, lazy) {
         Some(w) => w

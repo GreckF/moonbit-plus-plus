@@ -275,18 +275,19 @@ test "a splice that cannot be run" {
     check_source(
       "t.mbtpp",
       (
-        #|fn gen(xs : Array[Int]) -> Code[Int] {
-        #|  if xs.length() == 0 { code { 0 } } else { code { 1 } }
+        #|fn twice(x : Int) -> Int = "@mbt:demo.twice"
+        #|fn gen(x : Int) -> Code[Int] {
+        #|  if twice(x) == 0 { code { 0 } } else { code { 1 } }
         #|}
         #|fn f() -> Int {
-        #|  ${ gen([1, 2]) }
+        #|  ${ gen(2) }
         #|}
       ),
     ),
     content=(
-      #|t.mbtpp:5:3: error: this splice cannot be run when the program is checked: the code it makes is stuck on
-      #|  gen([1, 2])
-      #|(code generators cannot use arrays, `print`, imported MoonBit functions, or variables of the generated code; to run the code at run time instead, use .run())
+      #|t.mbtpp:6:3: error: this splice cannot be run when the program is checked: the code it makes is stuck on
+      #|  gen(2)
+      #|(a generator can use arrays and `print`, but not variables of the generated code or, without moonpp, imported MoonBit functions; to run the code at run time instead, use .run())
     ),
   )
 }
@@ -708,4 +709,60 @@ test "generated code compiles to MoonBit" {
       #|}
     ),
   )
+}
+
+///|
+test "generators use arrays and print" {
+  // an array as the data of the generator
+  let src =
+    #|fn sum_code(xs : Array[Int], x : Code[Int]) -> Code[Int] {
+    #|  let mut acc = code { 0 }
+    #|  for k in xs { let a = acc; acc = code { ${a} + ${x} * k } }
+    #|  acc
+    #|}
+    #|fn f(x : Int) -> Int { ${ sum_code([1, 2, 3], code { x }) } }
+    #|
+    #|// an array made by the generator: computed when the code is made
+    #|fn table(n : Int) -> Array[Int] {
+    #|  let t : Array[Int] = []
+    #|  for i = 0; i < n; i = i + 1 { t.push(i * i) }
+    #|  t
+    #|}
+    #|fn pick(i : Int) -> Code[Int] { let t = table(5); code { t[i] } }
+    #|fn g() -> Int { ${ pick(3) } }
+    #|
+    #|// what a generator prints is printed when the program is checked
+    #|fn say() -> Code[Int] { println("generating"); code { 1 } }
+    #|fn h() -> Int { ${ say() } }
+    #|fn main { println(f(10)); println(g()); println(h()) }
+  @tt.staging_echo.val = false
+  inspect(
+    expanded(src, "f"),
+    content=(
+      #|(x) => ((0 + (x * 1)) + (x * 2)) + (x * 3)
+    ),
+  )
+  inspect(
+    expanded(src, "g"),
+    content=(
+      #|(_) => Array::op_get([0, 1, 4, 9, 16], 3)
+    ),
+  )
+  inspect(
+    @tt.staging_output,
+    content=(
+      #|[generating
+      #|]
+    ),
+  )
+  inspect(
+    run_source("t.mbtpp", src),
+    content=(
+      #|60
+      #|9
+      #|1
+      #|
+    ),
+  )
+  @tt.staging_echo.val = true
 }
