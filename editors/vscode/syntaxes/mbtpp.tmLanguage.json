@@ -142,6 +142,10 @@
           "match": "\\b(fn|async|let|mut|enum|struct|trait|impl|lemma|suberror|derive|pub|priv|with|monad|proof|unfold|forall)\\b"
         },
         {
+          "name": "keyword.other.staging.mbtpp",
+          "match": "\\bcode(?=\\s*\\{)|\\$(?=[{A-Za-z_])"
+        },
+        {
           "name": "constant.language.boolean.mbtpp",
           "match": "\\b(true|false)\\b"
         },
