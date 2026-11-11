@@ -60220,6 +60220,9 @@ function _M0FP38username5mbtpp2tt14reset__staging() {
   _M0FP38username5mbtpp2tt13staging__used.val = false;
   _M0MPB3Map5clearGsiE(_M0FP38username5mbtpp2tt14lifted__stages);
   _M0FP38username5mbtpp2tt18unfold__everything.val = false;
+  _M0MPC15array5Array5clearGUiiEE(_M0FP38username5mbtpp2tt11specialized);
+  _M0FP38username5mbtpp2tt12specializing.val = undefined;
+  _M0FP38username5mbtpp2tt18specialized__count.val = 0;
 }
 function _M0FP38username5mbtpp2tt13builtin__data(name, ty, nparams, is_error) {
   _M0FP38username5mbtpp2tt8register(name, ty, new _M0DTP38username5mbtpp2tt5GKind5GData(new _M0TP38username5mbtpp2tt8DataInfo(name, nparams, 0, [], false, _M0DTPC16option6OptionGRPB5ArrayGsEE4None__, false, is_error, true)));

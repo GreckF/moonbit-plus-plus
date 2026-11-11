@@ -38,6 +38,9 @@ fn reset_staging() -> Unit {
   staging_used.val = false
   lifted_stages.clear()
   unfold_everything.val = false
+  specialized.clear()
+  specializing.val = None
+  specialized_count.val = 0
 }
 
 ///|

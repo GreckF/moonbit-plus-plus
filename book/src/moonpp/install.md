@@ -10,7 +10,7 @@
 [Releases](https://github.com/GreckF/mbtpp/releases) 页面的每个版本都附有 npm 包：
 
 ```bash
-npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.7.0/moonpp-0.7.0.tgz
+npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.7.1/moonpp-0.7.1.tgz
 moonpp version
 ```
 

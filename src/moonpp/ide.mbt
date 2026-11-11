@@ -1,4 +1,10 @@
 ///|
+/// A number as JSON (`Int32::to_json` is not in every version of the core).
+fn json_int(n : Int32) -> Json {
+  Json::number(n.to_double())
+}
+
+///|
 /// `moonpp ide <file> [--overlay <json>]`: check the package of a file for
 /// an editor and print what the editor shows, as JSON:
 ///
@@ -81,8 +87,8 @@ fn cmd_ide(
       diags.push(
         Json::object({
           "file": Json::string(h.file),
-          "line": h.line.to_json(),
-          "col": (1).to_json(),
+          "line": json_int(h.line),
+          "col": json_int(1),
           "severity": Json::string("hint"),
           "message": Json::string(
             "pub " + h.kind + " " + h.name + " could be #mbt",
@@ -105,9 +111,9 @@ fn cmd_ide(
     guard loc(n.pos) is Some((f, line, col)) else { continue }
     let m : Map[String, Json] = {
       "file": Json::string(f),
-      "line": line.to_json(),
-      "col": col.to_json(),
-      "len": n.name.length().to_json(),
+      "line": json_int(line),
+      "col": json_int(col),
+      "len": json_int(n.name.length()),
       "type": Json::string((n.show)()),
     }
     match n.global.bind(g => @tt.decl_pos.get(g)).bind(loc) {
@@ -116,8 +122,8 @@ fn cmd_ide(
           "def",
           Json::object({
             "file": Json::string(df),
-            "line": dl.to_json(),
-            "col": dc.to_json(),
+            "line": json_int(dl),
+            "col": json_int(dc),
           }),
         )
       None => ()
@@ -143,8 +149,8 @@ fn cmd_ide(
         None => (0, 0)
       }
       Json::object({
-        "line": tl.to_json(),
-        "col": tc.to_json(),
+        "line": json_int(tl),
+        "col": json_int(tc),
         "goals": match t.1 {
           Some(gs) => goal_json(gs)
           None => Json::null()
@@ -154,8 +160,8 @@ fn cmd_ide(
     proofs.push(
       Json::object({
         "file": Json::string(f),
-        "line": line.to_json(),
-        "col": col.to_json(),
+        "line": json_int(line),
+        "col": json_int(col),
         "start": goal_json(pr.start),
         "tactics": Json::array(tactics),
       }),
@@ -169,8 +175,8 @@ fn cmd_ide(
         "name": Json::string(name),
         "kind": Json::string(@tt.decl_kinds.get(name).unwrap_or("fn")),
         "file": Json::string(f),
-        "line": line.to_json(),
-        "col": col.to_json(),
+        "line": json_int(line),
+        "col": json_int(col),
       }),
     )
   }
@@ -196,8 +202,8 @@ fn diag(
 ) -> Json {
   Json::object({
     "file": Json::string(file),
-    "line": line.to_json(),
-    "col": col.to_json(),
+    "line": json_int(line),
+    "col": json_int(col),
     "severity": Json::string(severity),
     "message": Json::string(message),
   })

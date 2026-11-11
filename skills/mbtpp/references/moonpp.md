@@ -5,7 +5,7 @@
 需要 Node.js 18 以上，以及使用 `moon.mod` / `moon.pkg` 的新版 MoonBit 工具链 `moon`（编译、依赖时用）。
 
 ```bash
-npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.7.0/moonpp-0.7.0.tgz
+npm install -g https://github.com/GreckF/mbtpp/releases/download/v0.7.1/moonpp-0.7.1.tgz
 moonpp version
 ```
 

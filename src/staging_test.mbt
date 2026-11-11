@@ -399,7 +399,7 @@ test "local recursive functions in generators and in code" {
   inspect(
     expanded(src, "g"),
     content=(
-      #|(x) => { let go = loop_code$go$N$s2(x); go(4, 0) }
+      #|(x) => { let go = loop_code$go$N$s1(x); go(4, 0) }
     ),
   )
   inspect(
