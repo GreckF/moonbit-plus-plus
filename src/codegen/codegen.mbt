@@ -561,7 +561,7 @@ fn Gen::clauses_dynamic(
 ///|
 /// Is `t` a proof (an erased local, or a use of a lemma or of a constructor
 /// of a proposition)? It is not computed.
-fn Gen::is_erased_tm(self : Gen, env : Array[Local], t : @tt.Tm) -> Bool {
+fn is_erased_tm(env : Array[Local], t : @tt.Tm) -> Bool {
   match t {
     Var(ix) => env[env.length() - 1 - ix] is LErased
     _ => {
@@ -911,7 +911,7 @@ fn Gen::tm(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
     }
     App(_, _, _) => self.app(env, t)
     // a proof is not computed
-    Let(_, ty, v, b) if @tt.is_prop_head(ty) || self.is_erased_tm(env, v) =>
+    Let(_, ty, v, b) if @tt.is_prop_head(ty) || is_erased_tm(env, v) =>
       self.tm(push_local(env, LErased), b)
     Let(x, _, v, b) => {
       let n = self.name(x)
@@ -961,7 +961,7 @@ fn Gen::tm(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
         None => {
           let lets = StringBuilder()
           // a column matching a proof matches anything (see match_code)
-          let proofs = ss.map(s => self.is_erased_tm(env, s))
+          let proofs = ss.map(s => is_erased_tm(env, s))
           let names = ss.mapi((k, s) => {
             if proofs[k] {
               return "VType"

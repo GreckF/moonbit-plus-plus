@@ -8,7 +8,6 @@
 /// erase).
 priv struct NatLike {
   data : String
-  zero : String
   succ : String
   /// The index of the recursive field among the successor's own arguments.
   field : Int32
@@ -69,7 +68,7 @@ fn Gen::compute_nat_like(self : Gen, d : String) -> NatLike? {
     let succ = di.cons[1 - z]
     match (kept(zero), kept(succ)) {
       (Some([]), Some([(j, a)])) if flatten_app(a).0 is Global(h) && h == d =>
-        return Some({ data: d, zero, succ, field: j, })
+        return Some({ data: d, succ, field: j, })
       _ => ()
     }
   }

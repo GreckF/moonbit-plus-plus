@@ -417,7 +417,7 @@ fn Parser::row_opt(self : Parser) -> Expr? raise ParseError {
 /// `Raise[E]` (`Raise`: `Raise[Error]`) and `Async` in a row: the errors and
 /// the async effect, kept apart from the row (see `effect_opt`). Returns the
 /// other items, the error type and whether `Async` is there.
-fn split_builtin_effects(row : Expr) -> (Expr, Expr?, Bool) raise ParseError {
+fn split_builtin_effects(row : Expr) -> (Expr, Expr?, Bool) {
   let items : Array[Expr] = []
   let mut err : Expr? = None
   let mut is_async = false
@@ -1082,16 +1082,6 @@ fn Parser::primary(self : Parser) -> Expr raise ParseError {
     // loops are expressions too (`let x = for ... { break v } nobreak { d }`)
     TSym("while" | "for") => EBlock(pos, [self.loop_stmt(pos, None)])
     TSym("loop") => self.loop_expr(pos, None)
-    TIdent(_) if self.at_k(1, "~") && self.at_k(2, ":") => {
-      let label = self.ident()
-      ignore(self.advance())
-      ignore(self.advance())
-      if self.at("loop") {
-        self.loop_expr(pos, Some(label))
-      } else {
-        EBlock(pos, [self.loop_stmt(pos, Some(label))])
-      }
-    }
     TSym("monad") => {
       ignore(self.advance())
       EMonad(pos, self.block())

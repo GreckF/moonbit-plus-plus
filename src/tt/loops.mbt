@@ -36,11 +36,6 @@ fn LoopRw::targets(self : LoopRw, label : String?, d : Int32) -> Bool {
 }
 
 ///|
-fn evar(p : Pos, x : String) -> @parser.Expr {
-  EVar(p, x)
-}
-
-///|
 fn assign(p : Pos, x : String, e : @parser.Expr) -> @parser.Stmt {
   SAssign(p, EVar(p, x), "=", e)
 }

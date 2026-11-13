@@ -643,7 +643,7 @@ fn moon(args : String, dir : String) -> Unit raise Failure {
 ///|
 /// Make sure every package of the downloaded dependencies has an interface
 /// file, generating the missing ones with `moon info`.
-fn extract_interfaces(root : String) -> Unit raise Failure {
+fn extract_interfaces(root : String) -> Unit {
   let cakes = root + "/.mooncakes"
   for user in list_dir(cakes) {
     for m in list_dir(cakes + "/" + user) {
