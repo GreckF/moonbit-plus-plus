@@ -3,7 +3,7 @@
 pub(all) struct Pos {
   line : Int32
   col : Int32
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 pub fn Pos::to_string(self : Pos) -> String {
@@ -28,7 +28,7 @@ pub(all) enum Lit {
   LByte(Byte)
   /// `1.5F`
   LFloat(Float)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// A binder `x`, `x : A` or (in parameter lists) an anonymous type `A`.
@@ -37,7 +37,7 @@ pub(all) struct Binder {
   name : String
   ty : Expr?
   kind : ParamKind
-} derive(Show)
+} derive(Debug)
 
 ///|
 /// How a function parameter is passed (MoonBit's tagged arguments).
@@ -48,13 +48,13 @@ pub(all) enum ParamKind {
   Labelled(Expr?)
   /// `x? : T`: the parameter has type `T?` and defaults to `None`
   Optional
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum InterpPart {
   IStr(String)
   IExpr(Expr)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum Expr {
@@ -113,14 +113,14 @@ pub(all) enum Expr {
   EIs(Pos, Expr, Pat)
   /// `T raise E` as the result type of a lambda.
   EEff(Pos, Expr, Expr)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct MatchRet {
   as_name : String?
   in_ty : Expr?
   ret : Expr?
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct Arm {
@@ -129,7 +129,7 @@ pub(all) struct Arm {
   /// `p if cond => ...`
   cond : Expr?
   rhs : Expr?
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum Pat {
@@ -154,7 +154,7 @@ pub(all) enum Pat {
   /// `x~` or `x=p` among the arguments of a constructor pattern: the field
   /// labelled `x`.
   PLabel(Pos, String, Pat)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum Stmt {
@@ -177,7 +177,7 @@ pub(all) enum Stmt {
   SGuard(Pos, Expr, Expr?)
   /// `defer e`
   SDefer(Pos, Expr)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum Tactic {
@@ -190,13 +190,13 @@ pub(all) enum Tactic {
   TAssume(Pos, String, Expr)
   /// `unfold f, g`: `f` and `g` may be unfolded in the rest of the proof.
   TUnfold(Pos, Array[(Pos, String)])
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum FnBody {
   BodyExpr(Expr)
   BodyExtern(String)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct FnDecl {
@@ -208,7 +208,7 @@ pub(all) struct FnDecl {
   raises : Expr?
   body : FnBody
   is_lemma : Bool
-} derive(Show)
+} derive(Debug)
 
 ///|
 /// An operation of an effect: `Op(params) -> ret`, or `ctl Op(params) -> ret`
@@ -219,7 +219,7 @@ pub(all) struct EffOpDecl {
   params : Array[Binder]
   ret : Expr
   ctl : Bool
-} derive(Show)
+} derive(Debug)
 
 ///|
 /// `effect Name[params] { ops }`
@@ -228,7 +228,7 @@ pub(all) struct EffectDecl {
   name : String
   params : Array[Binder]
   ops : Array[EffOpDecl]
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct ConDecl {
@@ -237,7 +237,7 @@ pub(all) struct ConDecl {
   impl_params : Array[Binder]
   params : Array[Binder]
   ret : Expr?
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct EnumDecl {
@@ -248,7 +248,7 @@ pub(all) struct EnumDecl {
   sig : Expr?
   cons : Array[ConDecl]
   is_error : Bool
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct StructDecl {
@@ -257,7 +257,7 @@ pub(all) struct StructDecl {
   impl_params : Array[Binder]
   params : Array[Binder]?
   fields : Array[(Pos, String, Expr)]
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct TraitMethod {
@@ -267,7 +267,7 @@ pub(all) struct TraitMethod {
   params : Array[Binder]
   ret : Expr
   raises : Expr?
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct TraitDecl {
@@ -276,7 +276,7 @@ pub(all) struct TraitDecl {
   self_kind : Expr?
   supers : Array[String]
   methods : Array[TraitMethod]
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct ImplDecl {
@@ -287,7 +287,7 @@ pub(all) struct ImplDecl {
   meth : String
   params : Array[Binder]
   body : Expr
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum Decl {
@@ -322,7 +322,7 @@ pub(all) enum Decl {
   /// `#opaque`, `#opaque(sealed)` or `#unfold(f, g)` on a function (see
   /// doc/mbtpp/unfolding.md).
   DUnfoldAttr(Pos, UnfoldAttr, Decl)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) enum UnfoldAttr {
@@ -332,7 +332,7 @@ pub(all) enum UnfoldAttr {
   Sealed
   /// `#unfold(f, g)`: `f` and `g` may be unfolded in the definition
   Unfolds(Array[(Pos, String)])
-} derive(Show)
+} derive(Debug)
 
 ///|
 /// The declaration under its attributes.

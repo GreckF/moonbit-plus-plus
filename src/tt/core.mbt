@@ -5,7 +5,7 @@ pub(all) enum Icit {
   Impl
   /// An instance argument, filled in by instance search.
   Inst
-} derive(Eq, Show)
+} derive(Eq, Debug)
 
 ///|
 pub type Lit = @parser.Lit
@@ -23,7 +23,7 @@ pub(all) enum CPat {
   CPWild
   CPCon(String, Array[CPat])
   CPLit(Lit)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct Clause {
@@ -32,7 +32,7 @@ pub(all) struct Clause {
   /// Like the body, it is under the slots of the patterns.
   cond : Tm?
   body : Tm
-} derive(Show)
+} derive(Debug)
 
 ///|
 /// Apply `f` to the guard and the body of a clause.
@@ -71,7 +71,7 @@ pub(all) enum Tm {
   /// `defer e; body`: `e` runs when `body` is left (normally, by `return`,
   /// `break`, `continue` or an error).
   Defer(Tm, Tm)
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub type Env = Array[Val]

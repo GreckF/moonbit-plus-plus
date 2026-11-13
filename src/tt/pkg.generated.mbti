@@ -2,6 +2,7 @@
 package "username/mbtpp/tt"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/core/ref",
   "username/mbtpp/parser",
 }
@@ -240,13 +241,13 @@ pub(all) enum CPat {
   CPWild
   CPCon(String, Array[CPat])
   CPLit(@parser.Lit)
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct Clause {
   pats : Array[CPat]
   cond : Tm?
   body : Tm
-} derive(Show)
+} derive(@debug.Debug)
 pub fn Clause::map(Self, (Tm) -> Tm) -> Self
 
 pub(all) struct Closure {
@@ -342,7 +343,7 @@ pub(all) enum Icit {
   Expl
   Impl
   Inst
-} derive(Eq, Show)
+} derive(Eq, @debug.Debug)
 
 pub(all) struct Import {
   pkg_alias : String
@@ -412,7 +413,7 @@ pub(all) enum Tm {
   ArrayLit(Array[Tm])
   Seq(Tm, Tm)
   Defer(Tm, Tm)
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum Val {
   VRigid(Int32, Array[(Val, Icit)])

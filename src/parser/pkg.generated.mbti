@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "username/mbtpp/parser"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 pub fn decl_bound_names(Decl) -> Array[String]
 
@@ -29,14 +33,14 @@ pub(all) struct Arm {
   pat : Pat
   cond : Expr?
   rhs : Expr?
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct Binder {
   pos : Pos
   name : String
   ty : Expr?
   kind : ParamKind
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct ConDecl {
   pos : Pos
@@ -44,7 +48,7 @@ pub(all) struct ConDecl {
   impl_params : Array[Binder]
   params : Array[Binder]
   ret : Expr?
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum Decl {
   DFn(FnDecl)
@@ -60,7 +64,7 @@ pub(all) enum Decl {
   DDerive(Array[(Pos, String)], Decl)
   DLimit(Pos, Int32?, Decl)
   DUnfoldAttr(Pos, UnfoldAttr, Decl)
-} derive(Show)
+} derive(@debug.Debug)
 pub fn Decl::inner(Self) -> Self
 
 pub(all) struct EffOpDecl {
@@ -69,14 +73,14 @@ pub(all) struct EffOpDecl {
   params : Array[Binder]
   ret : Expr
   ctl : Bool
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct EffectDecl {
   pos : Pos
   name : String
   params : Array[Binder]
   ops : Array[EffOpDecl]
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct EnumDecl {
   pos : Pos
@@ -86,7 +90,7 @@ pub(all) struct EnumDecl {
   sig : Expr?
   cons : Array[ConDecl]
   is_error : Bool
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum Expr {
   EVar(Pos, String)
@@ -125,13 +129,13 @@ pub(all) enum Expr {
   ETagged(Pos, String, Expr, Bool)
   EIs(Pos, Expr, Pat)
   EEff(Pos, Expr, Expr)
-} derive(Show)
+} derive(@debug.Debug)
 pub fn Expr::pos(Self) -> Pos
 
 pub(all) enum FnBody {
   BodyExpr(Expr)
   BodyExtern(String)
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct FnDecl {
   pos : Pos
@@ -142,7 +146,7 @@ pub(all) struct FnDecl {
   raises : Expr?
   body : FnBody
   is_lemma : Bool
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct ImplDecl {
   pos : Pos
@@ -152,12 +156,12 @@ pub(all) struct ImplDecl {
   meth : String
   params : Array[Binder]
   body : Expr
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum InterpPart {
   IStr(String)
   IExpr(Expr)
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum Lit {
   LInt(Int32)
@@ -171,13 +175,13 @@ pub(all) enum Lit {
   LUInt64(UInt64)
   LByte(Byte)
   LFloat(Float)
-} derive(Eq, Show)
+} derive(Eq, @debug.Debug)
 
 pub(all) struct MatchRet {
   as_name : String?
   in_ty : Expr?
   ret : Expr?
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct MbtiImpl {
   pos : Pos
@@ -205,7 +209,7 @@ pub(all) enum ParamKind {
   Positional
   Labelled(Expr?)
   Optional
-} derive(Show)
+} derive(@debug.Debug)
 
 type Parser
 pub fn Parser::expr(Self) -> Expr raise ParseError
@@ -222,13 +226,13 @@ pub(all) enum Pat {
   PRange(Pos, Lit?, Lit?, Bool)
   PStruct(Pos, Array[(String, Pat)], Bool)
   PLabel(Pos, String, Pat)
-} derive(Show)
+} derive(@debug.Debug)
 pub fn Pat::pos(Self) -> Pos
 
 pub(all) struct Pos {
   line : Int32
   col : Int32
-} derive(Eq, Show)
+} derive(Eq, @debug.Debug)
 pub fn Pos::to_string(Self) -> String
 
 pub(all) enum Stmt {
@@ -244,12 +248,12 @@ pub(all) enum Stmt {
   SExpr(Pos, Expr)
   SGuard(Pos, Expr, Expr?)
   SDefer(Pos, Expr)
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum StrPart {
   SPStr(String)
   SPExpr(String, Int32, Int32)
-} derive(Eq, Show)
+} derive(Eq, @debug.Debug)
 
 pub(all) struct StructDecl {
   pos : Pos
@@ -257,7 +261,7 @@ pub(all) struct StructDecl {
   impl_params : Array[Binder]
   params : Array[Binder]?
   fields : Array[(Pos, String, Expr)]
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum Tactic {
   TIntros(Pos, Array[String])
@@ -268,7 +272,7 @@ pub(all) enum Tactic {
   TApply(Pos, Expr)
   TAssume(Pos, String, Expr)
   TUnfold(Pos, Array[(Pos, String)])
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum Tok {
   TIdent(String)
@@ -279,13 +283,13 @@ pub(all) enum Tok {
   TChar(Char)
   TSym(String)
   TEOF
-} derive(Eq, Show)
+} derive(Eq, @debug.Debug)
 
 pub(all) struct Token {
   tok : Tok
   pos : Pos
   nl : Bool
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct TraitDecl {
   pos : Pos
@@ -293,7 +297,7 @@ pub(all) struct TraitDecl {
   self_kind : Expr?
   supers : Array[String]
   methods : Array[TraitMethod]
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) struct TraitMethod {
   pos : Pos
@@ -302,13 +306,13 @@ pub(all) struct TraitMethod {
   params : Array[Binder]
   ret : Expr
   raises : Expr?
-} derive(Show)
+} derive(@debug.Debug)
 
 pub(all) enum UnfoldAttr {
   Opaque
   Sealed
   Unfolds(Array[(Pos, String)])
-} derive(Show)
+} derive(@debug.Debug)
 
 // Type aliases
 

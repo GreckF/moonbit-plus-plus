@@ -10,14 +10,14 @@ pub(all) enum Tok {
   /// Keywords and symbols.
   TSym(String)
   TEOF
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 pub(all) enum StrPart {
   SPStr(String)
   /// Source of an interpolated expression and its position.
   SPExpr(String, Int32, Int32)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 pub(all) struct Token {
@@ -25,7 +25,7 @@ pub(all) struct Token {
   pos : Pos
   /// Whether a newline separates this token from the previous one.
   nl : Bool
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub suberror ParseError {
