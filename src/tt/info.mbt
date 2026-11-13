@@ -31,20 +31,20 @@ pub(all) struct ProofInfo {
 }
 
 ///|
-pub let name_infos : Array[NameInfo] = []
+pub let name_infos : Array[NameInfo] = @percheck.array()
 
 ///|
-pub let proof_infos : Array[ProofInfo] = []
+pub let proof_infos : Array[ProofInfo] = @percheck.array()
 
 ///|
 /// Where the globals of the package are declared.
-pub let decl_pos : Map[String, Pos] = Map([])
+pub let decl_pos : Map[String, Pos] = @percheck.map()
 
 ///|
 /// What the globals of `decl_pos` are: "fn", "lemma", "let", "enum",
 /// "struct", "trait", "type", "constructor", "field" or "method" (of a
 /// trait).
-pub let decl_kinds : Map[String, String] = Map([])
+pub let decl_kinds : Map[String, String] = @percheck.map()
 
 ///|
 /// Only the files of the checked package are recorded.
@@ -94,13 +94,4 @@ fn goal_info(cxt : Cxt, ty : Val) -> GoalInfo {
 /// The file (index into `source_files`) and line of a position.
 pub fn split_pos(p : Pos) -> (Int32, Int32) {
   (p.line / file_stride - 1, p.line % file_stride)
-}
-
-///|
-fn clear_infos() -> Unit {
-  name_infos.clear()
-  proof_infos.clear()
-  decl_pos.clear()
-  derived_lines.clear()
-  decl_kinds.clear()
 }

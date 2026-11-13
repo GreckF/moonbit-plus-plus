@@ -43,28 +43,22 @@ pub(all) struct FfiHost {
 }
 
 ///|
+/// Host configuration, kept across checks (never reset).
 pub let ffi_host : Ref[FfiHost?] = Ref(None)
 
 ///|
 /// The functions of the checker that the host was given, with the types of
 /// their parameters: the function and its type.
-let ffi_callbacks : Array[(Val, Val)] = []
+let ffi_callbacks : Array[(Val, Val)] = @percheck.array()
 
 ///|
 /// The imported functions that the host can call.
-let ffi_ready : Map[String, Bool] = Map([])
+let ffi_ready : Map[String, Bool] = @percheck.map()
 
 ///|
 /// Why the last call of an imported function failed (for the error of a
 /// splice that is stuck on it).
-pub let ffi_error : Ref[String?] = Ref(None)
-
-///|
-fn reset_ffi() -> Unit {
-  ffi_callbacks.clear()
-  ffi_ready.clear()
-  ffi_error.val = None
-}
+pub let ffi_error : Ref[String?] = @percheck.cell(None)
 
 // ---------------------------------------------------------------------------
 // Writing

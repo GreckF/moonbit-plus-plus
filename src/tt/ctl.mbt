@@ -138,7 +138,7 @@ fn napp(g : String, args : Array[N]) -> N {
 }
 
 ///|
-let ctl_ready : Ref[Bool] = Ref(false)
+let ctl_ready : Ref[Bool] = @percheck.cell(false)
 
 ///|
 /// Define the runtime of `ctl` operations (once per check).
@@ -464,23 +464,15 @@ fn global_row_has_var(name : String) -> Bool {
 
 ///|
 /// Marked bodies of functions, for their translated versions.
-let marked_bodies : Map[String, Tm] = Map([])
+let marked_bodies : Map[String, Tm] = @percheck.map()
 
 ///|
 /// Translated versions waiting for the body of their function.
-let pending_m : Array[String] = []
+let pending_m : Array[String] = @percheck.array()
 
 ///|
 /// An error found while translating (reported by the declaration).
-let ctl_error : Ref[String?] = Ref(None)
-
-///|
-fn reset_ctl() -> Unit {
-  marked_bodies.clear()
-  pending_m.clear()
-  ctl_ready.val = false
-  ctl_error.val = None
-}
+let ctl_error : Ref[String?] = @percheck.cell(None)
 
 ///|
 /// The body to store for the function `name` (marked `body`).

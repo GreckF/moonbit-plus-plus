@@ -285,6 +285,8 @@ fn is_blocked(v : Val) -> Bool {
 /// Functions that could not be unfolded because their bodies were not
 /// elaborated yet (they are defined later), since the start of the current
 /// declaration: an error may come from the order in which files are checked.
+/// Not reset by `setup`: cleared in `elab_decl.mbt` at the start of each
+/// declaration.
 pub let unfolded_too_early : Array[String] = []
 
 ///|

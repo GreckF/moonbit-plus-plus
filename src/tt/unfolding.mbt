@@ -8,17 +8,17 @@
 ///|
 /// The opaque functions (`true`: sealed, never unfolded outside its own
 /// definition).
-let unfold_modes : Map[String, Bool] = Map([])
+let unfold_modes : Map[String, Bool] = @percheck.map()
 
 ///|
 /// The functions each function unfolds (`#unfold`, `unfold` blocks and
 /// tactics in its definition, or those of the declaration that made it).
-let unfold_deps : Map[String, Array[String]] = Map([])
+let unfold_deps : Map[String, Array[String]] = @percheck.map()
 
 ///|
 /// The names of the `#unfold` attributes, with their positions (checked
 /// when the definition is).
-let unfold_attr_names : Map[String, Array[(Pos, String)]] = Map([])
+let unfold_attr_names : Map[String, Array[(Pos, String)]] = @percheck.map()
 
 ///|
 /// Where functions may be unfolded: the definition of `owner` (`""` for a
@@ -32,21 +32,12 @@ priv struct UFrame {
 }
 
 ///|
-let unfold_frames : Array[UFrame] = []
+let unfold_frames : Array[UFrame] = @percheck.array()
 
 ///|
 /// The opaque functions that could not be unfolded while checking the
 /// current declaration (for a hint when it fails).
-let blocked_opaque : Array[String] = []
-
-///|
-fn reset_unfolding() -> Unit {
-  unfold_modes.clear()
-  unfold_deps.clear()
-  unfold_attr_names.clear()
-  unfold_frames.clear()
-  blocked_opaque.clear()
-}
+let blocked_opaque : Array[String] = @percheck.array()
 
 ///|
 /// Record and remove the `#opaque` and `#unfold` attributes of a

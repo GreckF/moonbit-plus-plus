@@ -23,7 +23,7 @@ pub(all) struct MbtInfo {
 
 ///|
 /// `#mbt` datatypes and traits, by MoonBit++ name.
-pub let mbt_types : Map[String, MbtInfo] = Map([])
+pub let mbt_types : Map[String, MbtInfo] = @percheck.map()
 
 ///|
 pub fn mbt_info(name : String) -> MbtInfo? {
@@ -418,7 +418,7 @@ fn check_mbt_impls(
 /// public MoonBit functions; their signatures must translate (checked
 /// here), their bodies must be in the native fragment (checked by the
 /// compiler).
-pub let mbt_fns : Map[String, String] = Map([])
+pub let mbt_fns : Map[String, String] = @percheck.map()
 
 ///|
 fn is_mbt_ident(s : String) -> Bool {
@@ -539,7 +539,7 @@ fn check_mbt_fns(fns : Array[(Pos, String)]) -> Unit raise ElabError {
 ///|
 /// Declarations written with `pub` and without `#mbt` (position, name,
 /// whether it is a function): candidates for a `#mbt` hint.
-pub let pub_decls : Array[(Pos, String, Bool)] = []
+pub let pub_decls : Array[(Pos, String, Bool)] = @percheck.array()
 
 ///|
 /// A `pub` declaration that could be `#mbt`.

@@ -26,8 +26,7 @@ fn builtin_data(
 ///|
 /// Reset all state and install the built-in types.
 pub fn setup() -> Unit {
-  reset_state()
-  reset_elab()
+  @percheck.reset_all()
   for
     n in [
       "Int", "String", "Char", "Bool", "Unit", "Double", "Int64", "UInt", "UInt64",
@@ -134,11 +133,13 @@ pub(all) struct Import {
 
 ///|
 /// Interface items that could not be imported by the last `check_program`.
+/// Cleared by `check_package` after the prelude, not by `setup`.
 pub let import_skipped : Array[String] = []
 
 ///|
 /// Types of imported packages that are other types (`@bigint.BigInt` is
-/// MoonBit++'s `BigInt`).
+/// MoonBit++'s `BigInt`). Cleared by `check_package` after the prelude, not
+/// by `setup`.
 let import_type_aliases : Map[String, String] = Map([])
 
 ///|
@@ -213,7 +214,7 @@ pub fn check_package(
 
 ///|
 /// The position and message of the error of the last `check_package` (for
-/// editors).
+/// editors). Cleared by `check_package` after `setup`, not by `setup`.
 pub let last_error : Array[(Pos, String)] = []
 
 ///|
@@ -483,7 +484,7 @@ fn reexports(
 ///|
 /// Instances of imported impls: MoonBit has them, the compiler does not
 /// generate them.
-pub let external_instances : Array[String] = []
+pub let external_instances : Array[String] = @percheck.array()
 
 ///|
 /// Pretty-print the type of a global.

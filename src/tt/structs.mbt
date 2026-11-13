@@ -8,23 +8,16 @@
 
 ///|
 /// The mutable fields (`T::x`).
-pub let mut_fields : Map[String, Bool] = Map([])
+pub let mut_fields : Map[String, Bool] = @percheck.map()
 
 ///|
 /// The tuple structs.
-pub let tuple_structs : Map[String, Bool] = Map([])
+pub let tuple_structs : Map[String, Bool] = @percheck.map()
 
 ///|
 /// The default implementations of trait methods (`impl Tr with m(..)`), by
 /// `Tr::m`.
-let trait_defaults : Map[String, @parser.ImplDecl] = Map([])
-
-///|
-fn reset_structs() -> Unit {
-  mut_fields.clear()
-  tuple_structs.clear()
-  trait_defaults.clear()
-}
+let trait_defaults : Map[String, @parser.ImplDecl] = @percheck.map()
 
 ///|
 /// The type of a field, without its `mut` mark, and whether it is mutable.

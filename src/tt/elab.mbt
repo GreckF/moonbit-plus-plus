@@ -56,40 +56,38 @@ priv struct PendingInst {
 }
 
 ///|
-let st : ElabState = {
-  cons_by_short: {},
-  trait_methods: {},
-  instances: {},
-  instance_heads: {},
-  traits: {},
-  opaque_traits: [],
-  thunks: {},
-  impl_sigs: {},
-  labels: {},
-  running: [],
-  pending: [],
-  type_defaults: [],
-  fresh: 0,
-}
-
-///|
-fn reset_elab() -> Unit {
-  st.cons_by_short.clear()
-  st.trait_methods.clear()
-  st.instances.clear()
-  st.instance_heads.clear()
-  st.traits.clear()
-  st.opaque_traits.clear()
-  st.thunks.clear()
-  st.impl_sigs.clear()
-  st.labels.clear()
-  st.running.clear()
-  st.pending.clear()
-  st.type_defaults.clear()
-  st.fresh = 0
-  prop_args.clear()
-  reset_effects()
-}
+let st : ElabState = @percheck.state(
+  {
+    cons_by_short: {},
+    trait_methods: {},
+    instances: {},
+    instance_heads: {},
+    traits: {},
+    opaque_traits: [],
+    thunks: {},
+    impl_sigs: {},
+    labels: {},
+    running: [],
+    pending: [],
+    type_defaults: [],
+    fresh: 0,
+  },
+  st => {
+    st.cons_by_short.clear()
+    st.trait_methods.clear()
+    st.instances.clear()
+    st.instance_heads.clear()
+    st.traits.clear()
+    st.opaque_traits.clear()
+    st.thunks.clear()
+    st.impl_sigs.clear()
+    st.labels.clear()
+    st.running.clear()
+    st.pending.clear()
+    st.type_defaults.clear()
+    st.fresh = 0
+  },
+)
 
 ///|
 fn fresh_name_gen(base : String) -> String {
@@ -1914,7 +1912,7 @@ fn occurs_any(hi : Int32, lo : Int32, v : Val) -> Bool {
 /// Implicit arguments that must be propositions (`[A : Prop]`), checked
 /// once their metas are solved (unification alone could solve them with
 /// any type).
-let prop_args : Array[(Cxt, Tm)] = []
+let prop_args : Array[(Cxt, Tm)] = @percheck.array()
 
 ///|
 fn note_prop_arg(cxt : Cxt, arg : Tm, dom : Val) -> Unit {

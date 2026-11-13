@@ -8,11 +8,12 @@
 
 ///|
 /// The default limit, in seconds.
+/// Host configuration, kept across checks (never reset).
 pub let default_time_limit : Ref[Int32] = Ref(30)
 
 ///|
 /// `#timelimit` of declarations, by global name (`None`: no limit).
-let time_limits : Map[String, Int32?] = Map([])
+let time_limits : Map[String, Int32?] = @percheck.map()
 
 ///|
 priv struct TimeFrame {
@@ -24,28 +25,19 @@ priv struct TimeFrame {
 }
 
 ///|
-let time_frames : Array[TimeFrame] = []
+let time_frames : Array[TimeFrame] = @percheck.array()
 
 ///|
 /// The declaration whose time ran out, and the function being evaluated
 /// then.
-let timed_out : Ref[(String, String?)?] = Ref(None)
+let timed_out : Ref[(String, String?)?] = @percheck.cell(None)
 
 ///|
-let ticks : Ref[Int32] = Ref(0)
+let ticks : Ref[Int32] = @percheck.cell(0)
 
 ///|
 /// The global function last unfolded or executed (for the message).
-let last_unfolded : Ref[String?] = Ref(None)
-
-///|
-fn reset_time_limits() -> Unit {
-  time_limits.clear()
-  time_frames.clear()
-  timed_out.val = None
-  ticks.val = 0
-  last_unfolded.val = None
-}
+let last_unfolded : Ref[String?] = @percheck.cell(None)
 
 ///|
 /// Called often by evaluation: has the time of the current declaration run
@@ -162,4 +154,5 @@ fn limit_names(d : @parser.Decl) -> Array[String] {
 ///|
 /// Called with the name of each definition when its checking starts (the
 /// JS build of moonpp names it when the checker runs out of stack).
+/// Host configuration, kept across checks (never reset).
 pub let checking_hook : Ref[(String) -> Unit] = Ref(_ => ())

@@ -21,38 +21,27 @@
 
 ///|
 /// Was `code { }` or `${ }` used since the last expansion?
-let staging_used : Ref[Bool] = Ref(false)
+let staging_used : Ref[Bool] = @percheck.cell(false)
 
 ///|
 /// The stage at which a lifted local function (localfn.mbt) was defined,
 /// when it is not 0.
-let lifted_stages : Map[String, Int32] = Map([])
+let lifted_stages : Map[String, Int32] = @percheck.map()
 
 ///|
 /// During the expansion of splices every function is unfolded: `#opaque` is
 /// about type checking, not about running (see unfolding.mbt).
-let unfold_everything : Ref[Bool] = Ref(false)
+let unfold_everything : Ref[Bool] = @percheck.cell(false)
 
 ///|
 /// What the splices print while they run (`print` and `println` in a
 /// generator), in order.
-pub let staging_output : Array[String] = []
+pub let staging_output : Array[String] = @percheck.array()
 
 ///|
 /// Are the messages of splices also printed when they are made?
+/// Host configuration, kept across checks (never reset).
 pub let staging_echo : Ref[Bool] = Ref(true)
-
-///|
-fn reset_staging() -> Unit {
-  reset_ffi()
-  staging_output.clear()
-  staging_used.val = false
-  lifted_stages.clear()
-  unfold_everything.val = false
-  specialized.clear()
-  specializing.val = None
-  specialized_count.val = 0
-}
 
 ///|
 /// The primitives that a splice runs for real when it is applied to all its
@@ -735,6 +724,7 @@ fn hoist_from(t : Tm, b : Int32, depth : Int32, found : Array[(Tm, Tm)]) -> Tm {
 
 ///|
 /// The global whose splices are being expanded.
+/// Not reset: set before the splices of each global are expanded.
 let unstage_owner : Ref[String] = Ref("")
 
 ///|
@@ -1155,15 +1145,15 @@ fn local_fn_arity(g : String) -> Int32? {
 /// The specializations made for the definition being expanded: the local
 /// function, the values of its context, the new global and the variables
 /// (levels) of the generated code it takes.
-let specialized : Array[(String, Array[Val], String, Array[Int32])] = []
+let specialized : Array[(String, Array[Val], String, Array[Int32])] = @percheck.array()
 
 ///|
 /// The specialization being made: its recursive calls are `%spec` until the
 /// variables it takes are known.
-let specializing : Ref[(String, Array[Val])?] = Ref(None)
+let specializing : Ref[(String, Array[Val])?] = @percheck.cell(None)
 
 ///|
-let specialized_count : Ref[Int32] = Ref(0)
+let specialized_count : Ref[Int32] = @percheck.cell(0)
 
 ///|
 fn same_values(lvl : Int32, vs : Array[Val], ws : Array[Val]) -> Bool {

@@ -24,25 +24,20 @@ priv struct OpInfo {
 
 ///|
 /// Operation name -> its effect.
-let effect_ops : Map[String, OpInfo] = Map([])
+let effect_ops : Map[String, OpInfo] = @percheck.map()
 
 ///|
 /// Effect name -> its operations, in order.
-let effect_decls : Map[String, Array[String]] = Map([])
-
-///|
-fn reset_effects() -> Unit {
-  effect_ops.clear()
-  effect_decls.clear()
+/// (Starts each check with the pseudo-effects `%Resume`, `%Exn` and
+/// `%AsyncE`, which have no operations.)
+let effect_decls : Map[String, Array[String]] = @percheck.state(Map([]), m => {
+  m.clear()
   // the calls of `resume` in the arms of `ctl` operations (ctl.mbt)
-  effect_decls.set("%Resume", [])
+  m.set("%Resume", [])
   // errors and async, in rows (they keep their own translation)
-  effect_decls.set("%Exn", [])
-  effect_decls.set("%AsyncE", [])
-  open_rows.clear()
-  exec_depth.val = 0
-  reset_ctl()
-}
+  m.set("%Exn", [])
+  m.set("%AsyncE", [])
+})
 
 ///|
 pub fn is_effect(name : String) -> Bool {
@@ -716,7 +711,7 @@ fn require_effect(cxt : Cxt, item : Val) -> Unit raise ElabError {
 ///|
 /// Tails of rows extended by `require_effect`: when nothing else is found,
 /// they end the row (`finish`). The meta and its number of arguments.
-let open_rows : Array[(Int32, Int32)] = []
+let open_rows : Array[(Int32, Int32)] = @percheck.array()
 
 ///|
 /// End the rows that are still open.

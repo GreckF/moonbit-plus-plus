@@ -172,8 +172,6 @@ pub fn quote_full(Int32, Val) -> Tm
 
 pub fn raise_val(Val) -> Val
 
-pub fn reset_state() -> Unit
-
 pub fn restore_metas(Array[Val?]) -> Unit
 
 pub fn setup() -> Unit

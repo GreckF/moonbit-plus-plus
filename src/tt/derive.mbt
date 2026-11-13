@@ -25,11 +25,11 @@ let mbt_derivable : Array[String] = ["ToJson", "FromJson", "Debug"]
 
 ///|
 /// The MoonBit `derive`s of the `#mbt` types (by MoonBit++ name).
-pub let mbt_derives : Map[String, Array[String]] = Map([])
+pub let mbt_derives : Map[String, Array[String]] = @percheck.map()
 
 ///|
 /// Lines with generated code: no editor information is recorded there.
-pub let derived_lines : Array[Int32] = []
+pub let derived_lines : Array[Int32] = @percheck.array()
 
 ///|
 /// The declarations with their `derive`s replaced by the generated impls.

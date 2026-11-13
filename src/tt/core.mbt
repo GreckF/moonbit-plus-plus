@@ -218,17 +218,26 @@ pub(all) struct GEntry {
   mut kind : GKind
 }
 
+// ---------------------------------------------------------------------------
+// Per-check state
+//
+// The globals below are declared with `@percheck.map`, `@percheck.array`,
+// `@percheck.cell` or `@percheck.state` (see src/percheck): the declaration
+// registers the reset that `setup` runs at each check. Per-check state must be
+// declared that way; a mutable global that is not has another lifetime, which
+// its doc comment says.
+
 ///|
-pub let globals : Map[String, GEntry] = Map([])
+pub let globals : Map[String, GEntry] = @percheck.map()
 
 ///|
 /// The source file of each global defined by a program (`"<prelude>"` for
 /// the prelude; imported items are not recorded).
-pub let global_files : Map[String, String] = Map([])
+pub let global_files : Map[String, String] = @percheck.map()
 
 ///|
 /// The source files of the last checked package, in order.
-pub let source_files : Array[String] = []
+pub let source_files : Array[String] = @percheck.array()
 
 ///|
 pub fn lookup_global(name : String) -> GEntry? {
@@ -263,7 +272,7 @@ pub(all) struct MetaEntry {
 }
 
 ///|
-pub let metas : Array[MetaEntry] = []
+pub let metas : Array[MetaEntry] = @percheck.array()
 
 ///|
 pub fn new_meta() -> Int32 {
@@ -298,27 +307,6 @@ pub fn metas_unchanged(s : Array[Val?]) -> Bool {
     }
   }
   true
-}
-
-///|
-pub fn reset_state() -> Unit {
-  globals.clear()
-  global_files.clear()
-  source_files.clear()
-  pub_decls.clear()
-  clear_infos()
-  external_instances.clear()
-  mbt_derives.clear()
-  mbt_types.clear()
-  mbt_fns.clear()
-  metas.clear()
-  reset_time_limits()
-  reset_unfolding()
-  lifted.clear()
-  lifted_count.val = 0
-  raises_cache.clear()
-  reset_structs()
-  reset_staging()
 }
 
 ///|

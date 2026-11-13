@@ -481,14 +481,16 @@ fn calls_run(t : Tm) -> Bool {
 /// Closures of the current run that share its `let mut` variables: their
 /// environment and lambda. They are values `%xclo(k)`, which keep the run
 /// from finishing if they are in its result.
+/// Not reset by `setup`: cleared when a run starts (at `exec_depth` 0).
 let xclosures : Array[(XEnv, Tm)] = []
 
 ///|
 /// The nesting of runs (the closures are dropped when a run starts at 0).
-let exec_depth : Ref[Int32] = Ref(0)
+let exec_depth : Ref[Int32] = @percheck.cell(0)
 
 ///|
 /// The markers given to the handlers of `ctl` operations in the current run.
+/// Not reset by `setup`: set to 0 when a run starts (at `exec_depth` 0).
 let exec_markers : Ref[Int32] = Ref(0)
 
 ///|

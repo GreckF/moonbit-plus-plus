@@ -10,10 +10,10 @@
 /// Lifted functions waiting for the end of the declaration that defines
 /// them (their metas may be solved by the rest of it): owner, name, type,
 /// body, arity.
-let lifted : Array[(String, String, Tm, Tm, Int32)] = []
+let lifted : Array[(String, String, Tm, Tm, Int32)] = @percheck.array()
 
 ///|
-let lifted_count : Ref[Int32] = Ref(0)
+let lifted_count : Ref[Int32] = @percheck.cell(0)
 
 ///|
 /// Does `e` mention the variable `x` (ignoring shadowing)?
@@ -38,6 +38,7 @@ fn code_mentions(e : @parser.Expr, x : String) -> Bool {
 ///|
 /// When not negative, `mention_walk` is in `code { }` (for `code_mentions`),
 /// that many `code { }` below the code asked about.
+/// Not reset: saved and restored around its use by `code_mentions`.
 let code_depth : Ref[Int32] = Ref(-1)
 
 ///|

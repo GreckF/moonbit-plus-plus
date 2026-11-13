@@ -1,5 +1,6 @@
 import {
   "username/mbtpp/parser",
+  "username/mbtpp/percheck",
   "moonbitlang/core/env",
   "moonbitlang/core/debug",
 }
