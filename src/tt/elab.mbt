@@ -958,7 +958,7 @@ fn elab_app(
           match expl_args {
             None => return (et, ety)
             Some(args) =>
-              return app_core(cxt, et, ety, 0, None, Some(args.map(AE(_))))
+              return app_core(cxt, et, ety, 0, None, Some(args.map(x => AE(x))))
           }
         }
       }
@@ -970,7 +970,7 @@ fn elab_app(
     hty,
     np,
     impl_args,
-    expl_args.map(as_ => as_.map(AE(_))),
+    expl_args.map(as_ => as_.map(x => AE(x))),
     expected~,
   )
 }
@@ -1603,7 +1603,7 @@ pub fn infer(cxt0 : Cxt, e : @parser.Expr) -> (Tm, Val) raise ElabError {
     }
     EMethod(p, x, m, i, args) => {
       let (t, ty) = infer_ins(cxt, x)
-      elab_method(cxt, t, ty, m, i, args.map(AE(_)), at=p)
+      elab_method(cxt, t, ty, m, i, args.map(x => AE(x)), at=p)
     }
     EBin(_, op, a, b) => infer_bin(cxt, op, a, b)
     EUn(p, "&", EVar(_, tr)) => {
@@ -1787,7 +1787,7 @@ fn elab_tuple(
     g.vty,
     es.length(),
     None,
-    Some(es.map(AE(_))),
+    Some(es.map(x => AE(x))),
   )
   match expected {
     Some(e) => cxt.unify(e, ty)

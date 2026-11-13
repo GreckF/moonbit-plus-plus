@@ -134,7 +134,7 @@ fn cmd_ide(
     Json::array(
       gs.map(g => {
         Json::object({
-          "hyps": Json::array(g.hyps.map(Json::string(_))),
+          "hyps": Json::array(g.hyps.map(x => Json::string(x))),
           "goal": Json::string(g.goal),
         })
       }),
@@ -182,7 +182,7 @@ fn cmd_ide(
   }
   println(
     Json::object({
-      "files": Json::array(files.map(Json::string(_))),
+      "files": Json::array(files.map(x => Json::string(x))),
       "symbols": Json::array(symbols),
       "diagnostics": Json::array(diags),
       "names": Json::array(names),
