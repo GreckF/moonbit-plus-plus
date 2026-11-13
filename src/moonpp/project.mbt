@@ -285,7 +285,7 @@ fn absolute_path(path : String) -> String {
   let full = normalize_path(if abs { p } else { current_dir() + "/" + p })
   // a drive letter in either case
   if full.length() > 1 && full.code_unit_at(1) == ':' {
-    full.substring(end=1).to_lower() + full.substring(start=1)
+    full[:1].to_owned().to_lower() + full[1:].to_owned()
   } else {
     full
   }

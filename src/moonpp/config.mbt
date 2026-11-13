@@ -75,14 +75,14 @@ fn module_info(dir : String) -> ModInfo raise Failure {
       }
   }
   let str = (k : String) => {
-    match j.value(k) {
+    match (if j is Object(obj) { obj.get(k) } else { None }) {
       Some(String(s)) => Some(s)
       _ => None
     }
   }
   let deps : Array[String] = []
   let local_deps : Array[(String, String)] = []
-  match j.value("deps") {
+  match (if j is Object(obj) { obj.get("deps") } else { None }) {
     Some(Object(ds)) =>
       for name, spec in ds {
         match spec {
@@ -131,7 +131,7 @@ fn package_imports(dir : String) -> Array[(String, String)] raise Failure {
     Some(j) => j
     None => die(cfg + ": invalid JSON")
   }
-  let entries = match json.value("import") {
+  let entries = match (if json is Object(obj) { obj.get("import") } else { None }) {
     Some(Array(xs)) => xs
     Some(_) => die(cfg + ": \"import\" must be an array")
     None => []
@@ -174,7 +174,7 @@ fn package_order(dir : String) -> Array[String]? raise Failure {
   }
   match read_json(dir + "/moon.pkg.json") {
     Some(j) =>
-      match j.value("mbtpp-order") {
+      match (if j is Object(obj) { obj.get("mbtpp-order") } else { None }) {
         Some(Array(xs)) =>
           Some(
             xs.map(x => {
@@ -237,7 +237,8 @@ fn package_is_main(dir : String) -> Bool {
     None => ()
   }
   match read_json(dir + "/moon.pkg.json") {
-    Some(j) => j.value("is-main") is Some(Json::True)
+    Some(j) =>
+      (if j is Object(obj) { obj.get("is-main") } else { None }) is Some(Json::True)
     None => false
   }
 }
