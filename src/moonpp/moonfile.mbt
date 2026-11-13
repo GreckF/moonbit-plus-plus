@@ -31,7 +31,7 @@ priv struct MImport {
   pkg_alias : String?
   /// `for "test"` etc.
   kind : String?
-} derive(Show)
+}
 
 ///|
 priv struct MoonFile {
@@ -40,14 +40,14 @@ priv struct MoonFile {
   /// `options(k: v, ...)`, `pkgtype(kind: "executable")` and other calls:
   /// their named arguments, by call name.
   calls : Map[String, Array[(String, MValue)]]
-} derive(Show)
+}
 
 ///|
 priv enum MTok {
   TStr(String)
   TWord(String)
   TPunct(Char)
-} derive(Eq, Show)
+} derive(Eq)
 
 ///|
 fn moon_tokens(src : String) -> Array[MTok] raise Failure {
