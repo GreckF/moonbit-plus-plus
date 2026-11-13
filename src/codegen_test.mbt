@@ -11,7 +11,7 @@ fn signatures(src : String) -> String {
   }
   let out : Array[String] = []
   for line in code.split("\n") {
-    let l = line.to_string()
+    let l = line.to_owned()
     // `async fn f` is shown as such, and filtered as `fn f`
     let is_async = l.has_prefix("async fn")
     let l = if is_async {
@@ -81,7 +81,7 @@ fn fn_code(src : String, name : String) -> String {
   let out : Array[String] = []
   let mut inside = false
   for line in code.split("\n") {
-    let l = strip_counters(line.to_string())
+    let l = strip_counters(line.to_owned())
     if l.has_prefix("fn f_" + name + "(") ||
       l.has_prefix("fn f_" + name + "_t(") {
       inside = true
@@ -234,7 +234,7 @@ fn mbt_decls(src : String) -> String {
   let out : Array[String] = []
   let mut inside = false
   for line in code.split("\n") {
-    let l = line.to_string()
+    let l = line.to_owned()
     if l.has_prefix("enum Tree") ||
       l.has_prefix("struct ") ||
       l.has_prefix("trait ") ||
@@ -328,7 +328,7 @@ fn data_lines(src : String) -> String {
   }
   code
   .split("\n")
-  .map(l => l.to_string().trim(chars=" ").to_string())
+  .map(l => l.to_owned().trim(chars=" ").to_owned())
   .filter(l => l.has_prefix("K_Exp"))
   .map(l => {
     // drop the counters of local names: n_176 -> n
@@ -502,7 +502,7 @@ fn impl_lines(src : String) -> String {
   code
   .split("\n")
   .filter(l => l.has_prefix("impl"))
-  .map(l => l.to_string())
+  .map(l => l.to_owned())
   .to_array()
   .join("\n")
 }
@@ -653,7 +653,7 @@ fn warnings_and_exports(src : String) -> String {
   let out = @codegen.warnings.map(w => "warning: " + w)
   for line in code.split("\n") {
     if line.has_prefix("pub fn") {
-      out.push(line.to_string())
+      out.push(line.to_owned())
     }
   }
   out.join("\n")
@@ -1140,7 +1140,7 @@ test "the driver of the splices has the imported functions" {
   let table = all
     .split("\n")
     .filter(l => l.contains("ffi_table.set") || l.contains("ffi_why.set"))
-    .map(l => strip_counters(l.to_string()))
+    .map(l => strip_counters(l.to_owned()))
   inspect(
     table,
     content=(

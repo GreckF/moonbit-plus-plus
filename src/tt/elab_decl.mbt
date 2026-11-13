@@ -273,7 +273,7 @@ fn elab_tagged_params(
       Labelled(Some(e)) => {
         let helper = fname + "$default$" + p.name
         let unit_bs : Array[(String, Icit, Tm)] = [("_", Expl, Global("Unit"))]
-        let hbs = concat(concat(bs1, bs2[0:k].to_array()), unit_bs)
+        let hbs = concat(concat(bs1, bs2[0:k].to_owned()), unit_bs)
         let cu = c.bind("_", VData("Unit", []))
         let t = check(cu.at(e.pos()), e, c.eval(bs2[k].2))
         let res = finish(c1, helper, [

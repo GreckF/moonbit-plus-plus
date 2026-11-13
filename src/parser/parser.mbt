@@ -2211,7 +2211,7 @@ fn Parser::guard_expr(self : Parser) -> Expr raise ParseError {
   }
   let sub : Parser = {
     toks: [
-      ..self.toks[self.i:k].to_array(),
+      ..self.toks[self.i:k].to_owned(),
       { tok: TEOF, pos: self.toks[k].pos, nl: true, },
     ],
     i: 0,

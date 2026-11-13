@@ -1320,7 +1320,7 @@ fn Gen::apply_groups(
   while i < args.length() {
     match ty {
       NFun(ps, r) | NAsyncFun(ps, r) if i + ps.length() <= args.length() => {
-        let cs = self.typed_args(env, args[i:i + ps.length()].to_array(), ps)
+        let cs = self.typed_args(env, args[i:i + ps.length()].to_owned(), ps)
         code = if unit_only(ps) && cs[0] == "()" {
           code + "()"
         } else if unit_only(ps) {
@@ -1808,7 +1808,7 @@ fn Gen::typed_term(
       (if k < 0 { "(" + k.to_string() + ")" } else { k.to_string() }, NInt)
     ArrayLit(es) if es.length() > 0 => {
       let (c0, t0) = self.typed(env, es[0])
-      let cs = [c0, ..es[1:].to_array().map(x => self.typed_check(env, x, t0))]
+      let cs = [c0, ..es[1:].to_owned().map(x => self.typed_check(env, x, t0))]
       ("[" + cs.join(", ") + "]", NForeign("Array", [t0]))
     }
     Lit(LDouble(d)) => (double_lit(d), NDouble)

@@ -311,8 +311,8 @@ fn byte_lit(b : Byte) -> String {
   let n = b.to_int()
   let hex = "0123456789abcdef"
   "b'\\x" +
-  hex[n / 16:n / 16 + 1].to_string() +
-  hex[n % 16:n % 16 + 1].to_string() +
+  hex[n / 16:n / 16 + 1].to_owned() +
+  hex[n % 16:n % 16 + 1].to_owned() +
   "'"
 }
 
@@ -807,7 +807,7 @@ fn Gen::app(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
   match nat_prim(h) {
     Some((p, k)) if args.length() >= k => {
       let cs = args.map(a => self.tm(env, a))
-      return apply_rest(self.prim_call(p, cs[:k].to_array()), cs[k:].to_array())
+      return apply_rest(self.prim_call(p, cs[:k].to_owned()), cs[k:].to_owned())
     }
     _ => ()
   }
@@ -823,7 +823,7 @@ fn Gen::app(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
                   direct.push(self.tm(env, args[i]))
                 }
               }
-              let rest = args[k:].to_array().map(a => self.tm(env, a))
+              let rest = args[k:].to_owned().map(a => self.tm(env, a))
               return apply_rest(
                 self.gid(n) + "(" + direct.join(", ") + ")",
                 rest,
@@ -832,7 +832,7 @@ fn Gen::app(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
             GCon(ci) if args.length() >= ci.nparams + ci.nargs &&
               self.nat_con(n) is Some((nl, true)) => {
               let total = ci.nparams + ci.nargs
-              let rest = args[total:].to_array().map(a => self.tm(env, a))
+              let rest = args[total:].to_owned().map(a => self.tm(env, a))
               let x = self.tm(env, args[ci.nparams + nl.field])
               return apply_rest(self.prim_call("%nat_succ", [x]), rest)
             }
@@ -844,7 +844,7 @@ fn Gen::app(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
                   own.push(self.tm(env, args[ci.nparams + j]))
                 }
               }
-              let rest = args[total:].to_array().map(a => self.tm(env, a))
+              let rest = args[total:].to_owned().map(a => self.tm(env, a))
               return apply_rest(self.con_code(n, own), rest)
             }
             GPrim(p, k) if args.length() >= k && !p.has_prefix("@mbt:") => {
@@ -855,7 +855,7 @@ fn Gen::app(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
                   expl.push(self.tm(env, args[i]))
                 }
               }
-              let rest = args[k:].to_array().map(a => self.tm(env, a))
+              let rest = args[k:].to_owned().map(a => self.tm(env, a))
               return apply_rest(self.prim_call(p, expl), rest)
             }
             _ => ()

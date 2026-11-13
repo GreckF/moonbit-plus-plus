@@ -183,7 +183,7 @@ fn exec_call(n : String, body : Tm, arity : Int32, sp : Spine) -> Val? {
   if has_effect(res, false) {
     return None
   }
-  Some(app_spine(res, sp[arity:].to_array()))
+  Some(app_spine(res, sp[arity:].to_owned()))
 }
 
 ///|
@@ -325,7 +325,7 @@ fn exec_term(xe : XEnv, t : Tm) -> Val raise ExecStop {
         Brk | Cont => raise XStuck
         e => raise e
       }
-      xapply_spine(r, vals[arity:].to_array())
+      xapply_spine(r, vals[arity:].to_owned())
     }
     // a call that may get a closure of the run (the arguments are run
     // first: a lambda argument may be the first such closure)
@@ -352,7 +352,7 @@ fn exec_term(xe : XEnv, t : Tm) -> Val raise ExecStop {
         Brk | Cont => raise XStuck
         e => raise e
       }
-      xapply_spine(r, vals[arity:].to_array())
+      xapply_spine(r, vals[arity:].to_owned())
     }
     // the marker of a handler of `ctl` operations: fresh in the run
     App(Global("%effect_marker"), _, _) => {

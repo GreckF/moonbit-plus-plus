@@ -22,7 +22,7 @@ pub fn proof_fields(c : String) -> Array[Bool] {
   match (globals.get(c), con_info(c)) {
     (Some(g), Some(ci)) => {
       let all = proof_binders(eval([], g.ty), ci.nparams + ci.nargs)
-      all[ci.nparams:].to_array()
+      all[ci.nparams:].to_owned()
     }
     _ => []
   }

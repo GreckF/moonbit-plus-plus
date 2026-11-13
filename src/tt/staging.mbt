@@ -475,7 +475,7 @@ fn splice_val(sp : Spine, arity : Int32, delay : Bool) -> Val? {
   let c = if delay { force_meta(sp[1].0) } else { force(sp[1].0) }
   match c {
     VPrim("%quote", [_, (s, _), (f, _)]) =>
-      Some(app_spine(app_val(f, s, Expl), sp[arity:].to_array()))
+      Some(app_spine(app_val(f, s, Expl), sp[arity:].to_owned()))
     VPrim("%raise", [_, ..]) => Some(c)
     _ => None
   }
@@ -673,7 +673,7 @@ fn hoist_from(t : Tm, b : Int32, depth : Int32, found : Array[(Tm, Tm)]) -> Tm {
       // implicit arguments are erased: their splices are not run
       let rest = (k : Int32) => {
         args[k:]
-        .to_array()
+        .to_owned()
         .map(a => if a.1 == Impl { a } else { (go(a.0), a.1) })
       }
       match h {
@@ -866,7 +866,7 @@ fn expand(
       let (h, args) = flatten_app(t)
       let rest = (k : Int32) => {
         args[k:]
-        .to_array()
+        .to_owned()
         .map(a => if a.1 == Impl { (erased(a.0), a.1) } else { (go(a.0), a.1) })
       }
       match h {
@@ -909,7 +909,7 @@ fn expand(
               names,
               g,
               n,
-              args[0:n].to_array().map(a => eval(env, a.0)),
+              args[0:n].to_owned().map(a => eval(env, a.0)),
             ) {
             Some(f) => apps(f, rest(n))
             None => apps(h, rest(0))

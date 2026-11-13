@@ -74,7 +74,7 @@ fn record_global(p : Pos, x : String, n : String) -> Unit {
 ///|
 /// The type of local `l` of `cxt`, in its own context.
 fn local_type(cxt : Cxt, l : Int32) -> String {
-  show_tm(cxt.names[0:l].to_array(), quote(l, cxt.types[l]))
+  show_tm(cxt.names[0:l].to_owned(), quote(l, cxt.types[l]))
 }
 
 ///|

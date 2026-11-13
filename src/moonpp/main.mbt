@@ -218,7 +218,7 @@ fn cmd_fix(opts : Options, path : String?) -> Bool raise Failure {
       }
       originals.push((file, src))
       let nl = if src.contains("\r\n") { "\r\n" } else { "\n" }
-      let lines = src.split(nl).map(l => l.to_string()).to_array()
+      let lines = src.split(nl).map(l => l.to_owned()).to_array()
       // from the bottom, so that the line numbers stay valid
       let lns = hints.filter(h => h.file == file).map(h => h.line)
       lns.sort()
@@ -283,7 +283,7 @@ fn write_file(path : String, content : String) -> Unit raise Failure {
 
 ///|
 fn make_dirs(path : String) -> Unit {
-  let parts = path.split("/").map(s => s.to_string()).to_array()
+  let parts = path.split("/").map(s => s.to_owned()).to_array()
   let mut d = ""
   for p in parts {
     d = if d == "" { p } else { d + "/" + p }
@@ -804,7 +804,7 @@ fn main {
   install_crash_report()
   // the first argument is the program itself
   let args = @sys.get_cli_args()
-  let ok = run_cli(args[1:].to_array()) catch {
+  let ok = run_cli(args[1:].to_owned()) catch {
     Failure(msg) => {
       println("error: " + msg)
       false

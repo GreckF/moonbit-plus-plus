@@ -18,7 +18,7 @@ fn check_block(
     return (Lit(LUnit), unit_ty())
   }
   let s = stmts[0]
-  let rest = stmts[1:].to_array()
+  let rest = stmts[1:].to_owned()
   let last = rest.length() == 0
   match s {
     SExpr(p, e) =>
@@ -282,7 +282,7 @@ fn check_block(
             p,
             [
               ..xs[0:xs.length() - 1]
-              .to_array()
+              .to_owned()
               .map(i0 => @parser.SLet(p, PVar(p, i0), None, ev)),
               SLet(p, PVar(p, x), None, EApp(p, av, Some([ev]), None)),
               SExpr(p, body),
@@ -405,7 +405,7 @@ fn desugar_stmts(stmts : Array[@parser.Stmt]) -> @parser.Expr {
   if stmts.length() == 0 {
     return ELit({ line: 0, col: 0, }, LUnit)
   }
-  let rest = stmts[1:].to_array()
+  let rest = stmts[1:].to_owned()
   let last = rest.length() == 0
   let binds : Array[(String, @parser.Expr)] = []
   let s : @parser.Stmt = match stmts[0] {

@@ -52,7 +52,7 @@ priv struct MbtiItem {
 fn mbti_items(src : String) -> (Array[String], Array[MbtiItem]) {
   let lines = src
     .split("\n")
-    .map(l => l.to_string().trim_end(chars="\r").to_string())
+    .map(l => l.to_owned().trim_end(chars="\r").to_owned())
     .to_array()
   let imports : Array[String] = []
   let items : Array[MbtiItem] = []
@@ -60,7 +60,7 @@ fn mbti_items(src : String) -> (Array[String], Array[MbtiItem]) {
   let mut i = 0
   while i < lines.length() {
     let line = lines[i]
-    let t = line.trim(chars=" \t").to_string()
+    let t = line.trim(chars=" \t").to_owned()
     if t == "" || t.has_prefix("//") || t.has_prefix("package ") {
       i = i + 1
       continue
@@ -75,8 +75,8 @@ fn mbti_items(src : String) -> (Array[String], Array[MbtiItem]) {
       let close = if t.has_prefix("import(") { ")" } else { "}" }
       i = i + 1
       while i < lines.length() &&
-            lines[i].trim(chars=" \t").to_string() != close {
-        let q = lines[i].trim(chars=" \t\",").to_string()
+            lines[i].trim(chars=" \t").to_owned() != close {
+        let q = lines[i].trim(chars=" \t\",").to_owned()
         // `"path" @alias` is possible; keep the path
         let path = match q.find("\"") {
           Some(k) => q.unsafe_substring(start=0, end=k)
@@ -102,7 +102,7 @@ fn mbti_items(src : String) -> (Array[String], Array[MbtiItem]) {
           ) {
       buf.write_char('\n')
       // attributes inside an item (e.g. on trait methods) are dropped
-      let inner = lines[i].trim(chars=" \t").to_string()
+      let inner = lines[i].trim(chars=" \t").to_owned()
       if !inner.has_prefix("#") {
         buf.write_string(lines[i])
       }
@@ -443,9 +443,9 @@ pub fn parse_mbti(
               let free = if a.has_prefix("#as_free_fn(") {
                 let inner = a.unsafe_substring(start=12, end=a.length() - 1)
                 inner.split(",").to_array()[0]
-                .to_string()
+                .to_owned()
                 .trim(chars=" ")
-                .to_string()
+                .to_owned()
               } else {
                 m
               }
@@ -696,11 +696,11 @@ fn using_items(
   skipped : Array[String],
 ) -> Unit {
   let pos : Pos = { line, col: 1, }
-  let t = text.trim(chars=" \t\n").to_string()
+  let t = text.trim(chars=" \t\n").to_owned()
   let (q, body) = match (t.find("@"), t.find("{"), t.rev_find("}")) {
     (Some(a), Some(b), Some(c)) if a < b && b < c =>
       (
-        t.unsafe_substring(start=a + 1, end=b).trim(chars=" ").to_string(),
+        t.unsafe_substring(start=a + 1, end=b).trim(chars=" ").to_owned(),
         t.unsafe_substring(start=b + 1, end=c),
       )
     _ => {
@@ -719,14 +719,14 @@ fn using_items(
     }
   }
   for entry in body.split(",") {
-    let e = entry.trim(chars=" \t\n").to_string()
+    let e = entry.trim(chars=" \t\n").to_owned()
     if e == "" {
       continue
     }
     let words = e
       .split(" ")
       .filter(w => w != "")
-      .map(w => w.to_string())
+      .map(w => w.to_owned())
       .to_array()
     let (kind, name, rest) = match words {
       ["type", n, .. rest] => ("type", n, rest)

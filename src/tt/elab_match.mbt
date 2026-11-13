@@ -658,7 +658,7 @@ fn elab_match_ret(
     (None, None) =>
       cxt.fail("cannot infer the type of this match; add `return`")
   }
-  let idx_scrut = sp[np:].to_array().map(x => x.0)
+  let idx_scrut = sp[np:].to_owned().map(x => x.0)
   let res_ty = eval(concat(concat(cxt.env, idx_scrut), [sval]), r)
   match goal {
     Some(g) => cxt.unify(g, res_ty)
@@ -677,10 +677,10 @@ fn elab_match_ret(
     }
     let (idx, xv) = match out.ret_ty {
       Some(VData(_, rsp)) =>
-        (rsp[np:].to_array().map(x => x.0), v_var(out.slot))
+        (rsp[np:].to_owned().map(x => x.0), v_var(out.slot))
       _ => (idx_scrut, sval)
     }
-    let env = concat(concat(out.cxt.env[0:cxt.lvl].to_array(), idx), [xv])
+    let env = concat(concat(out.cxt.env[0:cxt.lvl].to_owned(), idx), [xv])
     let g = out.cxt.subst(eval(env, r))
     let cond = arm.cond.map(e => check(out.cxt, e, bool_ty()))
     clauses.push({ pats: [out.pat], cond, body: check(out.cxt, rhs, g), })

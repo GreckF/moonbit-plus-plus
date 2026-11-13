@@ -430,7 +430,7 @@ fn Gen::ffi_call(
     match target.find("::") {
       Some(i) if conv.length() > 0 => {
         let m = target.unsafe_substring(start=i + 2, end=target.length())
-        conv[0] + "." + m + "(" + conv[1:].to_array().join(", ") + ")"
+        conv[0] + "." + m + "(" + conv[1:].to_owned().join(", ") + ")"
       }
       _ => return Err("unsupported method")
     }
@@ -450,7 +450,7 @@ fn Gen::ffi_call(
           "@" + pkg_alias + "." + fname + "(" + conv.join(", ") + ")"
         } else if conv.length() > 0 {
           // a method of a type of another package (e.g. `Array`)
-          conv[0] + "." + m + "(" + conv[1:].to_array().join(", ") + ")"
+          conv[0] + "." + m + "(" + conv[1:].to_owned().join(", ") + ")"
         } else {
           return Err("unsupported method")
         }

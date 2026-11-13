@@ -12,7 +12,7 @@
 fn runtime_fns() -> Array[String] {
   let out : Array[String] = []
   for line in runtime_src.split("\n") {
-    let l = line.to_string()
+    let l = line.to_owned()
     let rest = if l.has_prefix("fn[") {
       match l.find("] ") {
         Some(i) => l.unsafe_substring(start=i + 2, end=l.length())

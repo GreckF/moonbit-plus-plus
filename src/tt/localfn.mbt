@@ -367,7 +367,7 @@ fn subst_go(t : Tm, n : Int32, g : String, d : Int32) -> Tm {
     InsertedMeta(m, mask) =>
       // the function's own slot is dropped from the mask
       if mask.length() > n {
-        InsertedMeta(m, mask[0:n].to_array() + mask[n + 1:].to_array())
+        InsertedMeta(m, mask[0:n].to_owned() + mask[n + 1:].to_owned())
       } else {
         t
       }

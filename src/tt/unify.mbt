@@ -175,7 +175,7 @@ fn solve_fo(
         try {
           let n1 = sp.length() - j
           let n2 = sp2.length() - j
-          solve(lvl, m, sp[0:n1].to_array(), mk(sp2[0:n2].to_array()))
+          solve(lvl, m, sp[0:n1].to_owned(), mk(sp2[0:n2].to_owned()))
           for q = 0; q < j; q = q + 1 {
             unify(ts, sp[n1 + q].0, sp2[n2 + q].0)
           }

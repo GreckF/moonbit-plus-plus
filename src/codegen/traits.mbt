@@ -640,7 +640,7 @@ fn Gen::typed_method(
     Some(NFun(ps, r)) => (ps, r)
     _ => raise NotTyped
   }
-  let margs = args[2:].to_array()
+  let margs = args[2:].to_owned()
   let cs = if ps == [NUnit] {
     if margs.length() != 1 {
       raise NotTyped

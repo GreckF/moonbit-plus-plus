@@ -37,7 +37,7 @@ fn join_path(dir : String, path : String) -> String {
 fn normalize_path(path : String) -> String {
   let parts : Array[String] = []
   for seg in path.replace_all(old="\\", new="/").split("/") {
-    let s = seg.to_string()
+    let s = seg.to_owned()
     if s == "." || (s == "" && parts.length() > 0) {
       continue
     }

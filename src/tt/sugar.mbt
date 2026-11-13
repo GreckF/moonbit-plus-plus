@@ -23,8 +23,8 @@ fn pat_alts(
       let subs = impl_ps.unwrap_or([]) + expl_ps
       sub_alts(cxt, subs).map(a => {
         let (ps, al) = a
-        let impl2 = impl_ps.map(_ => ps[0:ni].to_array())
-        (@parser.PCon(q, c, impl2, ps[ni:].to_array()), al)
+        let impl2 = impl_ps.map(_ => ps[0:ni].to_owned())
+        (@parser.PCon(q, c, impl2, ps[ni:].to_owned()), al)
       })
     }
     PTuple(q, ps) => sub_alts(cxt, ps).map(a => (@parser.PTuple(q, a.0), a.1))

@@ -51,7 +51,7 @@ fn last_segment(path : String) -> String {
 
 ///|
 fn list_dir(dir : String) -> Array[String] {
-  let names = (@fs.read_dir(dir) catch { _ => return [] }).to_array()
+  let names = (@fs.read_dir(dir) catch { _ => return [] }).to_owned()
   // dictionary order (`String::compare` puts shorter strings first)
   names.sort_by(dict_compare)
   names
@@ -239,7 +239,7 @@ fn new_project(name : String) -> Unit raise Failure {
   ]
   for f in files {
     let path = name + "/" + f.0
-    let parts = f.0.split("/").map(s => s.to_string()).to_array()
+    let parts = f.0.split("/").map(s => s.to_owned()).to_array()
     let mut d = name
     @fs.create_dir(d) catch {
       _ => ()

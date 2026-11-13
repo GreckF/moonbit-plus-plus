@@ -315,7 +315,7 @@ fn Machine::apply(
       let args2 = args.copy()
       args2.push((a, i))
       if args2.length() == total {
-        RCon(n, args2[np:].to_array().map(x => x.0))
+        RCon(n, args2[np:].to_owned().map(x => x.0))
       } else {
         RPartial(PCon(n, np, total), args2)
       }

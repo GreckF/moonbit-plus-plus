@@ -144,7 +144,7 @@ fn put_val(out : StringBuilder, v : Val, ty : Val?) -> Bool {
     VCon(c, sp) =>
       match con_info(c) {
         Some(ci) if sp.length() >= ci.nparams => {
-          let own = sp[ci.nparams:].to_array().filter(a => a.1 != Impl)
+          let own = sp[ci.nparams:].to_owned().filter(a => a.1 != Impl)
           let cs : Array[Char] = c.iter().collect()
           out.write_string("k" + cs.length().to_string() + ":")
           for ch in cs {
@@ -334,7 +334,7 @@ fn get_con(
     _ => raise ReadFail
   }
   let params = match force(ty) {
-    VData(_, sp) if sp.length() >= ci.nparams => sp[0:ci.nparams].to_array()
+    VData(_, sp) if sp.length() >= ci.nparams => sp[0:ci.nparams].to_owned()
     _ => raise ReadFail
   }
   let args : Spine = []

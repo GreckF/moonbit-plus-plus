@@ -329,7 +329,7 @@ fn strict_call(n : String, sp : Spine) -> Val?? {
       match strict_args(sp) {
         ArgsUnknown => None
         ArgsRaise(r) => Some(r)
-        ArgsOk => Some(app_spine(sp[0].0, sp[1:].to_array()))
+        ArgsOk => Some(app_spine(sp[0].0, sp[1:].to_owned()))
       },
     )
   }

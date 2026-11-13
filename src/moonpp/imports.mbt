@@ -40,12 +40,12 @@ fn mbti_in(dir : String) -> String? {
 /// The directory of package `pkg` (`user/module/sub/pkg`) of a module
 /// downloaded into a `.mooncakes` directory above `dir`.
 fn mooncakes_package_dir(pkg : String, dir : String) -> String? {
-  let parts = pkg.split("/").map(s => s.to_string()).to_array()
+  let parts = pkg.split("/").map(s => s.to_owned()).to_array()
   if parts.length() < 2 {
     return None
   }
   let module_ = parts[0] + "/" + parts[1]
-  let rest = parts[2:].to_array()
+  let rest = parts[2:].to_owned()
   let mut d : String? = Some(dir)
   while d is Some(cur) {
     let mod_dir = cur + "/.mooncakes/" + module_
