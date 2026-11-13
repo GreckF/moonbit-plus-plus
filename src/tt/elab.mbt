@@ -118,12 +118,8 @@ fn ensure(cxt : Cxt, name : String) -> Unit raise ElabError {
     Some(th) => {
       st.thunks.remove(name)
       st.running.push(name)
-      th() catch {
-        e => {
-          ignore(st.running.pop())
-          raise e
-        }
-      }
+      errdefer ignore(st.running.pop())
+      th()
       ignore(st.running.pop())
     }
     None => ()

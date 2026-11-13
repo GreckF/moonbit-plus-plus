@@ -1126,12 +1126,8 @@ fn Gen::global(self : Gen, name : String) -> Unit raise CodegenError {
   let saved = self.cur_file
   self.cur_file = self.file_of(name)
   self.cur_global = name
-  self.global_def(name) catch {
-    e => {
-      self.cur_file = saved
-      raise e
-    }
-  }
+  errdefer { self.cur_file = saved }
+  self.global_def(name)
   self.cur_file = saved
 }
 
