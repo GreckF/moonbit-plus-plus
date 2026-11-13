@@ -1,4 +1,3 @@
 import {
-  "moonbitlang/core/float",
   "moonbitlang/core/string",
 }

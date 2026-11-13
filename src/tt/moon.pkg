@@ -1,5 +1,4 @@
 import {
   "username/mbtpp/parser",
   "moonbitlang/core/env",
-  "moonbitlang/core/float",
 }

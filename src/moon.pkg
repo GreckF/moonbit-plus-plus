@@ -1,10 +1,10 @@
 import {
   "username/mbtpp/tt",
   "username/mbtpp/interp",
-  "username/mbtpp/codegen",
 }
 
 import {
   "moonbitlang/x/fs",
   "username/mbtpp/parser",
+  "username/mbtpp/codegen",
 } for "test"
