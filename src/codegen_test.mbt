@@ -1041,7 +1041,7 @@ test "codegen: aliases in fields, if in match and while, string indexing" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|a
       #|5
@@ -1078,7 +1078,7 @@ test "codegen: main with return is native" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|6
       #|

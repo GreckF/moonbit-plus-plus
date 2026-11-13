@@ -15,7 +15,7 @@ let plus_src : String =
 ///|
 test "an opaque function is not unfolded" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       plus_src +
       (
@@ -34,7 +34,7 @@ test "an opaque function is not unfolded" {
 ///|
 test "unfolding by declaration, block and tactic" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       plus_src +
       (
@@ -72,7 +72,7 @@ test "unfolding by declaration, block and tactic" {
 ///|
 test "unfolding is transitive" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       plus_src +
       (
@@ -111,7 +111,7 @@ test "unfolding is transitive" {
 ///|
 test "a transparent function that unfolds an opaque one" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       plus_src +
       (
@@ -142,7 +142,7 @@ test "an opaque function is not run during checking" {
     #|}
     #|
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       src +
       (
@@ -169,7 +169,7 @@ test "names that cannot be unfolded" {
     #|}
     #|
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       src +
       (
@@ -182,7 +182,7 @@ test "names that cannot be unfolded" {
     ),
   )
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|lemma x() -> 1 === 1 { unfold(nosuch) { Refl } }
@@ -193,7 +193,7 @@ test "names that cannot be unfolded" {
     ),
   )
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|#opaque

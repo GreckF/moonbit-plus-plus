@@ -4,7 +4,7 @@
 ///|
 test "return and break leave a try with ctl arms" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Choose {
@@ -42,7 +42,7 @@ test "return and break leave a try with ctl arms" {
 ///|
 test "a ctl call in tail position saves let mut" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Choose {
@@ -73,7 +73,7 @@ test "a ctl call in tail position saves let mut" {
 ///|
 test "a function performing a handled effect cannot leave its try" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|effect Ask {
@@ -93,7 +93,7 @@ test "a function performing a handled effect cannot leave its try" {
 ///|
 test "let mut variables are not refined by patterns" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f(n : Int) -> String {
@@ -121,7 +121,7 @@ test "let mut variables are not refined by patterns" {
 ///|
 test "with abstracts the hypotheses too" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|lemma l(x : Int, h : (x <= 3) === true) -> (x <= 3) === true {
@@ -142,7 +142,7 @@ test "with abstracts the hypotheses too" {
 ///|
 test "an implicit proposition must be a proposition" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|enum Void {}
@@ -160,7 +160,7 @@ test "an implicit proposition must be a proposition" {
 ///|
 test "floating-point literals are compared by their bits" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|lemma nan() -> 0.0 / 0.0 === 0.0 / 0.0 { Refl }
@@ -178,7 +178,7 @@ test "floating-point literals are compared by their bits" {
 ///|
 test "loop variables are fresh in each iteration" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn main {
@@ -202,7 +202,7 @@ test "loop variables are fresh in each iteration" {
 ///|
 test "literals and precedence as in MoonBit" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn main {
@@ -227,13 +227,13 @@ test "literals and precedence as in MoonBit" {
     ),
   )
   inspect(
-    check_source("t.mbtpp", "fn f() -> Int { 3000000000 }"),
+    @mbtpp.check_source("t.mbtpp", "fn f() -> Int { 3000000000 }"),
     content=(
       #|t.mbtpp:1:17: parse error: the integer literal 3000000000 is out of range for Int
     ),
   )
   inspect(
-    check_source("t.mbtpp", "fn f() -> Bool { 1 | 2 == 3 }"),
+    @mbtpp.check_source("t.mbtpp", "fn f() -> Bool { 1 | 2 == 3 }"),
     content=(
       #|t.mbtpp:1:24: error: type mismatch
       #|  expected: Int
@@ -241,13 +241,13 @@ test "literals and precedence as in MoonBit" {
     ),
   )
   inspect(
-    check_source("t.mbtpp", "fn f() -> Byte { b'\\xZZ' }"),
+    @mbtpp.check_source("t.mbtpp", "fn f() -> Byte { b'\\xZZ' }"),
     content=(
       #|t.mbtpp:1:18: parse error: expected two hexadecimal digits after \x
     ),
   )
   inspect(
-    check_source("t.mbtpp", "fn f() -> String { \"abc\\"),
+    @mbtpp.check_source("t.mbtpp", "fn f() -> String { \"abc\\"),
     content=(
       #|t.mbtpp:1:20: parse error: unterminated string literal
     ),
@@ -257,7 +257,7 @@ test "literals and precedence as in MoonBit" {
 ///|
 test "check-time execution: inline lambdas, aborts, attribute order" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn once(f : (Int) -> Unit) -> Unit { f(1) }

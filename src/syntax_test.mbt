@@ -1,7 +1,7 @@
 ///|
 /// Behaviour of the MoonBit syntax: each program prints what MoonBit would.
 fn run(src : String) -> String {
-  run_source("t.mbtpp", src)
+  @mbtpp.run_source("t.mbtpp", src)
 }
 
 ///|
@@ -464,7 +464,7 @@ test "test blocks: each test runs on its own" {
 ///|
 test "functions with loops compute in types" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn fact(n : Int) -> Int {

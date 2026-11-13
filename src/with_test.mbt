@@ -5,7 +5,7 @@
 ///|
 test "matching on a comparison inside the goal" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn insert(x : Int, xs : List[Int]) -> List[Int] {
@@ -41,7 +41,7 @@ test "matching on a comparison inside the goal" {
 ///|
 test "a literal pattern refines a variable" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn pick(b : Bool) -> Int { if b { 1 } else { 0 } }

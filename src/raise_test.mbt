@@ -235,7 +235,7 @@ test "a proof cannot call a function that raises" {
 ///|
 test "at run time, the error of the argument comes first" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|suberror Empty

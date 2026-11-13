@@ -60,7 +60,7 @@ let power_src : String =
 test "a splice is replaced by the code it makes" {
   inspect(expanded(power_src, "cube"), content="(x) => x * (x * (x * 1))")
   inspect(
-    run_source("t.mbtpp", power_src),
+    @mbtpp.run_source("t.mbtpp", power_src),
     content=(
       #|27
       #|
@@ -119,7 +119,7 @@ test "a staged interpreter of a typed language is a compiler" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", exp_src),
+    @mbtpp.run_source("t.mbtpp", exp_src),
     content=(
       #|4
       #|0
@@ -152,7 +152,7 @@ test "code is run at run time by run" {
     #|  println(c.run())
     #|}
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|42
       #|
@@ -169,7 +169,7 @@ test "code is run at run time by run" {
 ///|
 test "a variable of the generated code is not known to a splice" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn power(n : Nat, x : Code[Int]) -> Code[Int] {
@@ -188,7 +188,7 @@ test "a variable of the generated code is not known to a splice" {
     ),
   )
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn bad(x : Int) -> Code[Int] {
@@ -203,7 +203,7 @@ test "a variable of the generated code is not known to a splice" {
     ),
   )
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn bad(x : Int) -> Int {
@@ -260,7 +260,7 @@ test "generated code with loops and mutable variables" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|30
       #|5
@@ -272,7 +272,7 @@ test "generated code with loops and mutable variables" {
 ///|
 test "a splice that cannot be run" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn twice(x : Int) -> Int = "@mbt:demo.twice"
@@ -310,7 +310,7 @@ test "values known to the generator persist in the code" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|abGreen42
       #|
@@ -338,7 +338,7 @@ test "code that raises" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|div by zero
       #|
@@ -361,7 +361,7 @@ test "return in code leaves the code" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|4
       #|10
@@ -404,7 +404,7 @@ test "local recursive functions in generators and in code" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|15
       #|20
@@ -416,7 +416,7 @@ test "local recursive functions in generators and in code" {
 ///|
 test "code is compared by what it does" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn inc(c : Code[Int]) -> Code[Int] { code { ${c} + 1 } }
@@ -452,7 +452,7 @@ test "the splices of code run when the code is made" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|0
       #|3
@@ -461,7 +461,7 @@ test "the splices of code run when the code is made" {
   )
   // so is an effect performed in a splice
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Fresh { Fresh() -> Int }
@@ -487,7 +487,7 @@ test "the splices of code run when the code is made" {
 test "splices that cannot have effects" {
   // a splice that uses the variables of the code runs with the code
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|suberror E { E }
@@ -504,7 +504,7 @@ test "splices that cannot have effects" {
   )
   // a splice in a definition runs when the program is checked
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|suberror E { E }
@@ -518,7 +518,7 @@ test "splices that cannot have effects" {
     ),
   )
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn g(x : Int) -> Int { ${ x + 1 } }
@@ -565,7 +565,7 @@ test "generators with mutable state, and let insertion" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|30
       #|9
@@ -619,7 +619,7 @@ test "what the generator knows about types" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|6
       #|8
@@ -674,7 +674,7 @@ test "splices in lambdas and arms, opaque generators, nested code" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|25
       #|6
@@ -756,7 +756,7 @@ test "generators use arrays and print" {
     ),
   )
   inspect(
-    run_source("t.mbtpp", src),
+    @mbtpp.run_source("t.mbtpp", src),
     content=(
       #|60
       #|9
@@ -866,7 +866,7 @@ test "generators call imported MoonBit functions through a host" {
   )
   // an imported function that is not in the host
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|fn unknown(x : Int) -> Int = "@mbt:demo.unknown"

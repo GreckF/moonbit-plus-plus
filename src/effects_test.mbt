@@ -4,7 +4,7 @@
 ///|
 test "a handler that resumes in tail position" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Yield[T] {
@@ -41,7 +41,7 @@ test "a handler that resumes in tail position" {
 ///|
 test "state, logs, nested handlers and lambdas that capture a handler" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect State[S] {
@@ -118,7 +118,7 @@ test "state, logs, nested handlers and lambdas that capture a handler" {
 ///|
 test "explicit effect polymorphism" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Log {
@@ -165,7 +165,7 @@ test "explicit effect polymorphism" {
 ///|
 test "inferred effect polymorphism, also of the Prelude" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Yield[T] {
@@ -215,7 +215,7 @@ test "inferred effect polymorphism, also of the Prelude" {
 ///|
 test "ctl operations: all paths, abort, one path" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Choose {
@@ -258,7 +258,7 @@ test "ctl operations: all paths, abort, one path" {
 ///|
 test "ctl operations: let mut per resumption, loops, return, polymorphism, nesting" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|effect Choose {
@@ -649,7 +649,7 @@ test "a function that returns a proof has no effects" {
 ///|
 test "errors are effects: through effect polymorphism, and `!Raise[E]`" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|suberror TooBig {
@@ -715,7 +715,7 @@ test "errors are effects: through effect polymorphism, and `!Raise[E]`" {
 ///|
 test "async is an effect: async lambdas given to effect polymorphic functions" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|async fn inc(x : Int) -> Int noraise { x + 1 }
@@ -829,7 +829,7 @@ test "effect polymorphic functions get async versions in native code" {
 ///|
 test "ctl handlers are computed during checking" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|effect Choose {
@@ -879,7 +879,7 @@ test "ctl handlers are computed during checking" {
 ///|
 test "closures that perform effects, returned from a run" {
   inspect(
-    check_source(
+    @mbtpp.check_source(
       "t.mbtpp",
       (
         #|effect Out {

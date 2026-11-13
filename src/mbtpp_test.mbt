@@ -4,7 +4,7 @@ fn run_example(name : String) -> String {
   let src = @fs.read_file_to_string(path) catch {
     @fs.IOError(msg) => return msg
   }
-  run_source(path, src)
+  @mbtpp.run_source(path, src)
 }
 
 ///|
@@ -228,7 +228,7 @@ test "example patterns" {
 ///|
 test "async functions run in the interpreter" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|async fn twice(f : async (Int) -> Int, x : Int) -> Int { f(f(x)) }
@@ -345,7 +345,7 @@ test "example effects_dt" {
 ///|
 test "Nat runs as a BigInt" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn fact(n : Nat) -> Nat {
@@ -397,7 +397,7 @@ test "Nat runs as a BigInt" {
 /// (bugs/001 of moonlit).
 test "a literal in a constructor pattern refines the later fields" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|enum Maybe[P : Prop] {
@@ -447,7 +447,7 @@ test "a literal in a constructor pattern refines the later fields" {
   )
   // `_` does not know the value
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|enum Maybe[P : Prop] {
@@ -481,7 +481,7 @@ test "a literal in a constructor pattern refines the later fields" {
 ///|
 test "Nat operations and BigInt" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|lemma sub_ok : (7 : Nat) - 3 === 4 = Refl
@@ -506,7 +506,7 @@ test "Nat operations and BigInt" {
     content="",
   )
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn main {
@@ -540,7 +540,7 @@ test "Nat operations and BigInt" {
 /// Decidable equality with proofs, `derive(DecEq)`, `ptr_deq`.
 test "deq, DecEq and physical equality" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|enum Color {
@@ -629,7 +629,7 @@ test "deq, DecEq and physical equality" {
 ///|
 test "HashMap" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn main {
@@ -676,7 +676,7 @@ test "HashMap" {
 /// everything of the Prelude that uses it.
 test "a type of the program replaces the Prelude's" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|struct HashMap[K, V] {
@@ -729,7 +729,7 @@ test "a type of the program replaces the Prelude's" {
 /// (bugs/002 of moonlit).
 test "large Nat literals" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f(b : Nat) -> Bool {
@@ -759,7 +759,7 @@ test "large Nat literals" {
 /// before its arguments are checked (bugs/003 of moonlit).
 test "implicit arguments from the expected type" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f(n : Nat) -> Nat {
@@ -804,7 +804,7 @@ test "implicit arguments from the expected type" {
 /// (bugs/004 of moonlit).
 test "callbacks returning proofs" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|enum Box : (Nat) -> Type {
@@ -848,7 +848,7 @@ test "callbacks returning proofs" {
 /// are provable on variables.
 test "refutations in Dec" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn upd(rho : (String) -> Nat, p : String, m : Nat) -> (String) -> Nat {
@@ -908,7 +908,7 @@ test "refutations in Dec" {
 /// argument (bugs/006 of moonlit).
 test "option types in type arguments" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f() -> Result[Int?, String] {

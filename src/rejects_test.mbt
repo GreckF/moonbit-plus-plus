@@ -1,7 +1,7 @@
 ///|
 /// Programs that must be rejected, and a few small positive checks.
 fn check(src : String) -> String {
-  check_source("t.mbtpp", src)
+  @mbtpp.check_source("t.mbtpp", src)
 }
 
 ///|

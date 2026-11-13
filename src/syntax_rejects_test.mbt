@@ -172,7 +172,7 @@ test "a guarded arm does not make a match exhaustive" {
 test "an array pattern in a let fails at run time when it does not match" {
   // as in MoonBit, a refutable `let` is accepted
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f(xs : Array[Int]) -> Int { let [a, b] = xs; a + b }
@@ -369,13 +369,13 @@ test "a time limit is a positive number of seconds" {
 ///|
 test "division by zero fails at run time" {
   inspect(
-    run_source("t.mbtpp", "fn main { let z = 0L; println(1L / z) }"),
+    @mbtpp.run_source("t.mbtpp", "fn main { let z = 0L; println(1L / z) }"),
     content=(
       #|runtime error: division by zero
     ),
   )
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp", "fn main { let m = { 1: 2 }; println(m.get(1)); println(m[2]) }",
     ),
     content=(
@@ -389,7 +389,7 @@ test "division by zero fails at run time" {
 ///|
 test "a failed guard statement aborts" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f(o : Option[Int]) -> Int { guard o is Some(x); x }
@@ -406,7 +406,7 @@ test "a failed guard statement aborts" {
 ///|
 test "a match on an array that no arm covers aborts" {
   inspect(
-    run_source(
+    @mbtpp.run_source(
       "t.mbtpp",
       (
         #|fn f(xs : Array[Int]) -> Int { match xs { [a] => a; [a, b] => a + b } }
