@@ -11,8 +11,7 @@
 /// order does not matter.
 ///
 /// The registry lives in its own package so that it is initialised before the
-/// top-level values of the packages that import it (inside one package the
-/// order of top-level initialisers does not follow calls of functions).
+/// top-level values of the packages that import it.
 
 ///|
 /// The resets of the registered state, in order of declaration.
