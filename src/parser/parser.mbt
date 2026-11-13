@@ -731,7 +731,9 @@ fn Parser::block(self : Parser) -> Expr raise ParseError {
   // inside a block, `unfold(f) { e }` is an unfolding again
   let saved = in_condition.val
   in_condition.val = false
-  errdefer { in_condition.val = saved }
+  errdefer {
+    in_condition.val = saved
+  }
   let r = self.block_in()
   in_condition.val = saved
   r
@@ -2350,7 +2352,9 @@ let in_condition : Ref[Bool] = Ref(false)
 fn Parser::cond_expr(self : Parser) -> Expr raise ParseError {
   let saved = in_condition.val
   in_condition.val = true
-  errdefer { in_condition.val = saved }
+  errdefer {
+    in_condition.val = saved
+  }
   let r = self.expr()
   in_condition.val = saved
   r

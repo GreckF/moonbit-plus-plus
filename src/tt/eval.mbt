@@ -179,7 +179,9 @@ fn reduce_prim(n : String, sp : Spine, lazily~ : Bool = false) -> Val {
       let lits : Array[Lit] = []
       for a in sp {
         if a.1 == Expl {
-          if lazily && !(a.0 is (VLit(_) | VPrim("%raise", _))) && !may_raise(a.0) {
+          if lazily &&
+            !(a.0 is (VLit(_) | VPrim("%raise", _))) &&
+            !may_raise(a.0) {
             return VPrim(n, sp)
           }
           match force(a.0) {

@@ -131,7 +131,8 @@ fn package_imports(dir : String) -> Array[(String, String)] raise Failure {
     Some(j) => j
     None => die(cfg + ": invalid JSON")
   }
-  let entries = match (if json is Object(obj) { obj.get("import") } else { None }) {
+  let entries = match
+    (if json is Object(obj) { obj.get("import") } else { None }) {
     Some(Array(xs)) => xs
     Some(_) => die(cfg + ": \"import\" must be an array")
     None => []
@@ -238,7 +239,8 @@ fn package_is_main(dir : String) -> Bool {
   }
   match read_json(dir + "/moon.pkg.json") {
     Some(j) =>
-      (if j is Object(obj) { obj.get("is-main") } else { None }) is Some(Json::True)
+      (if j is Object(obj) { obj.get("is-main") } else { None })
+      is Some(Json::True)
     None => false
   }
 }

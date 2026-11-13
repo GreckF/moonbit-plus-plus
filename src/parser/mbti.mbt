@@ -74,8 +74,7 @@ fn mbti_items(src : String) -> (Array[String], Array[MbtiItem]) {
     if t.has_prefix("import(") || t.has_prefix("import {") {
       let close = if t.has_prefix("import(") { ")" } else { "}" }
       i = i + 1
-      while i < lines.length() &&
-            lines[i].trim(chars=" \t").to_owned() != close {
+      while i < lines.length() && lines[i].trim(chars=" \t").to_owned() != close {
         let q = lines[i].trim(chars=" \t\",").to_owned()
         // `"path" @alias` is possible; keep the path
         let path = match q.find("\"") {

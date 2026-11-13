@@ -216,7 +216,8 @@ pub fn prim_pure(name : String, args : Array[Lit]) -> Lit? {
     ("%float_to_double", [LFloat(a)]) => Some(LDouble(a.to_double()))
     ("%int_to_float", [LInt(a)]) => Some(LFloat(Float::from_int(a)))
     ("%double_to_float", [LDouble(a)]) => Some(LFloat(Float::from_double(a)))
-    ("%int64_to_uint64", [LInt64(a)]) => Some(LUInt64(a.reinterpret_as_uint64()))
+    ("%int64_to_uint64", [LInt64(a)]) =>
+      Some(LUInt64(a.reinterpret_as_uint64()))
     ("%uint64_to_int64", [LUInt64(a)]) => Some(LInt64(a.reinterpret_as_int64()))
     ("%uint_to_uint64", [LUInt(a)]) => Some(LUInt64(a.to_uint64()))
     ("%uint64_to_uint", [LUInt64(a)]) => Some(LUInt(a.to_uint()))
