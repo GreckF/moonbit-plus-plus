@@ -13,12 +13,12 @@
 let lifted : Array[(String, String, Tm, Tm, Int32)] = []
 
 ///|
-let lifted_count : Ref[Int32] = Ref::new(0)
+let lifted_count : Ref[Int32] = Ref(0)
 
 ///|
 /// Does `e` mention the variable `x` (ignoring shadowing)?
 fn mentions(e : @parser.Expr, x : String) -> Bool {
-  let found = Ref::new(false)
+  let found = Ref(false)
   mention_walk(e, x, found)
   found.val
 }
@@ -29,7 +29,7 @@ fn mentions(e : @parser.Expr, x : String) -> Bool {
 fn code_mentions(e : @parser.Expr, x : String) -> Bool {
   let saved = code_depth.val
   code_depth.val = 0
-  let found = Ref::new(false)
+  let found = Ref(false)
   mention_walk(e, x, found)
   code_depth.val = saved
   found.val
@@ -38,7 +38,7 @@ fn code_mentions(e : @parser.Expr, x : String) -> Bool {
 ///|
 /// When not negative, `mention_walk` is in `code { }` (for `code_mentions`),
 /// that many `code { }` below the code asked about.
-let code_depth : Ref[Int32] = Ref::new(-1)
+let code_depth : Ref[Int32] = Ref(-1)
 
 ///|
 fn mention_walk(e : @parser.Expr, x : String, found : Ref[Bool]) -> Unit {

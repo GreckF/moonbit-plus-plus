@@ -331,7 +331,7 @@ fn output_module(
     }
     None => ()
   }
-  let m = StringBuilder::new()
+  let m = StringBuilder()
   m.write_string("name = " + mstr(info.name.unwrap_or(default_name)) + "\n\n")
   m.write_string("version = " + mstr(info.version.unwrap_or("0.1.0")) + "\n")
   if deps.length() > 0 {
@@ -343,7 +343,7 @@ fn output_module(
   }
   // the generated project is a workspace of its own (also so that a
   // `moon.work` of the MoonBit++ project does not apply to it)
-  let w = StringBuilder::new()
+  let w = StringBuilder()
   w.write_string("members = [\n  \".\",\n")
   for mem in members {
     w.write_string("  " + mstr(mem) + ",\n")
@@ -453,7 +453,7 @@ fn compile(opts : Options, path : String?) -> (String, String) raise Failure {
       $|
     ),
   )
-  let pkg_file = StringBuilder::new()
+  let pkg_file = StringBuilder()
   pkg_file.write_string("warnings = \"-a\"\n")
   // the runtime uses the conversions of `Float` (moonbitlang/core/float)
   pkg_file.write_string("\nimport {\n  \"moonbitlang/core/float\",\n")
@@ -556,7 +556,7 @@ fn cmd_run(opts : Options, path : String?) -> Bool raise Failure {
   }
   ignore(base)
   ignore(check_files(opts, dir, files))
-  let out = { buf: StringBuilder::new(), }
+  let out = { buf: StringBuilder(), }
   @interp.run_main(s => out.write(s)) catch {
     @interp.RunError(msg) => {
       out.flush()
@@ -581,7 +581,7 @@ fn cmd_test(opts : Options, path : String?) -> Bool raise Failure {
       if !@tt.globals.contains(name) {
         continue
       }
-      let out = { buf: StringBuilder::new(), }
+      let out = { buf: StringBuilder(), }
       let label = if display == "" { name } else { display }
       let ok = try {
         @interp.run_global(name, s => out.write(s))

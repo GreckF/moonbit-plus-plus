@@ -182,7 +182,7 @@ fn rmatch(p : @tt.CPat, v : RVal, out : Array[RVal]) -> Bool {
 fn push_env(env : REnv, vs : Array[RVal]) -> REnv {
   let mut e = env
   for v in vs {
-    e = ECons(Ref::new(v), e)
+    e = ECons(Ref(v), e)
   }
   e
 }
@@ -234,7 +234,7 @@ fn Machine::eval(self : Machine, env : REnv, t : @tt.Tm) -> RVal raise Ctl {
     }
     Let(_, _, v, b) | LetMut(_, _, v, b) => {
       let x = self.eval(env, v)
-      self.eval(ECons(Ref::new(x), env), b)
+      self.eval(ECons(Ref(x), env), b)
     }
     Lit(l) => RLit(l)
     Match(ss, cls) => {
@@ -301,7 +301,7 @@ fn Machine::apply(
 ) -> RVal raise Ctl {
   match f {
     RClo(env, Lam(_, _, _, body)) => {
-      let env2 = ECons(Ref::new(a), env)
+      let env2 = ECons(Ref(a), env)
       match body {
         Lam(_, _, _, _) => RClo(env2, body)
         _ =>
@@ -335,7 +335,7 @@ fn Machine::apply(
 }
 
 ///|
-let effect_markers : Ref[Int32] = Ref::new(0)
+let effect_markers : Ref[Int32] = Ref(0)
 
 ///|
 fn Machine::prim(

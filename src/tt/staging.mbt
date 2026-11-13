@@ -21,7 +21,7 @@
 
 ///|
 /// Was `code { }` or `${ }` used since the last expansion?
-let staging_used : Ref[Bool] = Ref::new(false)
+let staging_used : Ref[Bool] = Ref(false)
 
 ///|
 /// The stage at which a lifted local function (localfn.mbt) was defined,
@@ -31,7 +31,7 @@ let lifted_stages : Map[String, Int32] = Map([])
 ///|
 /// During the expansion of splices every function is unfolded: `#opaque` is
 /// about type checking, not about running (see unfolding.mbt).
-let unfold_everything : Ref[Bool] = Ref::new(false)
+let unfold_everything : Ref[Bool] = Ref(false)
 
 ///|
 /// What the splices print while they run (`print` and `println` in a
@@ -40,7 +40,7 @@ pub let staging_output : Array[String] = []
 
 ///|
 /// Are the messages of splices also printed when they are made?
-pub let staging_echo : Ref[Bool] = Ref::new(true)
+pub let staging_echo : Ref[Bool] = Ref(true)
 
 ///|
 fn reset_staging() -> Unit {
@@ -735,7 +735,7 @@ fn hoist_from(t : Tm, b : Int32, depth : Int32, found : Array[(Tm, Tm)]) -> Tm {
 
 ///|
 /// The global whose splices are being expanded.
-let unstage_owner : Ref[String] = Ref::new("")
+let unstage_owner : Ref[String] = Ref("")
 
 ///|
 /// A depth at which no splice is expanded (in a value kept for run time).
@@ -1160,10 +1160,10 @@ let specialized : Array[(String, Array[Val], String, Array[Int32])] = []
 ///|
 /// The specialization being made: its recursive calls are `%spec` until the
 /// variables it takes are known.
-let specializing : Ref[(String, Array[Val])?] = Ref::new(None)
+let specializing : Ref[(String, Array[Val])?] = Ref(None)
 
 ///|
-let specialized_count : Ref[Int32] = Ref::new(0)
+let specialized_count : Ref[Int32] = Ref(0)
 
 ///|
 fn same_values(lvl : Int32, vs : Array[Val], ws : Array[Val]) -> Bool {

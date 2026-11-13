@@ -19,7 +19,7 @@ pub fn run(src : String) -> String {
   @tt.check_program(file, src) catch {
     @tt.CheckError(msg) => return msg
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   @interp.run_main(s => buf.write_string(s)) catch {
     @interp.RunError(msg) => buf.write_string(msg)
   }

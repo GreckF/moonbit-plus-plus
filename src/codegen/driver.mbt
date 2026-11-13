@@ -330,7 +330,7 @@ pub fn generate_driver(
   warnings.clear()
   let g = Gen::new(imports)
   let skipped : Array[(String, String)] = []
-  let init = StringBuilder::new()
+  let init = StringBuilder()
   init.write_string("\n///|\nfn init {\n")
   for n in names {
     match @tt.globals.get(n) {

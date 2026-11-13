@@ -29,7 +29,7 @@ priv struct XEnv {
 ///|
 fn XEnv::push(self : XEnv, v : Val, is_mut : Bool) -> XEnv {
   let vals = self.vals.copy()
-  vals.push(Ref::new(v))
+  vals.push(Ref(v))
   let muts = self.muts.copy()
   muts.push(is_mut)
   { vals, muts, }
@@ -485,11 +485,11 @@ let xclosures : Array[(XEnv, Tm)] = []
 
 ///|
 /// The nesting of runs (the closures are dropped when a run starts at 0).
-let exec_depth : Ref[Int32] = Ref::new(0)
+let exec_depth : Ref[Int32] = Ref(0)
 
 ///|
 /// The markers given to the handlers of `ctl` operations in the current run.
-let exec_markers : Ref[Int32] = Ref::new(0)
+let exec_markers : Ref[Int32] = Ref(0)
 
 ///|
 fn xclo_val(k : Int32) -> Val {
@@ -567,7 +567,7 @@ fn xapply(fv : Val, av : Val, i : Icit) -> Val raise ExecStop {
   }
   let lam_env = (cl : Closure) => {
     let ce : XEnv = {
-      vals: cl.env.map(v => Ref::new(v)),
+      vals: cl.env.map(v => Ref(v)),
       muts: cl.env.map(_ => false),
     }
     ce

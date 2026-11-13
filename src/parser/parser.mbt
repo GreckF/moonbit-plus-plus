@@ -2229,7 +2229,7 @@ fn Parser::guard_expr(self : Parser) -> Expr raise ParseError {
 pub let test_names : Map[String, String] = Map([])
 
 ///|
-let test_counter : Ref[Int32] = Ref::new(0)
+let test_counter : Ref[Int32] = Ref(0)
 
 ///|
 /// Accept an identifier that is not a keyword of MoonBit++ (`const`).
@@ -2358,7 +2358,7 @@ fn Parser::at_unfold_block(self : Parser) -> Bool {
 ///|
 /// Parsing a condition (`if c {`, `match e {`, ...), where `unfold(f) {` is
 /// a call followed by the block of the `if`.
-let in_condition : Ref[Bool] = Ref::new(false)
+let in_condition : Ref[Bool] = Ref(false)
 
 ///|
 fn Parser::cond_expr(self : Parser) -> Expr raise ParseError {

@@ -14,7 +14,7 @@ fn Gen::ctor(self : Gen, c : String) -> (String, Int32) {
     Some(x) => return x
     None => ()
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_string("K_")
   let mut prev_us = true
   for ch in c {

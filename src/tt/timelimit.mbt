@@ -8,7 +8,7 @@
 
 ///|
 /// The default limit, in seconds.
-pub let default_time_limit : Ref[Int32] = Ref::new(30)
+pub let default_time_limit : Ref[Int32] = Ref(30)
 
 ///|
 /// `#timelimit` of declarations, by global name (`None`: no limit).
@@ -29,14 +29,14 @@ let time_frames : Array[TimeFrame] = []
 ///|
 /// The declaration whose time ran out, and the function being evaluated
 /// then.
-let timed_out : Ref[(String, String?)?] = Ref::new(None)
+let timed_out : Ref[(String, String?)?] = Ref(None)
 
 ///|
-let ticks : Ref[Int32] = Ref::new(0)
+let ticks : Ref[Int32] = Ref(0)
 
 ///|
 /// The global function last unfolded or executed (for the message).
-let last_unfolded : Ref[String?] = Ref::new(None)
+let last_unfolded : Ref[String?] = Ref(None)
 
 ///|
 fn reset_time_limits() -> Unit {
@@ -162,4 +162,4 @@ fn limit_names(d : @parser.Decl) -> Array[String] {
 ///|
 /// Called with the name of each definition when its checking starts (the
 /// JS build of moonpp names it when the checker runs out of stack).
-pub let checking_hook : Ref[(String) -> Unit] = Ref::new(_ => ())
+pub let checking_hook : Ref[(String) -> Unit] = Ref(_ => ())

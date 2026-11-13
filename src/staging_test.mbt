@@ -16,7 +16,7 @@ fn expanded(src : String, name : String) -> String {
 ///|
 /// Without the counters of generated names: `f$go$12` is `f$go$N`.
 fn drop_counters(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let cs : Array[Char] = s.iter().collect()
   let mut i = 0
   while i < cs.length() {

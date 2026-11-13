@@ -182,7 +182,7 @@ pub fn tokenize(
     // `#|raw` and `$|interpolated` lines: consecutive lines form one string
     if (c == '#' || c == '$') && peek(1) == '|' {
       let parts : Array[StrPart] = []
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       let mut first = true
       while i < n && (cs[i] == '#' || cs[i] == '$') && peek(1) == '|' {
         let interp = cs[i] == '$'
@@ -203,7 +203,7 @@ pub fn tokenize(
             buf.reset()
             let eline = line
             let ecol = col
-            let ebuf = StringBuilder::new()
+            let ebuf = StringBuilder()
             let mut depth = 0
             while i < n && cs[i] != '\n' && !(cs[i] == '}' && depth == 0) {
               // a string or a character in the expression
@@ -330,7 +330,7 @@ pub fn tokenize(
       continue
     }
     if c >= '0' && c <= '9' {
-      let text = StringBuilder::new()
+      let text = StringBuilder()
       let mut v : UInt64 = 0
       let mut too_big = false
       let digits = () => {
@@ -438,7 +438,7 @@ pub fn tokenize(
       continue
     }
     if is_ident_start(c) && !(c == '_' && !is_ident_char(peek(1))) {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       while i < n && is_ident_char(cs[i]) {
         buf.write_char(cs[i])
         adv()
@@ -477,7 +477,7 @@ pub fn tokenize(
     if c == '"' {
       adv()
       let parts : Array[StrPart] = []
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       while true {
         if i >= n || cs[i] == '\n' {
           raise ParseError(pos, "unterminated string literal")
@@ -496,7 +496,7 @@ pub fn tokenize(
           buf.reset()
           let eline = line
           let ecol = col
-          let ebuf = StringBuilder::new()
+          let ebuf = StringBuilder()
           let mut depth = 0
           while i < n && !(cs[i] == '}' && depth == 0) {
             // a string or a character in the expression

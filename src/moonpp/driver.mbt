@@ -52,7 +52,7 @@ fn build_driver(
     )
     // the driver is loaded with `require`
     write_if_changed(out + "/package.json", "{ \"type\": \"commonjs\" }\n")
-    let pkg_file = StringBuilder::new()
+    let pkg_file = StringBuilder()
     pkg_file.write_string("warnings = \"-a\"\n")
     pkg_file.write_string("\nimport {\n  \"moonbitlang/core/float\",\n")
     for i in imports {

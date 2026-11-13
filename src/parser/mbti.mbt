@@ -91,7 +91,7 @@ fn mbti_items(src : String) -> (Array[String], Array[MbtiItem]) {
       continue
     }
     let start = i
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(line)
     i = i + 1
     while i < lines.length() &&

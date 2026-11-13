@@ -223,7 +223,7 @@ fn Gen::need_trait(self : Gen, tr : String) -> Unit {
   }
   self.traits_done.push(tr)
   let supers = @tt.trait_supers(tr).map(s => self.trait_name(s))
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_string(
     "\n/// MoonBit++ trait " +
     tr +
@@ -519,7 +519,7 @@ fn Gen::impl_code(self : Gen, i : String) -> String? {
   let saved_bounds = self.cur_bounds
   let saved_result = self.cur_result
   self.cur_bounds = bounds
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let ok : Result[Unit, NotTyped] = try {
     // MoonBit needs the impls of the supertraits too
     for s in @tt.trait_supers(tr) {

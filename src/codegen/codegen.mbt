@@ -88,7 +88,7 @@ priv struct Gen {
 /// A fresh local name based on a source name.
 fn Gen::name(self : Gen, base : String) -> String {
   self.fresh = self.fresh + 1
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for c in base {
     if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' {
       buf.write_char(c)
@@ -118,7 +118,7 @@ fn Gen::gid(self : Gen, name : String) -> String {
       id
     }
     None => {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       let short = match name.rev_find("::") {
         Some(_) => name
         None => name
@@ -482,7 +482,7 @@ fn uses(code : String, name : String) -> Bool {
 /// Turn the binding markers of a pattern into bindings, dropping the unused
 /// ones (an unused variable becomes `_`).
 fn resolve_bindings(pat : String, body : String) -> String {
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   let cs : Array[Char] = pat.iter().collect()
   let v = var_marker.get_char(0).unwrap()
   let a = as_marker.get_char(0).unwrap()
@@ -492,7 +492,7 @@ fn resolve_bindings(pat : String, body : String) -> String {
     let c = cs[i]
     if c == v || c == a {
       let mut j = i + 1
-      let name = StringBuilder::new()
+      let name = StringBuilder()
       while cs[j] != e {
         name.write_char(cs[j])
         j = j + 1
@@ -523,11 +523,11 @@ fn Gen::clauses_dynamic(
   fallback : String,
 ) -> String {
   let out = self.name("o")
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_string("{\nlet " + out + " : Array[Value] = []\n")
   for cl in cls {
     let mut env2 = env
-    let binds = StringBuilder::new()
+    let binds = StringBuilder()
     for k = 0; k < @tt.pats_slots(cl.pats); k = k + 1 {
       let x = self.name("v")
       binds.write_string("let " + x + " = " + out + "[" + k.to_string() + "]\n")
@@ -588,7 +588,7 @@ fn Gen::match_code(
   if proofs.iter().any(p => p) {
     if proofs.iter().all(p => p) {
       // the clauses up to the first one without a guard, as an `if` chain
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       for cl in cls {
         let mut env2 = env
         for _ in 0..<@tt.pats_slots(cl.pats) {
@@ -637,7 +637,7 @@ fn Gen::match_code(
   } else {
     "(" + scruts.join(", ") + ")"
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_string("match " + subject + " {\n")
   for cl in cls {
     let names : Array[Local] = []
@@ -959,7 +959,7 @@ fn Gen::tm(self : Gen, env : Array[Local], t : @tt.Tm) -> String {
           "\n}\n}"
         }
         None => {
-          let lets = StringBuilder::new()
+          let lets = StringBuilder()
           // a column matching a proof matches anything (see match_code)
           let proofs = ss.map(s => self.is_erased_tm(env, s))
           let names = ss.mapi((k, s) => {

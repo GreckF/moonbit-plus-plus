@@ -992,7 +992,7 @@ fn stmt_escapes(s : @parser.Stmt, x : String) -> Bool {
 
 ///|
 fn mention_walk_stmt(s : @parser.Stmt, x : String) -> Bool {
-  let found = Ref::new(false)
+  let found = Ref(false)
   mention_walk_s(s, x, found)
   found.val
 }

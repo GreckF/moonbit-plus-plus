@@ -341,7 +341,7 @@ fn Gen::ffi_body(
   let target = prim.unsafe_substring(start=5, end=prim.length())
   let stack : Array[Binder] = []
   let conv : Array[String] = []
-  let lets = StringBuilder::new()
+  let lets = StringBuilder()
   let mut t = ty
   let mut k = 0
   let labels = @tt.param_labels(name).unwrap_or([])
@@ -520,7 +520,7 @@ fn Gen::dyn_wrapper(self : Gen, tr : String) -> (String, String)? {
   }
   let w = "DynW" + self.dyn_wrappers.length().to_string()
   self.dyn_wrappers.set(tr, w)
-  let code = StringBuilder::new()
+  let code = StringBuilder()
   code.write_string(
     "\n/// &" + tr + " passed to MoonBit\nstruct " + w + " {\n  v : Value\n}\n",
   )

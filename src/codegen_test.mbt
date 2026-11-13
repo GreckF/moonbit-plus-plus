@@ -39,7 +39,7 @@ fn signatures(src : String) -> String {
 ///|
 /// Drop the counters of generated names: f12_fib -> f_fib, x_34 -> x.
 fn strip_counters(l : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let cs : Array[Char] = l.iter().collect()
   let mut i = 0
   while i < cs.length() {
@@ -332,7 +332,7 @@ fn data_lines(src : String) -> String {
   .filter(l => l.has_prefix("K_Exp"))
   .map(l => {
     // drop the counters of local names: n_176 -> n
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     let cs : Array[Char] = l.iter().collect()
     let mut i = 0
     while i < cs.length() {

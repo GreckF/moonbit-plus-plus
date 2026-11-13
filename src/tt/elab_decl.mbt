@@ -862,7 +862,7 @@ fn add_thunk(name : String, th : () -> Unit raise ElabError) -> Unit {
 ///|
 /// A thunk shared by several names, run at most once.
 fn shared_thunk(names : Array[String], th : () -> Unit raise ElabError) -> Unit {
-  let done = Ref::new(false)
+  let done = Ref(false)
   let f = () => {
     if !done.val {
       done.val = true

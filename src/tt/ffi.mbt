@@ -43,7 +43,7 @@ pub(all) struct FfiHost {
 }
 
 ///|
-pub let ffi_host : Ref[FfiHost?] = Ref::new(None)
+pub let ffi_host : Ref[FfiHost?] = Ref(None)
 
 ///|
 /// The functions of the checker that the host was given, with the types of
@@ -57,7 +57,7 @@ let ffi_ready : Map[String, Bool] = Map([])
 ///|
 /// Why the last call of an imported function failed (for the error of a
 /// splice that is stuck on it).
-pub let ffi_error : Ref[String?] = Ref::new(None)
+pub let ffi_error : Ref[String?] = Ref(None)
 
 ///|
 fn reset_ffi() -> Unit {
@@ -198,7 +198,7 @@ fn Reader::next(self : Reader) -> Char raise ReadFail {
 ///|
 /// The characters up to `stop` (which is skipped).
 fn Reader::until(self : Reader, stop : Char) -> String raise ReadFail {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   while true {
     let c = self.next()
     if c == stop {
@@ -215,7 +215,7 @@ fn Reader::take(self : Reader, k : Int32) -> String raise ReadFail {
   if k < 0 || self.pos + k > self.cs.length() {
     raise ReadFail
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for _ in 0..<k {
     buf.write_char(self.cs[self.pos])
     self.pos = self.pos + 1
@@ -395,7 +395,7 @@ fn run_ffi(n : String, sp : Spine) -> Val? {
     Some((t, _)) => t
     None => return None
   }
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_string("a" + sp.length().to_string() + ";")
   // the types of the parameters, for the functions among the arguments
   let mut fty = match globals.get(n) {
@@ -567,7 +567,7 @@ fn group_params(t : Val) -> Int32 {
 /// message.
 pub fn ffi_callback(id : Int32, args : String) -> String {
   let fail = (msg : String) => {
-    let out = StringBuilder::new()
+    let out = StringBuilder()
     out.write_string("e")
     put_string(out, msg)
     out.to_string()
@@ -596,7 +596,7 @@ pub fn ffi_callback(id : Int32, args : String) -> String {
     _ => return fail("cannot read the arguments of a function of the checker")
   }
   let res = run_callback(f, vals)
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   match res {
     Some(VPrim("%raise", [(e, _), ..])) => {
       out.write_string("r")

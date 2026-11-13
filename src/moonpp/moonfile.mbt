@@ -63,7 +63,7 @@ fn moon_tokens(src : String) -> Array[MTok] raise Failure {
         i = i + 1
       }
     } else if c == '"' {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       i = i + 1
       while i < cs.length() && cs[i] != '"' {
         if cs[i] == '\\' && i + 1 < cs.length() {
@@ -89,7 +89,7 @@ fn moon_tokens(src : String) -> Array[MTok] raise Failure {
       out.push(TPunct(c))
       i = i + 1
     } else {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       while i < cs.length() && !" \t\r\n{}()[],:=@\"".contains_char(cs[i]) {
         buf.write_char(cs[i])
         i = i + 1

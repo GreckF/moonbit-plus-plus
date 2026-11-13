@@ -78,7 +78,7 @@ fn prune_prelude(decls : Array[@parser.Decl]) -> Unit {
 ///|
 /// Whether `Nat` is the Prelude's (not replaced by the package): only then
 /// are the functions of `nat_natives` native.
-pub let prelude_nat : Ref[Bool] = Ref::new(true)
+pub let prelude_nat : Ref[Bool] = Ref(true)
 
 ///|
 /// Does `t` mention one of the globals of `names`?

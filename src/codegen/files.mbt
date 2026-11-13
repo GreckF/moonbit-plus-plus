@@ -51,7 +51,7 @@ fn Gen::buffer(self : Gen, file : String) -> StringBuilder {
   match self.files.get(file) {
     Some(b) => b
     None => {
-      let b = StringBuilder::new()
+      let b = StringBuilder()
       self.files.set(file, b)
       b
     }
@@ -77,9 +77,9 @@ fn Gen::value_ext(self : Gen, file : String) -> String {
   if cs.length() == 0 {
     return ""
   }
-  let decl = StringBuilder::new()
-  let dec = StringBuilder::new()
-  let mk = StringBuilder::new()
+  let decl = StringBuilder()
+  let dec = StringBuilder()
+  let mk = StringBuilder()
   decl.write_string("\n///|\nextenum Value += {\n")
   dec.write_string("\n///|\nfn init {\n  con_decoders.push(v => match v {\n")
   mk.write_string("  con_makers.push((c, xs) => match c {\n")
@@ -131,7 +131,7 @@ fn Gen::foreign_ext(self : Gen) -> String {
   if self.foreign_order.length() == 0 {
     return ""
   }
-  let b = StringBuilder::new()
+  let b = StringBuilder()
   b.write_string("\n///|\nextenum Foreign += {\n")
   for ty in self.foreign_order {
     b.write_string("  " + self.foreign.get(ty).unwrap() + "(" + ty + ")\n")

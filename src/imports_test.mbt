@@ -176,7 +176,7 @@ test "import: running calls an imported function" {
     check_geo("fn main { println(1); println(@geo.area(@geo.unit_circle())) }"),
     content="ok",
   )
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   @interp.run_main(s => buf.write_string(s)) catch {
     @interp.RunError(msg) => buf.write_string(msg)
   }

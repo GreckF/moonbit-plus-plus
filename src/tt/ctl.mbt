@@ -138,7 +138,7 @@ fn napp(g : String, args : Array[N]) -> N {
 }
 
 ///|
-let ctl_ready : Ref[Bool] = Ref::new(false)
+let ctl_ready : Ref[Bool] = Ref(false)
 
 ///|
 /// Define the runtime of `ctl` operations (once per check).
@@ -472,7 +472,7 @@ let pending_m : Array[String] = []
 
 ///|
 /// An error found while translating (reported by the declaration).
-let ctl_error : Ref[String?] = Ref::new(None)
+let ctl_error : Ref[String?] = Ref(None)
 
 ///|
 fn reset_ctl() -> Unit {

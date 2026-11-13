@@ -359,7 +359,7 @@ fn Gen::native_ty_in(self : Gen, ctx : Array[TyCtx], t : @tt.Tm) -> NTy? {
 
 ///|
 fn enum_name(d : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for c in d {
     if is_ident_char(c) {
       buf.write_char(c)
@@ -372,7 +372,7 @@ fn enum_name(d : String) -> String {
 
 ///|
 fn enum_fn(d : String, what : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for c in d {
     if c >= 'A' && c <= 'Z' {
       buf.write_char(Int32::unsafe_to_char(c.to_int() + 32))
@@ -623,9 +623,9 @@ fn Gen::need_enum(self : Gen, d : String) -> Unit {
   let of_params = tvs.mapi((k, tv) => {
     of_convs[k] + " : (Value) -> " + tv + " raise"
   })
-  let decl = StringBuilder::new()
-  let to = StringBuilder::new()
-  let of = StringBuilder::new()
+  let decl = StringBuilder()
+  let to = StringBuilder()
+  let of = StringBuilder()
   let is_struct = is_mbt_struct(d)
   // an existing MoonBit type is not declared
   let emit_decl = match @tt.mbt_info(d) {
@@ -1887,7 +1887,7 @@ fn Gen::typed_term(
       let mut ty = tb
       let arms : Array[String] = []
       for cl in cls {
-        let lets = StringBuilder::new()
+        let lets = StringBuilder()
         let (cond, env2) = match cl.pats {
           [CPWild | CPVar(_)] => ("true", tpush(env, TNone))
           [CPCon(c, ps)] if ps.iter().all(p => p is (CPWild | CPVar(_))) => {
@@ -1978,7 +1978,7 @@ fn Gen::typed_term(
           for s in ss {
             scr.push(self.typed(env, s))
           }
-          let buf = StringBuilder::new()
+          let buf = StringBuilder()
           let subject = if scr.length() == 1 {
             paren_block(scr[0].0)
           } else {
