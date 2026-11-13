@@ -464,7 +464,7 @@ fn global_row_has_var(name : String) -> Bool {
 
 ///|
 /// Marked bodies of functions, for their translated versions.
-let marked_bodies : Map[String, Tm] = {}
+let marked_bodies : Map[String, Tm] = Map([])
 
 ///|
 /// Translated versions waiting for the body of their function.

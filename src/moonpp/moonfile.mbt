@@ -163,9 +163,9 @@ fn parse_moon_file(src : String) -> MoonFile raise Failure {
     }
   }
 
-  let fields : Map[String, MValue] = {}
+  let fields : Map[String, MValue] = Map([])
   let imports : Array[MImport] = []
-  let calls : Map[String, Array[(String, MValue)]] = {}
+  let calls : Map[String, Array[(String, MValue)]] = Map([])
   while i < toks.length() {
     match peek() {
       Some(TWord("import")) if i + 1 < toks.length() &&

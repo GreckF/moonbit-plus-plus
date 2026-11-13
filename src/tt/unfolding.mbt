@@ -8,17 +8,17 @@
 ///|
 /// The opaque functions (`true`: sealed, never unfolded outside its own
 /// definition).
-let unfold_modes : Map[String, Bool] = {}
+let unfold_modes : Map[String, Bool] = Map([])
 
 ///|
 /// The functions each function unfolds (`#unfold`, `unfold` blocks and
 /// tactics in its definition, or those of the declaration that made it).
-let unfold_deps : Map[String, Array[String]] = {}
+let unfold_deps : Map[String, Array[String]] = Map([])
 
 ///|
 /// The names of the `#unfold` attributes, with their positions (checked
 /// when the definition is).
-let unfold_attr_names : Map[String, Array[(Pos, String)]] = {}
+let unfold_attr_names : Map[String, Array[(Pos, String)]] = Map([])
 
 ///|
 /// Where functions may be unfolded: the definition of `owner` (`""` for a
@@ -86,7 +86,7 @@ fn strip_unfold_attrs(d : @parser.Decl) -> @parser.Decl {
 ///|
 /// `names` and what they unfold, transitively.
 fn unfold_closure(names : Array[String]) -> Map[String, Bool] {
-  let set : Map[String, Bool] = {}
+  let set : Map[String, Bool] = Map([])
   let todo = names.copy()
   while todo.pop() is Some(n) {
     if !set.contains(n) {

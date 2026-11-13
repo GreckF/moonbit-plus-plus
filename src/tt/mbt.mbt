@@ -23,7 +23,7 @@ pub(all) struct MbtInfo {
 
 ///|
 /// `#mbt` datatypes and traits, by MoonBit++ name.
-pub let mbt_types : Map[String, MbtInfo] = {}
+pub let mbt_types : Map[String, MbtInfo] = Map([])
 
 ///|
 pub fn mbt_info(name : String) -> MbtInfo? {
@@ -418,7 +418,7 @@ fn check_mbt_impls(
 /// public MoonBit functions; their signatures must translate (checked
 /// here), their bodies must be in the native fragment (checked by the
 /// compiler).
-pub let mbt_fns : Map[String, String] = {}
+pub let mbt_fns : Map[String, String] = Map([])
 
 ///|
 fn is_mbt_ident(s : String) -> Bool {

@@ -2326,7 +2326,7 @@ fn is_native_const_candidate(name : String, g : @tt.GEntry) -> Bool {
 /// Is the constant `c` used by code that stays in the uniform
 /// representation?
 fn Gen::used_by_uniform_code(self : Gen, c : String) -> Bool {
-  let names : Map[String, Bool] = {}
+  let names : Map[String, Bool] = Map([])
   names.set(c, true)
   for name, g in @tt.globals {
     let body = match g.kind {

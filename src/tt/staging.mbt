@@ -26,7 +26,7 @@ let staging_used : Ref[Bool] = Ref::new(false)
 ///|
 /// The stage at which a lifted local function (localfn.mbt) was defined,
 /// when it is not 0.
-let lifted_stages : Map[String, Int32] = {}
+let lifted_stages : Map[String, Int32] = Map([])
 
 ///|
 /// During the expansion of splices every function is unfolded: `#opaque` is

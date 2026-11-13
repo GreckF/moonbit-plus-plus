@@ -29,7 +29,7 @@ fn cmd_ide(
   } else {
     [file]
   }
-  let contents : Map[String, String] = {}
+  let contents : Map[String, String] = Map([])
   match overlay {
     Some(o) => {
       let text = @fs.read_file_to_string(o) catch {

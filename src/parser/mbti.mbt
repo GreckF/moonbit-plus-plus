@@ -248,7 +248,7 @@ pub fn decl_bound_names(d : Decl) -> Array[String] {
 ///|
 /// Names referred to by a declaration that may be types, with their arity.
 pub fn decl_type_names(d : Decl) -> Map[String, Int32] {
-  let out : Map[String, Int32] = {}
+  let out : Map[String, Int32] = Map([])
   let tys = (bs : Array[Binder], bound : Array[String]) => {
     for b in bs {
       b.ty.map(t => collect_names(t, bound, out)) |> ignore
@@ -300,7 +300,7 @@ pub fn parse_mbti(
   let (imports, items) = mbti_items(src)
   let prefix = "@" + alias + "."
   // the interface refers to its own imports by their last path segment
-  let import_alias : Map[String, String] = {}
+  let import_alias : Map[String, String] = Map([])
   for path in imports {
     match aliases.get(path) {
       Some(a) => import_alias.set(last_segment(path), a)

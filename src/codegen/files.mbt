@@ -144,7 +144,7 @@ fn Gen::foreign_ext(self : Gen) -> String {
 /// The generated files: one per source file (in order), then the prelude
 /// and the imports if they have code, then the runtime.
 fn Gen::output_files(self : Gen) -> Array[(String, String)] raise CodegenError {
-  let srcs : Map[String, String] = {}
+  let srcs : Map[String, String] = Map([])
   let order : Array[String] = []
   for f in @tt.source_files {
     let o = out_file(f)

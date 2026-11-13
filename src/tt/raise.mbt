@@ -34,7 +34,7 @@ fn delayed_app(f : Val, a : Val, i : Icit) -> Val {
 }
 
 ///|
-let raises_cache : Map[String, Bool] = {}
+let raises_cache : Map[String, Bool] = Map([])
 
 ///|
 /// Does a saturated call of the global `n` raise errors?

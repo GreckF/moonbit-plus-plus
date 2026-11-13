@@ -25,7 +25,7 @@ let mbt_derivable : Array[String] = ["ToJson", "FromJson", "Debug"]
 
 ///|
 /// The MoonBit `derive`s of the `#mbt` types (by MoonBit++ name).
-pub let mbt_derives : Map[String, Array[String]] = {}
+pub let mbt_derives : Map[String, Array[String]] = Map([])
 
 ///|
 /// Lines with generated code: no editor information is recorded there.

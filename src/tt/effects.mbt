@@ -24,11 +24,11 @@ priv struct OpInfo {
 
 ///|
 /// Operation name -> its effect.
-let effect_ops : Map[String, OpInfo] = {}
+let effect_ops : Map[String, OpInfo] = Map([])
 
 ///|
 /// Effect name -> its operations, in order.
-let effect_decls : Map[String, Array[String]] = {}
+let effect_decls : Map[String, Array[String]] = Map([])
 
 ///|
 fn reset_effects() -> Unit {
@@ -317,7 +317,7 @@ fn elab_handle(
 ) -> (Tm, Val) raise ElabError {
   // the handled effects, in order, and the arms of each operation
   let effs : Array[String] = []
-  let op_arms : Map[String, Array[@parser.Arm]] = {}
+  let op_arms : Map[String, Array[@parser.Arm]] = Map([])
   let err_arms : Array[@parser.Arm] = []
   for arm in arms {
     match arm_op(arm) {

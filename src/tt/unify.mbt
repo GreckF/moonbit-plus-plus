@@ -42,7 +42,7 @@ fn invert(
   sp : Spine,
   prune : Bool,
 ) -> PRen raise UnifyError {
-  let ren : Map[Int32, Int32] = {}
+  let ren : Map[Int32, Int32] = Map([])
   let dup : Array[Int32] = []
   for k = 0; k < sp.length(); k = k + 1 {
     match force(sp[k].0) {

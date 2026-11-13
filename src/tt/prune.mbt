@@ -5,7 +5,7 @@
 /// the package is checked. (A package defining its own `HashMap`, say, does
 /// not get the Prelude's methods on the wrong fields.)
 fn prune_prelude(decls : Array[@parser.Decl]) -> Unit {
-  let removed : Map[String, Bool] = {}
+  let removed : Map[String, Bool] = Map([])
   for d in decls {
     let n = match d.inner() {
       DEnum(ed) => ed.name

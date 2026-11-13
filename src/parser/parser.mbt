@@ -2226,7 +2226,7 @@ fn Parser::guard_expr(self : Parser) -> Expr raise ParseError {
 
 ///|
 /// The names of the `test` blocks: the function -> the test's name.
-pub let test_names : Map[String, String] = {}
+pub let test_names : Map[String, String] = Map([])
 
 ///|
 let test_counter : Ref[Int32] = Ref::new(0)

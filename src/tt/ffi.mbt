@@ -52,7 +52,7 @@ let ffi_callbacks : Array[(Val, Val)] = []
 
 ///|
 /// The imported functions that the host can call.
-let ffi_ready : Map[String, Bool] = {}
+let ffi_ready : Map[String, Bool] = Map([])
 
 ///|
 /// Why the last call of an imported function failed (for the error of a
@@ -457,7 +457,7 @@ fn run_ffi(n : String, sp : Spine) -> Val? {
 /// reachable from those with a splice call.
 fn imported_functions_of_splices() -> Array[String] {
   let splice : Map[String, Bool] = { "%splice": true }
-  let seen : Map[String, Bool] = {}
+  let seen : Map[String, Bool] = Map([])
   let todo : Array[String] = []
   for n, g in globals {
     match g.kind {
@@ -474,7 +474,7 @@ fn imported_functions_of_splices() -> Array[String] {
     match globals.get(n) {
       Some({ kind: GPrim(p, _), .. }) if p.has_prefix("@mbt:") => found.push(n)
       Some({ kind: GFunc(Some(body), _, _), ty, .. }) => {
-        let all : Map[String, Bool] = {}
+        let all : Map[String, Bool] = Map([])
         collect_globals(body, all)
         collect_globals(ty, all)
         for m, _ in all {

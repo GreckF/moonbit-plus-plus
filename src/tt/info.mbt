@@ -38,13 +38,13 @@ pub let proof_infos : Array[ProofInfo] = []
 
 ///|
 /// Where the globals of the package are declared.
-pub let decl_pos : Map[String, Pos] = {}
+pub let decl_pos : Map[String, Pos] = Map([])
 
 ///|
 /// What the globals of `decl_pos` are: "fn", "lemma", "let", "enum",
 /// "struct", "trait", "type", "constructor", "field" or "method" (of a
 /// trait).
-pub let decl_kinds : Map[String, String] = {}
+pub let decl_kinds : Map[String, String] = Map([])
 
 ///|
 /// Only the files of the checked package are recorded.

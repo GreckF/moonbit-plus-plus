@@ -12,7 +12,7 @@ pub let default_time_limit : Ref[Int32] = Ref::new(30)
 
 ///|
 /// `#timelimit` of declarations, by global name (`None`: no limit).
-let time_limits : Map[String, Int32?] = {}
+let time_limits : Map[String, Int32?] = Map([])
 
 ///|
 priv struct TimeFrame {

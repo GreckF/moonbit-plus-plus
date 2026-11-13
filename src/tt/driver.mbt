@@ -139,7 +139,7 @@ pub let import_skipped : Array[String] = []
 ///|
 /// Types of imported packages that are other types (`@bigint.BigInt` is
 /// MoonBit++'s `BigInt`).
-let import_type_aliases : Map[String, String] = {}
+let import_type_aliases : Map[String, String] = Map([])
 
 ///|
 /// Type check a program (after the prelude and the imported interfaces).
@@ -279,7 +279,7 @@ fn load_imports(imports : Array[Import]) -> Unit raise CheckError {
   if imports.length() == 0 {
     return
   }
-  let aliases : Map[String, String] = {}
+  let aliases : Map[String, String] = Map([])
   for im in imports {
     aliases.set(im.path, im.alias)
   }
@@ -326,7 +326,7 @@ fn load_imports(imports : Array[Import]) -> Unit raise CheckError {
   }
   reexports(usings, decls)
   // the impls, as instances of the Prelude's traits and the imported ones
-  let traits : Map[String, @parser.TraitDecl] = {}
+  let traits : Map[String, @parser.TraitDecl] = Map([])
   let prelude_decls = @parser.parse_program(prelude_src) catch { _ => [] }
   for d in [..prelude_decls, ..decls] {
     if d.inner() is DTrait(td) {
@@ -382,7 +382,7 @@ fn load_imports(imports : Array[Import]) -> Unit raise CheckError {
     declared.push(n)
     st.opaque_traits.push(n)
   }
-  let needed : Map[String, Int32] = {}
+  let needed : Map[String, Int32] = Map([])
   for d in decls {
     for n, k in @parser.decl_type_names(d) {
       if is_type_like(n) && !declared.contains(n) && !globals.contains(n) {
@@ -421,7 +421,7 @@ fn reexports(
   usings : Array[@parser.MbtiUsing],
   decls : Array[@parser.Decl],
 ) -> Unit {
-  let by_name : Map[String, @parser.Decl] = {}
+  let by_name : Map[String, @parser.Decl] = Map([])
   for d in decls {
     match d.inner() {
       DEnum({ name, .. })

@@ -204,12 +204,12 @@ pub(all) struct GEntry {
 }
 
 ///|
-pub let globals : Map[String, GEntry] = {}
+pub let globals : Map[String, GEntry] = Map([])
 
 ///|
 /// The source file of each global defined by a program (`"<prelude>"` for
 /// the prelude; imported items are not recorded).
-pub let global_files : Map[String, String] = {}
+pub let global_files : Map[String, String] = Map([])
 
 ///|
 /// The source files of the last checked package, in order.

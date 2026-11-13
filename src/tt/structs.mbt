@@ -8,16 +8,16 @@
 
 ///|
 /// The mutable fields (`T::x`).
-pub let mut_fields : Map[String, Bool] = {}
+pub let mut_fields : Map[String, Bool] = Map([])
 
 ///|
 /// The tuple structs.
-pub let tuple_structs : Map[String, Bool] = {}
+pub let tuple_structs : Map[String, Bool] = Map([])
 
 ///|
 /// The default implementations of trait methods (`impl Tr with m(..)`), by
 /// `Tr::m`.
-let trait_defaults : Map[String, @parser.ImplDecl] = {}
+let trait_defaults : Map[String, @parser.ImplDecl] = Map([])
 
 ///|
 fn reset_structs() -> Unit {

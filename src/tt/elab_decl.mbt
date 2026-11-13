@@ -952,7 +952,7 @@ pub fn check_decls(
   // earlier functions. Forward references get their signatures on demand.
   let types : Array[String] = []
   let steps : Array[() -> Unit raise ElabError] = []
-  let impl_groups : Map[String, Array[@parser.ImplDecl]] = {}
+  let impl_groups : Map[String, Array[@parser.ImplDecl]] = Map([])
   let nowhere = empty_cxt({ line: 0, col: 0, })
   let taken = (n : String) => globals.contains(n) || st.thunks.contains(n)
   for d in decls {
