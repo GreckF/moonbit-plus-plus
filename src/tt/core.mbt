@@ -300,6 +300,7 @@ pub fn reset_state() -> Unit {
   reset_time_limits()
   reset_unfolding()
   lifted.clear()
+  lifted_count.val = 0
   raises_cache.clear()
   reset_structs()
   reset_staging()
