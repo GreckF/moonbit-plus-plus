@@ -242,6 +242,7 @@ pub(all) enum CPat {
   CPCon(String, Array[CPat])
   CPLit(@parser.Lit)
 } derive(@debug.Debug)
+pub fn CPat::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Clause {
   pats : Array[CPat]
@@ -249,6 +250,7 @@ pub(all) struct Clause {
   body : Tm
 } derive(@debug.Debug)
 pub fn Clause::map(Self, (Tm) -> Tm) -> Self
+pub fn Clause::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Closure {
   env : Array[Val]
@@ -344,6 +346,9 @@ pub(all) enum Icit {
   Impl
   Inst
 } derive(Eq, @debug.Debug)
+pub fn Icit::equal(Self, Self) -> Bool
+pub fn Icit::not_equal(Self, Self) -> Bool
+pub fn Icit::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Import {
   pkg_alias : String
@@ -414,6 +419,7 @@ pub(all) enum Tm {
   Seq(Tm, Tm)
   Defer(Tm, Tm)
 } derive(@debug.Debug)
+pub fn Tm::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Val {
   VRigid(Int32, Array[(Val, Icit)])

@@ -34,6 +34,7 @@ pub(all) struct Arm {
   cond : Expr?
   rhs : Expr?
 } derive(@debug.Debug)
+pub fn Arm::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Binder {
   pos : Pos
@@ -41,6 +42,7 @@ pub(all) struct Binder {
   ty : Expr?
   kind : ParamKind
 } derive(@debug.Debug)
+pub fn Binder::to_repr(Self) -> @debug.Repr
 
 pub(all) struct ConDecl {
   pos : Pos
@@ -49,6 +51,7 @@ pub(all) struct ConDecl {
   params : Array[Binder]
   ret : Expr?
 } derive(@debug.Debug)
+pub fn ConDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Decl {
   DFn(FnDecl)
@@ -66,6 +69,7 @@ pub(all) enum Decl {
   DUnfoldAttr(Pos, UnfoldAttr, Decl)
 } derive(@debug.Debug)
 pub fn Decl::inner(Self) -> Self
+pub fn Decl::to_repr(Self) -> @debug.Repr
 
 pub(all) struct EffOpDecl {
   pos : Pos
@@ -74,6 +78,7 @@ pub(all) struct EffOpDecl {
   ret : Expr
   ctl : Bool
 } derive(@debug.Debug)
+pub fn EffOpDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) struct EffectDecl {
   pos : Pos
@@ -81,6 +86,7 @@ pub(all) struct EffectDecl {
   params : Array[Binder]
   ops : Array[EffOpDecl]
 } derive(@debug.Debug)
+pub fn EffectDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) struct EnumDecl {
   pos : Pos
@@ -91,6 +97,7 @@ pub(all) struct EnumDecl {
   cons : Array[ConDecl]
   is_error : Bool
 } derive(@debug.Debug)
+pub fn EnumDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Expr {
   EVar(Pos, String)
@@ -131,11 +138,13 @@ pub(all) enum Expr {
   EEff(Pos, Expr, Expr)
 } derive(@debug.Debug)
 pub fn Expr::pos(Self) -> Pos
+pub fn Expr::to_repr(Self) -> @debug.Repr
 
 pub(all) enum FnBody {
   BodyExpr(Expr)
   BodyExtern(String)
 } derive(@debug.Debug)
+pub fn FnBody::to_repr(Self) -> @debug.Repr
 
 pub(all) struct FnDecl {
   pos : Pos
@@ -147,6 +156,7 @@ pub(all) struct FnDecl {
   body : FnBody
   is_lemma : Bool
 } derive(@debug.Debug)
+pub fn FnDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) struct ImplDecl {
   pos : Pos
@@ -157,11 +167,13 @@ pub(all) struct ImplDecl {
   params : Array[Binder]
   body : Expr
 } derive(@debug.Debug)
+pub fn ImplDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) enum InterpPart {
   IStr(String)
   IExpr(Expr)
 } derive(@debug.Debug)
+pub fn InterpPart::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Lit {
   LInt(Int32)
@@ -176,12 +188,16 @@ pub(all) enum Lit {
   LByte(Byte)
   LFloat(Float)
 } derive(Eq, @debug.Debug)
+pub fn Lit::equal(Self, Self) -> Bool
+pub fn Lit::not_equal(Self, Self) -> Bool
+pub fn Lit::to_repr(Self) -> @debug.Repr
 
 pub(all) struct MatchRet {
   as_name : String?
   in_ty : Expr?
   ret : Expr?
 } derive(@debug.Debug)
+pub fn MatchRet::to_repr(Self) -> @debug.Repr
 
 pub(all) struct MbtiImpl {
   pos : Pos
@@ -210,6 +226,7 @@ pub(all) enum ParamKind {
   Labelled(Expr?)
   Optional
 } derive(@debug.Debug)
+pub fn ParamKind::to_repr(Self) -> @debug.Repr
 
 type Parser
 pub fn Parser::expr(Self) -> Expr raise ParseError
@@ -228,11 +245,15 @@ pub(all) enum Pat {
   PLabel(Pos, String, Pat)
 } derive(@debug.Debug)
 pub fn Pat::pos(Self) -> Pos
+pub fn Pat::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Pos {
   line : Int32
   col : Int32
 } derive(Eq, @debug.Debug)
+pub fn Pos::equal(Self, Self) -> Bool
+pub fn Pos::not_equal(Self, Self) -> Bool
+pub fn Pos::to_repr(Self) -> @debug.Repr
 pub fn Pos::to_string(Self) -> String
 
 pub(all) enum Stmt {
@@ -249,11 +270,15 @@ pub(all) enum Stmt {
   SGuard(Pos, Expr, Expr?)
   SDefer(Pos, Expr)
 } derive(@debug.Debug)
+pub fn Stmt::to_repr(Self) -> @debug.Repr
 
 pub(all) enum StrPart {
   SPStr(String)
   SPExpr(String, Int32, Int32)
 } derive(Eq, @debug.Debug)
+pub fn StrPart::equal(Self, Self) -> Bool
+pub fn StrPart::not_equal(Self, Self) -> Bool
+pub fn StrPart::to_repr(Self) -> @debug.Repr
 
 pub(all) struct StructDecl {
   pos : Pos
@@ -262,6 +287,7 @@ pub(all) struct StructDecl {
   params : Array[Binder]?
   fields : Array[(Pos, String, Expr)]
 } derive(@debug.Debug)
+pub fn StructDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Tactic {
   TIntros(Pos, Array[String])
@@ -273,6 +299,7 @@ pub(all) enum Tactic {
   TAssume(Pos, String, Expr)
   TUnfold(Pos, Array[(Pos, String)])
 } derive(@debug.Debug)
+pub fn Tactic::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Tok {
   TIdent(String)
@@ -284,12 +311,16 @@ pub(all) enum Tok {
   TSym(String)
   TEOF
 } derive(Eq, @debug.Debug)
+pub fn Tok::equal(Self, Self) -> Bool
+pub fn Tok::not_equal(Self, Self) -> Bool
+pub fn Tok::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Token {
   tok : Tok
   pos : Pos
   nl : Bool
 } derive(@debug.Debug)
+pub fn Token::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TraitDecl {
   pos : Pos
@@ -298,6 +329,7 @@ pub(all) struct TraitDecl {
   supers : Array[String]
   methods : Array[TraitMethod]
 } derive(@debug.Debug)
+pub fn TraitDecl::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TraitMethod {
   pos : Pos
@@ -307,12 +339,14 @@ pub(all) struct TraitMethod {
   ret : Expr
   raises : Expr?
 } derive(@debug.Debug)
+pub fn TraitMethod::to_repr(Self) -> @debug.Repr
 
 pub(all) enum UnfoldAttr {
   Opaque
   Sealed
   Unfolds(Array[(Pos, String)])
 } derive(@debug.Debug)
+pub fn UnfoldAttr::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

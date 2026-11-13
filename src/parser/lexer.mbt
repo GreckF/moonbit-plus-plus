@@ -13,11 +13,23 @@ pub(all) enum Tok {
 } derive(Debug, Eq)
 
 ///|
+pub extend Tok with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Tok with Eq::{not_equal, equal}
+
+///|
 pub(all) enum StrPart {
   SPStr(String)
   /// Source of an interpolated expression and its position.
   SPExpr(String, Int32, Int32)
 } derive(Debug, Eq)
+
+///|
+pub extend StrPart with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend StrPart with Eq::{not_equal, equal}
 
 ///|
 pub(all) struct Token {
@@ -26,6 +38,9 @@ pub(all) struct Token {
   /// Whether a newline separates this token from the previous one.
   nl : Bool
 } derive(Debug)
+
+///|
+pub extend Token with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub suberror ParseError {

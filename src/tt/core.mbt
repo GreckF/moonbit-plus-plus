@@ -8,6 +8,12 @@ pub(all) enum Icit {
 } derive(Eq, Debug)
 
 ///|
+pub extend Icit with Eq::{not_equal, equal}
+
+///|
+pub extend Icit with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub type Lit = @parser.Lit
 
 ///|
@@ -26,6 +32,9 @@ pub(all) enum CPat {
 } derive(Debug)
 
 ///|
+pub extend CPat with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) struct Clause {
   pats : Array[CPat]
   /// `p if cond => ...`: the clause is skipped when the condition is false.
@@ -33,6 +42,9 @@ pub(all) struct Clause {
   cond : Tm?
   body : Tm
 } derive(Debug)
+
+///|
+pub extend Clause with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 /// Apply `f` to the guard and the body of a clause.
@@ -72,6 +84,9 @@ pub(all) enum Tm {
   /// `break`, `continue` or an error).
   Defer(Tm, Tm)
 } derive(Debug)
+
+///|
+pub extend Tm with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub type Env = Array[Val]

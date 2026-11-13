@@ -6,6 +6,12 @@ pub(all) struct Pos {
 } derive(Debug, Eq)
 
 ///|
+pub extend Pos with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Pos with Eq::{not_equal, equal}
+
+///|
 pub fn Pos::to_string(self : Pos) -> String {
   self.line.to_string() + ":" + self.col.to_string()
 }
@@ -31,6 +37,12 @@ pub(all) enum Lit {
 } derive(Debug, Eq)
 
 ///|
+pub extend Lit with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Lit with Eq::{not_equal, equal}
+
+///|
 /// A binder `x`, `x : A` or (in parameter lists) an anonymous type `A`.
 pub(all) struct Binder {
   pos : Pos
@@ -38,6 +50,9 @@ pub(all) struct Binder {
   ty : Expr?
   kind : ParamKind
 } derive(Debug)
+
+///|
+pub extend Binder with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 /// How a function parameter is passed (MoonBit's tagged arguments).
@@ -51,10 +66,16 @@ pub(all) enum ParamKind {
 } derive(Debug)
 
 ///|
+pub extend ParamKind with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) enum InterpPart {
   IStr(String)
   IExpr(Expr)
 } derive(Debug)
+
+///|
+pub extend InterpPart with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) enum Expr {
@@ -116,11 +137,17 @@ pub(all) enum Expr {
 } derive(Debug)
 
 ///|
+pub extend Expr with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) struct MatchRet {
   as_name : String?
   in_ty : Expr?
   ret : Expr?
 } derive(Debug)
+
+///|
+pub extend MatchRet with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) struct Arm {
@@ -130,6 +157,9 @@ pub(all) struct Arm {
   cond : Expr?
   rhs : Expr?
 } derive(Debug)
+
+///|
+pub extend Arm with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) enum Pat {
@@ -157,6 +187,9 @@ pub(all) enum Pat {
 } derive(Debug)
 
 ///|
+pub extend Pat with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) enum Stmt {
   SLet(Pos, Pat, Expr?, Expr)
   SLetMut(Pos, String, Expr?, Expr)
@@ -180,6 +213,9 @@ pub(all) enum Stmt {
 } derive(Debug)
 
 ///|
+pub extend Stmt with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) enum Tactic {
   TIntros(Pos, Array[String])
   TExact(Pos, Expr)
@@ -193,10 +229,16 @@ pub(all) enum Tactic {
 } derive(Debug)
 
 ///|
+pub extend Tactic with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) enum FnBody {
   BodyExpr(Expr)
   BodyExtern(String)
 } derive(Debug)
+
+///|
+pub extend FnBody with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) struct FnDecl {
@@ -211,6 +253,9 @@ pub(all) struct FnDecl {
 } derive(Debug)
 
 ///|
+pub extend FnDecl with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 /// An operation of an effect: `Op(params) -> ret`, or `ctl Op(params) -> ret`
 /// when its handlers may resume any number of times.
 pub(all) struct EffOpDecl {
@@ -222,6 +267,9 @@ pub(all) struct EffOpDecl {
 } derive(Debug)
 
 ///|
+pub extend EffOpDecl with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 /// `effect Name[params] { ops }`
 pub(all) struct EffectDecl {
   pos : Pos
@@ -231,6 +279,9 @@ pub(all) struct EffectDecl {
 } derive(Debug)
 
 ///|
+pub extend EffectDecl with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) struct ConDecl {
   pos : Pos
   name : String
@@ -238,6 +289,9 @@ pub(all) struct ConDecl {
   params : Array[Binder]
   ret : Expr?
 } derive(Debug)
+
+///|
+pub extend ConDecl with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) struct EnumDecl {
@@ -251,6 +305,9 @@ pub(all) struct EnumDecl {
 } derive(Debug)
 
 ///|
+pub extend EnumDecl with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) struct StructDecl {
   pos : Pos
   name : String
@@ -258,6 +315,9 @@ pub(all) struct StructDecl {
   params : Array[Binder]?
   fields : Array[(Pos, String, Expr)]
 } derive(Debug)
+
+///|
+pub extend StructDecl with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) struct TraitMethod {
@@ -270,6 +330,9 @@ pub(all) struct TraitMethod {
 } derive(Debug)
 
 ///|
+pub extend TraitMethod with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) struct TraitDecl {
   pos : Pos
   name : String
@@ -277,6 +340,9 @@ pub(all) struct TraitDecl {
   supers : Array[String]
   methods : Array[TraitMethod]
 } derive(Debug)
+
+///|
+pub extend TraitDecl with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) struct ImplDecl {
@@ -288,6 +354,9 @@ pub(all) struct ImplDecl {
   params : Array[Binder]
   body : Expr
 } derive(Debug)
+
+///|
+pub extend ImplDecl with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub(all) enum Decl {
@@ -325,6 +394,9 @@ pub(all) enum Decl {
 } derive(Debug)
 
 ///|
+pub extend Decl with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub(all) enum UnfoldAttr {
   /// `#opaque`: not unfolded during type checking, except where unfolded
   Opaque
@@ -333,6 +405,9 @@ pub(all) enum UnfoldAttr {
   /// `#unfold(f, g)`: `f` and `g` may be unfolded in the definition
   Unfolds(Array[(Pos, String)])
 } derive(Debug)
+
+///|
+pub extend UnfoldAttr with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 /// The declaration under its attributes.
