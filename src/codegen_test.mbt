@@ -1159,3 +1159,32 @@ test "the driver of the splices has the imported functions" {
   )
   inspect(all.contains("con_makers.push"), content="true")
 }
+
+///|
+test "codegen: a primitive with a `$` in an argument is a dynamic call that the runtime handles" {
+  inspect(
+    fn_code(
+      (
+        #|fn T(b : Bool) -> Type { if b { Bool } else { Int } }
+        #|fn f(b : Bool, x : BigInt) -> T(b) {
+        #|  match b {
+        #|    true => x < BigInt::from_int("$$".length())
+        #|    false => 0
+        #|  }
+        #|}
+        #|fn main { println(f(true, BigInt::from_int(1))) }
+      ),
+      "f",
+    ),
+    content=(
+      #|fn f_f(b : Value, x : Value) -> Value raise {
+      #|{
+      #|let cond = b
+      #|if truthy(cond) {
+      #|prim("%bigint_lt", [x, prim("%bigint_of_int", [prim("%str_length", [VStr("$$")])])])
+      #|} else {
+      #|VInt(0)
+      #|}
+    ),
+  )
+}
