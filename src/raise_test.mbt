@@ -260,3 +260,22 @@ test "at run time, the error of the argument comes first" {
     ),
   )
 }
+
+///|
+test "the raise analysis is not remembered between checks" {
+  let raising =
+    #|suberror E
+    #|fn fN(x : Int) -> Int raise E { if x == 0 { raise E } else { x } }
+    #|fn const0(x : Int) -> Int { 0 }
+    #|lemma l(x : Int) -> const0(fN(x)) === 0 { Refl }
+  let pure_ =
+    #|fn fN(x : Int) -> Int { if x == 0 { 1 } else { x } }
+    #|fn const0(x : Int) -> Int { 0 }
+    #|lemma l(x : Int) -> const0(fN(x)) === 0 { Refl }
+  // a function of the same name is pure in one program and raises in another
+  let a = check(raising.replace_all(old="fN", new="fa"))
+  inspect(a.contains("type mismatch"), content="true")
+  inspect(check(pure_.replace_all(old="fN", new="fb")), content="ok")
+  let c = check(raising.replace_all(old="fN", new="fb"))
+  inspect(c.contains("type mismatch"), content="true")
+}
