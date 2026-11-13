@@ -345,7 +345,7 @@ pub(all) enum Icit {
 } derive(Eq, Show)
 
 pub(all) struct Import {
-  alias : String
+  pkg_alias : String
   path : String
   mbti : String
 }

@@ -28,7 +28,7 @@ priv enum MValue {
 /// An entry of an `import { ... }` block: path and alias.
 priv struct MImport {
   path : String
-  alias : String?
+  pkg_alias : String?
   /// `for "test"` etc.
   kind : String?
 } derive(Show)
@@ -180,7 +180,7 @@ fn parse_moon_file(src : String) -> MoonFile raise Failure {
             }
             _ => die("expected an import path")
           }
-          let alias = if peek() == Some(TPunct('@')) {
+          let pkg_alias = if peek() == Some(TPunct('@')) {
             i = i + 1
             match peek() {
               Some(TWord(a)) => {
@@ -192,7 +192,7 @@ fn parse_moon_file(src : String) -> MoonFile raise Failure {
           } else {
             None
           }
-          block.push((path, alias))
+          block.push((path, pkg_alias))
           if peek() == Some(TPunct(',')) {
             i = i + 1
           }
@@ -211,7 +211,7 @@ fn parse_moon_file(src : String) -> MoonFile raise Failure {
           None
         }
         for b in block {
-          imports.push({ path: b.0, alias: b.1, kind, })
+          imports.push({ path: b.0, pkg_alias: b.1, kind, })
         }
       }
       Some(TWord(name)) if i + 1 < toks.length() && toks[i + 1] == TPunct('(') => {

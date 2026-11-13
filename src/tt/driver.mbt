@@ -127,7 +127,7 @@ fn check_src(file : String, src : String) -> Unit raise CheckError {
 /// An imported MoonBit package: the alias it is referred to with
 /// (`@alias.name`), its path, and the text of its `.mbti` interface.
 pub(all) struct Import {
-  alias : String
+  pkg_alias : String
   path : String
   mbti : String
 }
@@ -281,7 +281,7 @@ fn load_imports(imports : Array[Import]) -> Unit raise CheckError {
   }
   let aliases : Map[String, String] = Map([])
   for im in imports {
-    aliases.set(im.path, im.alias)
+    aliases.set(im.path, im.pkg_alias)
   }
   let decls : Array[@parser.Decl] = []
   // Views are taken to be the containers themselves (MoonBit converts a
@@ -306,7 +306,7 @@ fn load_imports(imports : Array[Import]) -> Unit raise CheckError {
   let impls : Array[@parser.MbtiImpl] = []
   let usings : Array[@parser.MbtiUsing] = []
   for im in imports {
-    let r = @parser.parse_mbti(im.mbti, im.alias, im.path, aliases)
+    let r = @parser.parse_mbti(im.mbti, im.pkg_alias, im.path, aliases)
     for d in r.decls {
       decls.push(d)
       // `@bigint.BigInt` is `BigInt`: `@bigint.BigInt::m` is `BigInt::m`

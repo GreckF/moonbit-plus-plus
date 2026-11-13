@@ -29,7 +29,7 @@ fn build_driver(
   names : Array[String],
 ) -> String? {
   let (files, _) = @codegen.generate_driver(
-    imports.map(i => (i.path, i.alias)),
+    imports.map(i => (i.path, i.pkg_alias)),
     names,
   ) catch {
     @codegen.CodegenError(msg) => return Some(msg)
@@ -56,7 +56,7 @@ fn build_driver(
     pkg_file.write_string("warnings = \"-a\"\n")
     pkg_file.write_string("\nimport {\n  \"moonbitlang/core/float\",\n")
     for i in imports {
-      pkg_file.write_string("  " + mstr(i.path) + " @" + i.alias + ",\n")
+      pkg_file.write_string("  " + mstr(i.path) + " @" + i.pkg_alias + ",\n")
     }
     pkg_file.write_string("}\n")
     pkg_file.write_string(

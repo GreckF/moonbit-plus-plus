@@ -438,7 +438,7 @@ fn Gen::ffi_call(
     let dot = target.rev_find(".").unwrap()
     let path = target.unsafe_substring(start=0, end=dot)
     let fname = target.unsafe_substring(start=dot + 1, end=target.length())
-    let alias = match self.aliases.get(path) {
+    let pkg_alias = match self.aliases.get(path) {
       Some(a) => a
       None => return Err("package " + path + " is not imported")
     }
@@ -446,8 +446,8 @@ fn Gen::ffi_call(
       Some(i) => {
         let tname = fname.unsafe_substring(start=0, end=i)
         let m = fname.unsafe_substring(start=i + 2, end=fname.length())
-        if @tt.globals.contains("@" + alias + "." + tname) {
-          "@" + alias + "." + fname + "(" + conv.join(", ") + ")"
+        if @tt.globals.contains("@" + pkg_alias + "." + tname) {
+          "@" + pkg_alias + "." + fname + "(" + conv.join(", ") + ")"
         } else if conv.length() > 0 {
           // a method of a type of another package (e.g. `Array`)
           conv[0] + "." + m + "(" + conv[1:].to_array().join(", ") + ")"
@@ -455,7 +455,7 @@ fn Gen::ffi_call(
           return Err("unsupported method")
         }
       }
-      None => "@" + alias + "." + fname + "(" + conv.join(", ") + ")"
+      None => "@" + pkg_alias + "." + fname + "(" + conv.join(", ") + ")"
     }
   }
   Ok(call)

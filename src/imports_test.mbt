@@ -55,7 +55,7 @@ let geo_mbti : String =
 ///|
 fn check_geo(src : String) -> String {
   let imports : Array[@tt.Import] = [
-    { alias: "geo", path: "demo/geo", mbti: geo_mbti, },
+    { pkg_alias: "geo", path: "demo/geo", mbti: geo_mbti, },
   ]
   @tt.check_program("t.mbtpp", src, imports~) catch {
     @tt.CheckError(msg) => return msg
@@ -221,7 +221,7 @@ let handles_mbti : String =
 ///|
 fn check_handles(src : String) -> String {
   let imports : Array[@tt.Import] = [
-    { alias: "h", path: "demo/handles", mbti: handles_mbti, },
+    { pkg_alias: "h", path: "demo/handles", mbti: handles_mbti, },
   ]
   @tt.check_program("t.mbtpp", src, imports~) catch {
     @tt.CheckError(msg) => return msg
@@ -276,7 +276,7 @@ test "import: Int32 is Int" {
     #|pub fn twice(Int32) -> Int32
     #|
   let imports : Array[@tt.Import] = [
-    { alias: "ints", path: "demo/ints", mbti, },
+    { pkg_alias: "ints", path: "demo/ints", mbti, },
   ]
   let r = try {
     @tt.check_program(
@@ -324,7 +324,7 @@ let coll_mbti : String =
 ///|
 fn check_coll(src : String) -> String {
   let imports : Array[@tt.Import] = [
-    { alias: "coll", path: "demo/coll", mbti: coll_mbti, },
+    { pkg_alias: "coll", path: "demo/coll", mbti: coll_mbti, },
   ]
   @tt.check_program("t.mbtpp", src, imports~) catch {
     @tt.CheckError(msg) => return msg
@@ -378,7 +378,7 @@ let tasks_mbti : String =
 ///|
 test "import: async function types with a parenthesised argument" {
   let imports : Array[@tt.Import] = [
-    { alias: "tasks", path: "demo/tasks", mbti: tasks_mbti, },
+    { pkg_alias: "tasks", path: "demo/tasks", mbti: tasks_mbti, },
   ]
   let r = try {
     @tt.check_program(

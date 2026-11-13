@@ -109,7 +109,7 @@ fn check_files(
 ///|
 /// The `pub` declarations of the package just checked that could be `#mbt`.
 fn mbt_hints(imports : Array[@tt.Import]) -> Array[@tt.MbtHint] {
-  let aliases = imports.map(i => (i.path, i.alias))
+  let aliases = imports.map(i => (i.path, i.pkg_alias))
   @tt.mbt_hints(names => @codegen.native_fns(aliases, names))
 }
 
@@ -359,14 +359,14 @@ fn compile(opts : Options, path : String?) -> (String, String) raise Failure {
   let (dir, files) = main_package(path)
   ignore(check_files(opts, dir, files))
   let imports = load_imports(dir)
-  let code = @codegen.generate_files(imports.map(i => (i.path, i.alias))) catch {
+  let code = @codegen.generate_files(imports.map(i => (i.path, i.pkg_alias))) catch {
     @codegen.CodegenError(msg) => die("cannot compile: " + msg)
   }
   for w in @codegen.warnings {
     println("warning: " + w)
   }
   if opts.verbose {
-    let report = @codegen.native_report(imports.map(i => (i.path, i.alias)))
+    let report = @codegen.native_report(imports.map(i => (i.path, i.pkg_alias)))
     if report.length() > 0 {
       println(
         "without a native version (they run in the uniform representation):",
@@ -458,7 +458,7 @@ fn compile(opts : Options, path : String?) -> (String, String) raise Failure {
   // the runtime uses the conversions of `Float` (moonbitlang/core/float)
   pkg_file.write_string("\nimport {\n  \"moonbitlang/core/float\",\n")
   for i in imports {
-    pkg_file.write_string("  " + mstr(i.path) + " @" + i.alias + ",\n")
+    pkg_file.write_string("  " + mstr(i.path) + " @" + i.pkg_alias + ",\n")
   }
   pkg_file.write_string("}\n")
   pkg_file.write_string("\noptions(\n  \"is-main\": true,\n)\n")

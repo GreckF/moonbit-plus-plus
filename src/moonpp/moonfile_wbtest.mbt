@@ -21,7 +21,7 @@ test "moon.pkg" {
     ),
   )
   inspect(
-    f.imports.map(i => (i.path, i.alias, i.kind)),
+    f.imports.map(i => (i.path, i.pkg_alias, i.kind)),
     content=(
       #|[(u/mig/lib, None, None), (moonbitlang/core/strconv, Some(conv), None), (moonbitlang/x/fs, None, Some(test))]
     ),

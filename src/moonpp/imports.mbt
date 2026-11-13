@@ -89,7 +89,7 @@ fn find_mbti(pkg : String, dir : String) -> String? {
 fn load_imports(dir : String) -> Array[@tt.Import] raise Failure {
   let out : Array[@tt.Import] = []
   for imp in package_imports(dir) {
-    let (path, alias) = imp
+    let (path, pkg_alias) = imp
     let mbti = match find_mbti(path, dir) {
       Some(p) => p
       None =>
@@ -102,7 +102,7 @@ fn load_imports(dir : String) -> Array[@tt.Import] raise Failure {
     let src = @fs.read_file_to_string(mbti) catch {
       @fs.IOError(msg) => die("cannot read " + mbti + ": " + msg)
     }
-    out.push({ alias, path, mbti: src, })
+    out.push({ pkg_alias, path, mbti: src, })
   }
   out
 }

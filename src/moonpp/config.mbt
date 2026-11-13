@@ -120,7 +120,7 @@ fn package_imports(dir : String) -> Array[(String, String)] raise Failure {
     Some(f) =>
       return f.imports
         .filter(i => i.kind is None)
-        .map(i => (i.path, i.alias.unwrap_or(last_segment(i.path))))
+        .map(i => (i.path, i.pkg_alias.unwrap_or(last_segment(i.path))))
     None => ()
   }
   let cfg = dir + "/moon.pkg.json"

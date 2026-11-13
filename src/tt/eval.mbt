@@ -117,7 +117,7 @@ pub fn app_val(f : Val, a : Val, i : Icit) -> Val {
         None => delayed_app(f, a, i)
       }
     VCon(n, sp) => VCon(n, sp_push(sp, a, i))
-    VPrim(n, sp) => reduce_prim(n, sp_push(sp, a, i), lazy=true)
+    VPrim(n, sp) => reduce_prim(n, sp_push(sp, a, i), lazily=true)
     VMatch(env, vs, cls, sp) => VMatch(env, vs, cls, sp_push(sp, a, i))
     VStuck(env, t, sp) => VStuck(env, t, sp_push(sp, a, i))
     _ => VStuck([], Lit(LUnit), [(f, Expl), (a, i)])
@@ -158,7 +158,7 @@ pub fn app_spine(f : Val, sp : Spine) -> Val {
 /// is needed (a primitive of an argument that is large to compute, like
 /// `int_to_nat(1000000).to_string()`, is not computed when it is merely
 /// checked).
-fn reduce_prim(n : String, sp : Spine, lazy~ : Bool = false) -> Val {
+fn reduce_prim(n : String, sp : Spine, lazily~ : Bool = false) -> Val {
   match globals.get(n) {
     // `${ c }`, `c.run()`: the code `c` is run (see staging.mbt)
     // arrays and `print`, when a splice runs (staging.mbt)
@@ -171,7 +171,7 @@ fn reduce_prim(n : String, sp : Spine, lazy~ : Bool = false) -> Val {
       p.has_prefix("@mbt:") &&
       run_ffi(n, sp) is Some(r) => r
     Some({ kind: GPrim("%splice" | "%run", arity), .. }) if sp.length() >= arity =>
-      match splice_val(sp, arity, lazy) {
+      match splice_val(sp, arity, lazily) {
         Some(w) => w
         None => VPrim(n, sp)
       }
@@ -179,7 +179,7 @@ fn reduce_prim(n : String, sp : Spine, lazy~ : Bool = false) -> Val {
       let lits : Array[Lit] = []
       for a in sp {
         if a.1 == Expl {
-          if lazy && !(a.0 is (VLit(_) | VPrim("%raise", _))) && !may_raise(a.0) {
+          if lazily && !(a.0 is (VLit(_) | VPrim("%raise", _))) && !may_raise(a.0) {
             return VPrim(n, sp)
           }
           match force(a.0) {
@@ -260,7 +260,7 @@ pub fn force_meta(v : Val) -> Val {
       }
     // (arguments that are folded applications are not computed either)
     VPrim(n, sp) =>
-      match reduce_prim(n, sp, lazy=true) {
+      match reduce_prim(n, sp, lazily=true) {
         VPrim(_, _) => v
         w => w
       }

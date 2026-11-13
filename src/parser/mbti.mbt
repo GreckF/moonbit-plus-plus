@@ -293,12 +293,12 @@ pub fn decl_type_names(d : Decl) -> Map[String, Int32] {
 /// imported packages.
 pub fn parse_mbti(
   src : String,
-  alias : String,
+  pkg_alias : String,
   pkg_path : String,
   aliases : Map[String, String],
 ) -> MbtiResult {
   let (imports, items) = mbti_items(src)
-  let prefix = "@" + alias + "."
+  let prefix = "@" + pkg_alias + "."
   // the interface refers to its own imports by their last path segment
   let import_alias : Map[String, String] = Map([])
   for path in imports {
@@ -330,14 +330,14 @@ pub fn parse_mbti(
     }
   }
   // names of the types of this package
-  let local : Array[String] = []
+  let locals : Array[String] = []
   for r in raw {
     match r.0.inner() {
-      DEnum(ed) => local.push(ed.name)
-      DStruct(sd) => local.push(sd.name)
-      DTrait(td) => local.push(td.name)
-      DOpaque(_, n, _) if builtin_alias(pkg_path, n) is None => local.push(n)
-      DDef(_, n, _, _, _) if is_type_name(n) => local.push(n)
+      DEnum(ed) => locals.push(ed.name)
+      DStruct(sd) => locals.push(sd.name)
+      DTrait(td) => locals.push(td.name)
+      DOpaque(_, n, _) if builtin_alias(pkg_path, n) is None => locals.push(n)
+      DDef(_, n, _, _, _) if is_type_name(n) => locals.push(n)
       _ => ()
     }
   }
@@ -350,7 +350,7 @@ pub fn parse_mbti(
         EVar(p, "Int")
       } else if builtin_alias(pkg_path, n) is Some(b) {
         EVar(p, b)
-      } else if local.contains(n) {
+      } else if locals.contains(n) {
         EVar(p, prefix + n)
       } else if n.has_prefix("@builtin.") {
         // the types and traits of `@builtin` are the global ones
@@ -388,7 +388,7 @@ pub fn parse_mbti(
     using_items(u.0, u.1, prefix, import_alias, reexports, skipped)
   }
   let qualify_trait = (tr : String) => {
-    if local.contains(tr) {
+    if locals.contains(tr) {
       prefix + tr
     } else {
       match map_names(EVar({ line: 0, col: 0, }, tr), qualify(None)) {
@@ -413,7 +413,7 @@ pub fn parse_mbti(
         let (name, self_ty) = match fd.name.find("::") {
           Some(k) => {
             let t = fd.name.unsafe_substring(start=0, end=k)
-            let qt = if local.contains(t) { prefix + t } else { t }
+            let qt = if locals.contains(t) { prefix + t } else { t }
             (
               qt + fd.name.unsafe_substring(start=k, end=fd.name.length()),
               Some(qt),
@@ -494,7 +494,7 @@ pub fn parse_mbti(
             ..td,
             name: prefix + td.name,
             supers: td.supers.map(s => {
-              if local.contains(s) {
+              if locals.contains(s) {
                 prefix + s
               } else {
                 s
